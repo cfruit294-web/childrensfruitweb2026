@@ -1,90 +1,153 @@
 {% extends 'core/base.html' %}
 {% load static %}
 
-{% block title %}📡 Live — Children's Fruit WebTV{% endblock %}
-{% block meta_desc %}Regardez Children's Fruit en direct. WebTV chrétienne en streaming live.{% endblock %}
+{% block title %}Live — Children's Fruit WebTV{% endblock %}
+{% block meta_desc %}Regardez Children's Fruit en direct. Grille 24h et chat en live.{% endblock %}
 
 {% block extra_css %}
 <style>
-  .live-hero {
-    background: linear-gradient(135deg, #0a0a1a 0%, #0d1b0d 100%);
-    min-height: calc(100vh - 72px);
-    display: flex;
-    flex-direction: column;
-  }
-  .live-player-wrap {
-    position: relative;
-    width: 100%;
-    background: #000;
-    aspect-ratio: 16/9;
-    max-height: 72vh;
-  }
-  .live-player-wrap iframe,
-  .live-player-wrap video {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    border: none;
-  }
+  body, main { background: #0d1117; }
+
+  /* ── LIVE badge ── */
   .live-badge {
     display: inline-flex; align-items: center; gap: .4rem;
     background: #dc2626; color: #fff;
-    font-size: .72rem; font-weight: 800;
+    font-size: .7rem; font-weight: 800;
     padding: .25rem .65rem; border-radius: 20px;
     letter-spacing: .08em; text-transform: uppercase;
-    animation: pulse-badge 1.5s infinite;
   }
   @keyframes pulse-badge {
-    0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,.4); }
+    0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,.5); }
     50%      { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
   }
+  .live-badge { animation: pulse-badge 1.8s infinite; }
+
+  /* ── Player ── */
+  .player-card {
+    background: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,.7);
+  }
+  .player-ratio {
+    position: relative; width: 100%; aspect-ratio: 16/9;
+  }
+  .player-ratio iframe,
+  .player-ratio video {
+    position: absolute; inset: 0; width: 100%; height: 100%; border: none;
+  }
   .offline-screen {
-    aspect-ratio: 16/9; max-height: 72vh;
+    aspect-ratio: 16/9;
     background: radial-gradient(ellipse at center, #0f2010 0%, #050a05 100%);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     color: rgba(255,255,255,.5);
   }
+
+  /* ── Panneau droit : émissions suivantes ── */
+  .next-panel {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 16px;
+    display: flex; flex-direction: column;
+    max-height: 520px;
+  }
+  .next-panel-header {
+    padding: 1rem 1.1rem .75rem;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    flex-shrink: 0;
+  }
+  .next-panel-body {
+    overflow-y: auto; flex: 1; padding: .6rem .8rem;
+  }
+  .next-panel-body::-webkit-scrollbar { width: 3px; }
+  .next-panel-body::-webkit-scrollbar-thumb { background: var(--green); border-radius: 4px; }
+
+  .next-slot {
+    display: flex; gap: .75rem; align-items: flex-start;
+    padding: .65rem .5rem;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    border-radius: 8px;
+    transition: background .15s;
+  }
+  .next-slot:last-child { border-bottom: none; }
+  .next-slot:hover { background: rgba(255,255,255,.04); }
+  .next-slot.is-live { background: rgba(220,38,38,.08); }
+  .next-slot-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0; margin-top: 4px;
+  }
+  .next-slot-time { font-size: .68rem; color: rgba(255,255,255,.4); font-weight: 600; white-space: nowrap; }
+  .next-slot-title { font-size: .82rem; font-weight: 700; color: #fff; line-height: 1.3; }
+  .next-slot-cat { font-size: .62rem; color: rgba(255,255,255,.4); margin-top: .1rem; }
+
+  /* ── Commentaires live ── */
+  .chat-panel {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 16px;
+    display: flex; flex-direction: column;
+    height: 340px;
+  }
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: .75rem 1rem; display: flex; flex-direction: column; gap: .5rem;
+  }
+  .chat-messages::-webkit-scrollbar { width: 3px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--green); border-radius: 4px; }
+  .chat-msg { display: flex; gap: .6rem; align-items: flex-start; }
+  .chat-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--green); color: #fff;
+    font-size: .7rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .chat-bubble {
+    background: rgba(255,255,255,.06);
+    border-radius: 0 8px 8px 8px;
+    padding: .4rem .7rem; flex: 1;
+  }
+  .chat-user { font-size: .7rem; font-weight: 700; color: var(--green); }
+  .chat-text { font-size: .78rem; color: rgba(255,255,255,.8); line-height: 1.4; word-break: break-word; }
+  .chat-time { font-size: .62rem; color: rgba(255,255,255,.3); margin-top: .1rem; }
+  .chat-input-wrap {
+    padding: .65rem .9rem;
+    border-top: 1px solid rgba(255,255,255,.07);
+    flex-shrink: 0;
+  }
+  .chat-input {
+    background: rgba(255,255,255,.07) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    color: #fff !important; border-radius: 20px !important;
+    font-size: .82rem; padding: .45rem 1rem !important;
+    resize: none;
+  }
+  .chat-input::placeholder { color: rgba(255,255,255,.3) !important; }
+  .chat-input:focus { box-shadow: 0 0 0 2px rgba(0,104,55,.4) !important; outline: none; }
+
   /* ── Grille 24h ── */
   .grid-24h { display: flex; flex-direction: column; }
-
   .grid-row {
-    display: grid;
-    grid-template-columns: 80px 1fr;
-    min-height: 56px;
+    display: grid; grid-template-columns: 80px 1fr;
+    min-height: 54px;
     border-bottom: 1px solid rgba(255,255,255,.05);
     transition: background .2s;
   }
   .grid-row:hover { background: rgba(255,255,255,.02); }
-  .grid-row--now {
-    background: rgba(0,104,55,.07);
-    border-bottom-color: rgba(0,104,55,.25);
-  }
-
+  .grid-row--now { background: rgba(0,104,55,.07); border-bottom-color: rgba(0,104,55,.25); }
   .grid-hour {
     display: flex; flex-direction: column; align-items: center;
-    justify-content: flex-start; padding: .7rem .4rem .7rem 0;
-    border-right: 2px solid rgba(255,255,255,.07); gap: .3rem;
-    position: sticky; left: 0;
+    justify-content: flex-start; padding: .65rem .4rem .65rem 0;
+    border-right: 2px solid rgba(255,255,255,.07); gap: .25rem;
   }
   .grid-row--now .grid-hour { border-right-color: var(--green); }
-
-  .hour-label {
-    font-size: .72rem; font-weight: 700; color: rgba(255,255,255,.35);
-    font-family: monospace; letter-spacing: .03em;
-  }
-  .hour-label--now { color: var(--green); font-size: .78rem; }
-
+  .hour-label { font-size: .7rem; font-weight: 700; color: rgba(255,255,255,.3); font-family: monospace; }
+  .hour-label--now { color: var(--green); font-size: .76rem; }
   .now-pill {
-    font-size: .55rem; font-weight: 800; letter-spacing: .06em;
+    font-size: .5rem; font-weight: 800; letter-spacing: .05em;
     background: var(--green); color: #fff;
-    padding: .15rem .4rem; border-radius: 10px;
-    text-transform: uppercase;
+    padding: .12rem .4rem; border-radius: 8px; text-transform: uppercase;
   }
-
-  .grid-content {
-    padding: .5rem .75rem; display: flex; flex-direction: column; gap: .4rem;
-  }
-
+  .grid-content { padding: .45rem .7rem; display: flex; flex-direction: column; gap: .35rem; }
   .program-block {
     border-left: 3px solid var(--pc, #006837);
     border-radius: 0 8px 8px 0;
@@ -92,266 +155,326 @@
     transition: background .2s, transform .15s;
   }
   .program-block:hover { background: rgba(255,255,255,.08); transform: translateX(2px); }
-  .program-block--live {
-    background: rgba(220,38,38,.08);
-    border-left-color: #dc2626;
-    box-shadow: 0 0 0 1px rgba(220,38,38,.2);
-  }
-  .program-block--special {
-    background: rgba(247,148,29,.07);
-  }
+  .program-block--live { background: rgba(220,38,38,.08); border-left-color: #dc2626; box-shadow: 0 0 0 1px rgba(220,38,38,.2); }
+  .program-inner { padding: .55rem .8rem; }
+  .program-time { font-size: .65rem; color: rgba(255,255,255,.4); margin-bottom: .2rem; font-weight: 600; }
+  .program-title { font-size: .85rem; font-weight: 700; color: #fff; line-height: 1.3; }
+  .program-presenter { font-size: .7rem; color: rgba(255,255,255,.4); margin-top: .15rem; }
+  .program-cat-badge { font-size: .58rem; font-weight: 700; color: #fff; padding: .18rem .55rem; border-radius: 20px; white-space: nowrap; }
+  .program-empty { font-size: .7rem; color: rgba(255,255,255,.15); padding: .5rem .8rem; font-style: italic; }
+  .legend-pill { font-size: .67rem; font-weight: 600; color: #fff; background: var(--lc,#006837); opacity: .75; padding: .18rem .65rem; border-radius: 20px; }
 
-  .program-inner { padding: .6rem .85rem; }
-
-  .program-time {
-    font-size: .68rem; color: rgba(255,255,255,.4);
-    margin-bottom: .25rem; font-weight: 600;
-  }
-  .program-title {
-    font-size: .88rem; font-weight: 700; color: #fff;
-    line-height: 1.3;
-  }
-  .program-presenter {
-    font-size: .72rem; color: rgba(255,255,255,.45); margin-top: .2rem;
-  }
-  .program-cat-badge {
-    font-size: .6rem; font-weight: 700; color: #fff;
-    padding: .2rem .6rem; border-radius: 20px;
-    letter-spacing: .03em; white-space: nowrap;
-  }
-
-  .program-empty {
-    font-size: .72rem; color: rgba(255,255,255,.18);
-    padding: .55rem .85rem; font-style: italic;
-  }
-
-  /* Légende */
-  .legend-pill {
-    font-size: .68rem; font-weight: 600; color: #fff;
-    background: var(--lc, #006837); opacity: .75;
-    padding: .2rem .7rem; border-radius: 20px;
-  }
-
-  @keyframes livePulse {
-    0%,100% { opacity:1; } 50% { opacity:.4; }
-  }
+  @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 </style>
 {% endblock %}
 
 {% block content %}
+<div style="background:#0d1117;min-height:100vh;padding:1.5rem 0 4rem;">
+<div class="container-fluid px-lg-4">
 
-<!-- ── Player section ── -->
-<div class="live-hero">
-  <div id="playerSection" style="background:#000;">
+  <!-- ══════════ RANGÉE PRINCIPALE : PLAYER + PROCHAINES ÉMISSIONS ══════════ -->
+  <div class="row g-3 mb-3">
 
-    {% if live %}
-      <!-- LIVE info bar -->
-      <div class="d-flex align-items-center gap-3 px-3 py-2" style="background:rgba(0,0,0,.7);border-bottom:1px solid rgba(255,255,255,.06);">
-        <span class="live-badge"><span style="width:7px;height:7px;border-radius:50%;background:#fff;display:inline-block;"></span>EN DIRECT</span>
-        <span class="text-white fw-semibold" style="font-size:.9rem;">{{ live.title }}</span>
-        {% if live.started_at %}
-        <small class="text-muted ms-auto" style="font-size:.72rem;">Démarré à {{ live.started_at|time:"H:i" }}</small>
+    <!-- ── Colonne player (gauche, large) ── -->
+    <div class="col-lg-8">
+
+      <!-- Info bar -->
+      <div class="d-flex align-items-center gap-3 mb-2 flex-wrap">
+        {% if live %}
+          <span class="live-badge">
+            <span style="width:7px;height:7px;border-radius:50%;background:#fff;display:inline-block;"></span>
+            EN DIRECT
+          </span>
+          <span class="text-white fw-600" style="font-size:.9rem;">{{ live.title }}</span>
+          {% if live.started_at %}
+          <small style="color:rgba(255,255,255,.4);font-size:.72rem;margin-left:auto;">
+            <i class="far fa-clock me-1"></i>Démarré à {{ live.started_at|time:"H:i" }}
+          </small>
+          {% endif %}
+        {% else %}
+          <span style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.4);
+                       font-size:.7rem;font-weight:700;padding:.25rem .7rem;border-radius:20px;letter-spacing:.06em;">
+            HORS LIGNE
+          </span>
+          <span style="color:rgba(255,255,255,.4);font-size:.82rem;">Children's Fruit WebTV</span>
         {% endif %}
-      </div>
-
-      <!-- Player -->
-      <div class="live-player-wrap" id="livePlayerWrap">
-        {% if live.platform == 'youtube' %}
-          <iframe
-            src="{{ live.get_embed_url }}"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowfullscreen
-            title="{{ live.title }}">
-          </iframe>
-
-        {% elif live.platform == 'hls' %}
-          <video id="hlsVideo" controls autoplay playsinline style="width:100%;height:100%;background:#000;">
-            Votre navigateur ne supporte pas la lecture HLS.
-          </video>
-          <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
-          <script>
-            (function(){
-              const src = "{{ live.stream_url|escapejs }}";
-              const video = document.getElementById('hlsVideo');
-              if (Hls.isSupported()) {
-                const hls = new Hls();
-                hls.loadSource(src);
-                hls.attachMedia(video);
-              } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = src;
-              }
-            })();
-          </script>
-
-        {% elif live.platform == 'facebook' %}
-          <iframe
-            src="{{ live.stream_url }}"
-            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-            allowfullscreen
-            style="width:100%;height:100%;border:none;">
-          </iframe>
-        {% endif %}
-      </div>
-
-    {% else %}
-      <!-- Offline screen -->
-      <div class="offline-screen">
-        <i class="fas fa-satellite-dish fa-3x mb-3" style="opacity:.3;color:var(--green);"></i>
-        <h4 class="text-white fw-bold mb-2">Pas de direct en ce moment</h4>
-        <p style="font-size:.88rem;max-width:360px;text-align:center;">
-          Consultez la grille ci-dessous pour connaître les prochaines émissions.
-        </p>
-        <a href="{% url 'video_list' %}" class="btn btn-sm mt-3 rounded-pill px-4"
-           style="background:rgba(0,104,55,.2);color:var(--green);border:1px solid rgba(0,104,55,.3);">
-          <i class="fas fa-play me-1"></i>Voir les replays
-        </a>
-      </div>
-    {% endif %}
-
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════
-     GRILLE 24H
-     ══════════════════════════════════════════════════════════ -->
-<section style="background:#0d1117;padding:3rem 0 5rem;">
-  <div class="container-fluid px-lg-5">
-
-    <!-- En-tête -->
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
-      <div>
-        <span style="background:rgba(0,104,55,.15);color:var(--green);font-size:.72rem;font-weight:700;
-                     padding:.3rem .85rem;border-radius:20px;letter-spacing:.05em;border:1px solid rgba(0,104,55,.3);">
-          <i class="fas fa-calendar-alt me-1"></i>PROGRAMME
-        </span>
-        <h2 class="text-white fw-800 mt-2 mb-0" style="font-size:1.5rem;">
-          Grille 24h — <span style="color:var(--green);">{{ today|date:"l d F Y"|capfirst }}</span>
-        </h2>
-        <p style="color:rgba(255,255,255,.4);font-size:.82rem;margin-top:.3rem;">
-          Heure locale · Abidjan (GMT+0)
-        </p>
-      </div>
-      <div class="d-flex gap-2 flex-wrap align-items-center">
-        <!-- Horloge live -->
-        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
-                    border-radius:12px;padding:.5rem 1rem;display:flex;align-items:center;gap:.5rem;">
-          <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;
+        <!-- Horloge -->
+        <div class="ms-auto d-flex align-items-center gap-2"
+             style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+                    border-radius:10px;padding:.3rem .8rem;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;
                        display:inline-block;animation:livePulse 1.5s infinite;"></span>
-          <span class="text-white fw-700" id="liveClock" style="font-size:.95rem;font-family:monospace;">
+          <span class="text-white fw-700" id="liveClock" style="font-size:.88rem;font-family:monospace;">
             {{ now_hour|stringformat:"02d" }}:{{ now_min|stringformat:"02d" }}
           </span>
         </div>
-        <!-- Bouton aller à maintenant -->
-        <button id="btnNow" class="btn btn-sm rounded-pill px-3"
-                style="background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3);font-size:.78rem;">
-          <i class="fas fa-crosshairs me-1"></i>Maintenant
-        </button>
-        <a href="{% url 'live_control' %}" class="btn btn-sm rounded-pill px-3"
-           style="background:rgba(0,104,55,.15);color:var(--green);border:1px solid rgba(0,104,55,.3);font-size:.78rem;">
-          <i class="fas fa-sliders me-1"></i>Gérer
-        </a>
+      </div>
+
+      <!-- Player -->
+      <div class="player-card">
+        {% if live %}
+          <div class="player-ratio">
+            {% if live.platform == 'youtube' %}
+              <iframe src="{{ live.get_embed_url }}"
+                      allow="autoplay; encrypted-media; picture-in-picture"
+                      allowfullscreen title="{{ live.title }}"></iframe>
+            {% elif live.platform == 'hls' %}
+              <video id="hlsVideo" controls autoplay playsinline style="width:100%;height:100%;background:#000;">
+                Votre navigateur ne supporte pas la lecture HLS.
+              </video>
+            {% elif live.platform == 'facebook' %}
+              <iframe src="{{ live.stream_url }}"
+                      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                      allowfullscreen style="width:100%;height:100%;border:none;"></iframe>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="offline-screen">
+            <i class="fas fa-satellite-dish fa-3x mb-3" style="opacity:.25;color:var(--green);"></i>
+            <h4 class="text-white fw-bold mb-2" style="font-size:1.1rem;">Pas de direct en ce moment</h4>
+            <p style="font-size:.85rem;max-width:320px;text-align:center;color:rgba(255,255,255,.4);">
+              Consultez les prochaines émissions à droite ou la grille 24h ci-dessous.
+            </p>
+            <a href="https://www.youtube.com/@CFRUIT24" target="_blank" rel="noopener"
+               class="btn btn-sm rounded-pill px-4 mt-2"
+               style="background:#ff0000;color:#fff;font-size:.8rem;">
+              <i class="fab fa-youtube me-1"></i>Chaîne YouTube
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ── Commentaires + Don ── -->
+      <div class="row g-3 mt-1">
+
+        <!-- Commentaires (chat) -->
+        <div class="col-md-8">
+          <div class="chat-panel">
+            <div style="padding:.75rem 1rem .5rem;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;
+                        display:flex;align-items:center;justify-content:between;gap:.5rem;">
+              <span class="text-white fw-700" style="font-size:.85rem;">
+                <i class="fas fa-comments me-2" style="color:var(--orange);"></i>Chat Live
+              </span>
+              <span class="live-indicator ms-2" style="font-size:.68rem;color:rgba(255,255,255,.4);">
+                <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;animation:livePulse 1.2s infinite;margin-right:4px;"></span>
+                En temps réel
+              </span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+              <div class="text-center py-3" id="chatLoader">
+                <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+              </div>
+            </div>
+            <div class="chat-input-wrap">
+              {% if user.is_authenticated %}
+              <form id="chatForm" class="d-flex gap-2">
+                {% csrf_token %}
+                <input type="text" id="chatInput" class="form-control chat-input flex-grow-1"
+                       placeholder="Écrire un message…" maxlength="500" autocomplete="off">
+                <button type="submit" class="btn btn-sm rounded-pill px-3 fw-600 flex-shrink-0"
+                        style="background:var(--green);color:#fff;font-size:.8rem;">
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+              </form>
+              {% else %}
+              <div class="text-center py-1" style="font-size:.8rem;color:rgba(255,255,255,.4);">
+                <a href="{% url 'login' %}" style="color:var(--orange);font-weight:600;">Connectez-vous</a>
+                pour participer au chat.
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Faire un Don -->
+        <div class="col-md-4">
+          <div style="background:linear-gradient(135deg,rgba(247,148,29,.12) 0%,rgba(247,148,29,.04) 100%);
+                      border:1px solid rgba(247,148,29,.25);border-radius:16px;padding:1.4rem 1.2rem;
+                      height:100%;display:flex;flex-direction:column;align-items:center;
+                      justify-content:center;text-align:center;gap:.85rem;">
+            <div style="width:56px;height:56px;border-radius:50%;background:rgba(247,148,29,.15);
+                        display:flex;align-items:center;justify-content:center;">
+              <i class="fas fa-hand-holding-heart" style="font-size:1.5rem;color:var(--orange);"></i>
+            </div>
+            <div>
+              <div class="text-white fw-700 mb-1" style="font-size:.95rem;">Soutenez-nous</div>
+              <p style="color:rgba(255,255,255,.5);font-size:.78rem;line-height:1.5;margin:0;">
+                Votre don finance nos émissions et nos actions pour les enfants.
+              </p>
+            </div>
+            <a href="{% url 'donation' %}" class="btn btn-sm rounded-pill px-4 w-100 fw-700"
+               style="background:var(--orange);color:#fff;font-size:.85rem;">
+              <i class="fas fa-heart me-1"></i>Faire un Don
+            </a>
+            <a href="{% url 'partnership_request' %}"
+               class="btn btn-sm rounded-pill px-4 w-100"
+               style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);
+                      border:1px solid rgba(255,255,255,.1);font-size:.78rem;">
+              <i class="fas fa-handshake me-1"></i>Devenir Partenaire
+            </a>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- Légende catégories -->
-    <div class="d-flex flex-wrap gap-2 mb-4">
-      <span style="font-size:.7rem;color:rgba(255,255,255,.4);align-self:center;margin-right:.3rem;">Catégories :</span>
-      <span class="legend-pill" style="--lc:#006837;">Culte & Prière</span>
-      <span class="legend-pill" style="--lc:#8b5cf6;">Témoignages</span>
-      <span class="legend-pill" style="--lc:#f59e0b;">Enfants</span>
-      <span class="legend-pill" style="--lc:#3b82f6;">Enseignement</span>
-      <span class="legend-pill" style="--lc:#ef4444;">Actualités</span>
-      <span class="legend-pill" style="--lc:#ec4899;">Musique</span>
-      <span class="legend-pill" style="--lc:#f7941d;">Spéciale</span>
-      <span class="legend-pill" style="--lc:#06b6d4;">Conférence</span>
+    <!-- ── Colonne droite : prochaines émissions ── -->
+    <div class="col-lg-4">
+      <div class="next-panel h-100" style="max-height:none;">
+        <div class="next-panel-header">
+          <div class="text-white fw-700 mb-0" style="font-size:.88rem;">
+            <i class="fas fa-calendar-alt me-2" style="color:var(--orange);"></i>Émissions du jour
+          </div>
+          <div style="font-size:.7rem;color:rgba(255,255,255,.35);margin-top:.2rem;">
+            {{ today|date:"l d F Y"|capfirst }}
+          </div>
+        </div>
+        <div class="next-panel-body">
+          {% with has_slots=False %}
+          {% for block in grid_24h %}
+            {% if block.slots %}
+            {% for slot in block.slots %}
+            {% if slot.start_time.hour == block.hour %}
+            <div class="next-slot {% if slot.is_on_air %}is-live{% endif %}">
+              <div class="next-slot-dot" style="background:{{ slot.color }};
+                           {% if slot.is_on_air %}box-shadow:0 0 6px {{ slot.color }};{% endif %}">
+              </div>
+              <div class="flex-grow-1 min-w-0">
+                <div class="next-slot-time">
+                  {{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}
+                  {% if slot.is_on_air %}
+                  <span class="live-badge ms-1" style="font-size:.55rem;padding:.12rem .45rem;animation:none;background:#dc2626;">LIVE</span>
+                  {% endif %}
+                </div>
+                <div class="next-slot-title">{{ slot.title }}</div>
+                {% if slot.presenter %}
+                <div class="next-slot-cat"><i class="fas fa-microphone me-1" style="font-size:.55rem;"></i>{{ slot.presenter }}</div>
+                {% endif %}
+                <div class="next-slot-cat">{{ slot.get_category_display }} · {{ slot.duration_minutes }} min</div>
+              </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+          {% endfor %}
+          {% endwith %}
+
+          {% comment %}Si aucun slot aujourd'hui{% endcomment %}
+          {% with count=0 %}
+          {% for b in grid_24h %}{% for s in b.slots %}{% endfor %}{% endfor %}
+          {% endwith %}
+
+          <!-- Vide si aucun programme -->
+          <div id="noSlots" style="display:none;text-align:center;padding:2rem 1rem;color:rgba(255,255,255,.3);">
+            <i class="fas fa-calendar-plus fa-2x d-block mb-2 opacity-25"></i>
+            <p style="font-size:.8rem;">Aucune émission aujourd'hui.<br>
+              <a href="{% url 'live_control' %}" style="color:var(--green);">Ajouter</a>
+            </p>
+          </div>
+        </div>
+
+        <!-- Boutons bas -->
+        <div style="padding:.75rem .9rem;border-top:1px solid rgba(255,255,255,.06);
+                    display:flex;gap:.5rem;flex-shrink:0;">
+          <button id="btnNow" class="btn btn-sm rounded-pill flex-grow-1"
+                  style="background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.25);font-size:.75rem;">
+            <i class="fas fa-crosshairs me-1"></i>Maintenant
+          </button>
+          <a href="{% url 'live_control' %}" class="btn btn-sm rounded-pill flex-grow-1"
+             style="background:rgba(0,104,55,.12);color:var(--green);border:1px solid rgba(0,104,55,.25);font-size:.75rem;">
+            <i class="fas fa-sliders me-1"></i>Gérer
+          </a>
+        </div>
+      </div>
     </div>
 
-    <!-- Grille 24h -->
+  </div><!-- /row principale -->
+
+
+  <!-- ══════════ GRILLE 24H ══════════ -->
+  <div class="mt-4 pt-4" style="border-top:1px solid rgba(255,255,255,.06);">
+
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+      <div>
+        <span style="background:rgba(0,104,55,.15);color:var(--green);font-size:.7rem;font-weight:700;
+                     padding:.28rem .8rem;border-radius:20px;letter-spacing:.05em;border:1px solid rgba(0,104,55,.3);">
+          <i class="fas fa-calendar-alt me-1"></i>PROGRAMME
+        </span>
+        <h2 class="text-white fw-800 mt-2 mb-0" style="font-size:1.3rem;">
+          Grille 24h — <span style="color:var(--green);">{{ today|date:"l d F Y"|capfirst }}</span>
+        </h2>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="legend-pill" style="--lc:#006837;">Culte</span>
+        <span class="legend-pill" style="--lc:#8b5cf6;">Témoignages</span>
+        <span class="legend-pill" style="--lc:#f59e0b;">Enfants</span>
+        <span class="legend-pill" style="--lc:#3b82f6;">Enseignement</span>
+        <span class="legend-pill" style="--lc:#ef4444;">Actualités</span>
+        <span class="legend-pill" style="--lc:#ec4899;">Musique</span>
+        <span class="legend-pill" style="--lc:#f7941d;">Spéciale</span>
+        <span class="legend-pill" style="--lc:#06b6d4;">Conférence</span>
+      </div>
+    </div>
+
     <div class="grid-24h" id="grid24h">
       {% for block in grid_24h %}
       <div class="grid-row {% if block.is_now %}grid-row--now{% endif %}" id="hour-{{ block.hour }}">
-
-        <!-- Colonne heure -->
         <div class="grid-hour">
           <span class="hour-label {% if block.is_now %}hour-label--now{% endif %}">
             {{ block.hour|stringformat:"02d" }}:00
           </span>
-          {% if block.is_now %}
-          <span class="now-pill">EN COURS</span>
-          {% endif %}
+          {% if block.is_now %}<span class="now-pill">LIVE</span>{% endif %}
         </div>
-
-        <!-- Colonne programme -->
         <div class="grid-content">
           {% if block.slots %}
             {% for slot in block.slots %}
-            <div class="program-block {% if slot.is_on_air %}program-block--live{% endif %} {% if slot.is_highlighted %}program-block--special{% endif %}"
-                 style="--pc:{{ slot.color }};">
+            <div class="program-block {% if slot.is_on_air %}program-block--live{% endif %}" style="--pc:{{ slot.color }};">
               <div class="program-inner">
-                <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
+                <div class="d-flex align-items-start justify-content-between gap-2">
                   <div class="flex-grow-1 min-w-0">
                     <div class="program-time">
-                      <i class="far fa-clock me-1" style="font-size:.62rem;"></i>
-                      {{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}
-                      <span class="ms-1" style="opacity:.6;">· {{ slot.duration_minutes }} min</span>
+                      {{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }} · {{ slot.duration_minutes }} min
                     </div>
                     <div class="program-title">{{ slot.title }}</div>
                     {% if slot.presenter %}
-                    <div class="program-presenter">
-                      <i class="fas fa-microphone me-1" style="font-size:.6rem;"></i>{{ slot.presenter }}
-                    </div>
+                    <div class="program-presenter"><i class="fas fa-microphone me-1" style="font-size:.55rem;"></i>{{ slot.presenter }}</div>
                     {% endif %}
                   </div>
                   <div class="d-flex flex-column align-items-end gap-1 flex-shrink-0">
-                    <span class="program-cat-badge" style="background:var(--pc);">
-                      {{ slot.get_category_display }}
-                    </span>
-                    {% if slot.is_on_air %}
-                    <span class="live-badge" style="font-size:.6rem;padding:.15rem .5rem;">
-                      <span style="width:5px;height:5px;border-radius:50%;background:#fff;display:inline-block;"></span>
-                      LIVE
-                    </span>
-                    {% endif %}
-                    {% if slot.is_highlighted %}
-                    <span style="font-size:.62rem;color:var(--orange);">&#9733; Spécial</span>
-                    {% endif %}
+                    <span class="program-cat-badge" style="background:var(--pc);">{{ slot.get_category_display }}</span>
+                    {% if slot.is_on_air %}<span class="live-badge" style="font-size:.58rem;padding:.12rem .45rem;animation:none;">LIVE</span>{% endif %}
+                    {% if slot.is_highlighted %}<span style="font-size:.6rem;color:var(--orange);">&#9733; Spécial</span>{% endif %}
                   </div>
                 </div>
               </div>
             </div>
             {% endfor %}
           {% else %}
-            <div class="program-empty">
-              <i class="fas fa-circle-dashed me-2" style="opacity:.3;font-size:.7rem;"></i>
-              Disponible
-            </div>
+            <div class="program-empty"><i class="fas fa-minus me-1"></i>Disponible</div>
           {% endif %}
         </div>
-
       </div>
       {% endfor %}
     </div>
 
-    <!-- Prochains jours -->
     {% if schedule_week %}
     <div class="mt-5">
-      <h3 class="text-white fw-700 mb-4" style="font-size:1.1rem;">
+      <h3 class="text-white fw-700 mb-4" style="font-size:1rem;">
         <i class="fas fa-calendar-week me-2" style="color:var(--orange);"></i>Prochainement
       </h3>
       {% regroup schedule_week by date as week_days %}
       {% for day in week_days %}
       <div class="mb-4">
-        <div class="mb-2" style="font-size:.72rem;font-weight:700;text-transform:uppercase;
-                                  letter-spacing:.08em;color:var(--green);">
-          <i class="fas fa-calendar me-1"></i>{{ day.grouper|date:"l d F Y"|capfirst }}
+        <div class="mb-2" style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);">
+          {{ day.grouper|date:"l d F Y"|capfirst }}
         </div>
         <div class="d-flex flex-column gap-2">
           {% for slot in day.list %}
           <div class="program-block" style="--pc:{{ slot.color }};">
             <div class="program-inner d-flex gap-3 align-items-center">
-              <div class="program-time" style="min-width:110px;">{{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}</div>
+              <div class="program-time" style="min-width:110px;margin:0;">{{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}</div>
               <div class="flex-grow-1">
-                <div class="program-title" style="font-size:.88rem;">{{ slot.title }}</div>
+                <div class="program-title" style="font-size:.85rem;">{{ slot.title }}</div>
                 {% if slot.presenter %}<div class="program-presenter">{{ slot.presenter }}</div>{% endif %}
               </div>
               <span class="program-cat-badge" style="background:var(--pc);">{{ slot.get_category_display }}</span>
@@ -364,64 +487,118 @@
     </div>
     {% endif %}
 
-    {% if not grid_24h and not schedule_week %}
-    <div class="text-center py-5" style="color:rgba(255,255,255,.3);">
-      <i class="fas fa-calendar-plus fa-3x d-block mb-3 opacity-25"></i>
-      <p>La grille n'a pas encore été remplie.<br>
-        <a href="{% url 'live_control' %}" style="color:var(--green);">Ajouter des émissions</a>
-      </p>
-    </div>
-    {% endif %}
-
   </div>
-</section>
 
+</div>
+</div>
 {% endblock %}
 
+
 {% block extra_js %}
+{% if live and live.platform == 'hls' %}
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
 <script>
-// ── Horloge temps réel ──
-(function () {
-  function tick() {
-    const now = new Date();
-    const hh  = String(now.getHours()).padStart(2, '0');
-    const mm  = String(now.getMinutes()).padStart(2, '0');
-    const el  = document.getElementById('liveClock');
-    if (el) el.textContent = hh + ':' + mm;
-  }
-  tick();
-  setInterval(tick, 10000);
-})();
-
-// ── Scroll vers l'heure actuelle ──
-(function () {
-  const nowHour = {{ now_hour }};
-  const target  = document.getElementById('hour-' + nowHour);
-  if (target) {
-    setTimeout(() => {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 500);
+(function(){
+  const src   = "{{ live.stream_url|escapejs }}";
+  const video = document.getElementById('hlsVideo');
+  if (!video) return;
+  if (Hls.isSupported()) {
+    const hls = new Hls();
+    hls.loadSource(src);
+    hls.attachMedia(video);
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = src;
   }
 })();
+</script>
+{% endif %}
 
-// ── Bouton "Maintenant" ──
-document.getElementById('btnNow')?.addEventListener('click', () => {
-  const nowHour = {{ now_hour }};
-  const target  = document.getElementById('hour-' + nowHour);
-  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+<script>
+const CSRF = '{{ csrf_token }}';
+
+/* ── Horloge ── */
+(function(){
+  function tick(){
+    const n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0');
+    const el=document.getElementById('liveClock');
+    if(el) el.textContent=h+':'+m;
+  }
+  tick(); setInterval(tick,10000);
+})();
+
+/* ── Scroll vers heure courante ── */
+(function(){
+  const t=document.getElementById('hour-{{ now_hour }}');
+  if(t) setTimeout(()=>t.scrollIntoView({behavior:'smooth',block:'start'}),500);
+})();
+document.getElementById('btnNow')?.addEventListener('click',()=>{
+  const t=document.getElementById('hour-{{ now_hour }}');
+  if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
 });
 
-// ── Auto-refresh si hors ligne (vérifie toutes les 30s) ──
-(function () {
-  const isLive = {{ live|yesno:"true,false" }};
-  if (!isLive) {
-    setInterval(function () {
-      fetch('{% url "live_status" %}')
-        .then(r => r.json())
-        .then(data => { if (data.is_live) location.reload(); })
-        .catch(() => {});
-    }, 30000);
-  }
-})();
+/* ── Chat live (utilise l'API community messages) ── */
+let lastMsgId = 0;
+
+function chatMsgHTML(m){
+  const init = m.user[0].toUpperCase();
+  const txt  = m.text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<div class="chat-msg" data-id="${m.id}">
+    <div class="chat-avatar">${init}</div>
+    <div class="chat-bubble">
+      <div class="chat-user">${m.user}</div>
+      <div class="chat-text">${txt}</div>
+      <div class="chat-time">${m.created_at}</div>
+    </div>
+  </div>`;
+}
+
+function loadChat(){
+  fetch('/communaute/messages/?after='+lastMsgId)
+    .then(r=>r.json())
+    .then(d=>{
+      const box=document.getElementById('chatMessages');
+      document.getElementById('chatLoader')?.remove();
+      if(!d.messages || !d.messages.length) {
+        if(!lastMsgId) box.innerHTML='<div style="text-align:center;padding:2rem;color:rgba(255,255,255,.3);font-size:.8rem;">Soyez le premier à écrire !</div>';
+        return;
+      }
+      box.querySelector('div[style*="text-align:center"]')?.remove();
+      d.messages.forEach(m=>{
+        if(m.id>lastMsgId){ lastMsgId=m.id; box.insertAdjacentHTML('beforeend',chatMsgHTML(m)); }
+      });
+      box.scrollTop=box.scrollHeight;
+    }).catch(()=>{});
+}
+
+loadChat();
+setInterval(loadChat, 5000);
+
+document.getElementById('chatForm')?.addEventListener('submit', e=>{
+  e.preventDefault();
+  const inp=document.getElementById('chatInput');
+  const txt=inp.value.trim();
+  if(!txt) return;
+  const btn=e.target.querySelector('button[type=submit]');
+  btn.disabled=true;
+  fetch('/communaute/messages/',{
+    method:'POST',
+    headers:{'X-CSRFToken':CSRF},
+    body:new URLSearchParams({text:txt})
+  }).then(r=>r.json()).then(m=>{
+    if(m.error){alert(m.error);return;}
+    inp.value='';
+    const box=document.getElementById('chatMessages');
+    box.querySelector('div[style*="text-align:center"]')?.remove();
+    if(m.id>lastMsgId){lastMsgId=m.id;box.insertAdjacentHTML('beforeend',chatMsgHTML(m));}
+    box.scrollTop=box.scrollHeight;
+  }).finally(()=>btn.disabled=false);
+});
+
+/* ── Auto-refresh si hors ligne ── */
+{% if not live %}
+setInterval(function(){
+  fetch('{% url "live_status" %}').then(r=>r.json()).then(d=>{if(d.is_live)location.reload();}).catch(()=>{});
+},30000);
+{% endif %}
 </script>
 {% endblock %}
