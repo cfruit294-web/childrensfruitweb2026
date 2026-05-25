@@ -41,6 +41,12 @@
   .vid-thumb-item:hover { background: rgba(255,255,255,.07); }
   .vid-thumb-item.active-vid { background: rgba(0,104,55,.12); border-color: rgba(0,104,55,.35); }
   .vid-thumb-img { width: 108px; height: 60px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: #1a1a2e; }
+  .cat-divider { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+                 color: var(--orange); padding: .55rem .4rem .3rem; margin-top: .5rem;
+                 border-top: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; gap: 6px; }
+  .cat-divider:first-child { border-top: none; margin-top: 0; }
+  .cat-divider .cat-count { background: rgba(247,148,29,.15); color: var(--orange);
+                             border-radius: 20px; padding: 1px 7px; font-size: .6rem; }
 </style>
 {% endblock %}
 
@@ -189,13 +195,18 @@
     <div class="sidebar-panel sticky-top" style="top:80px;">
       <h6 class="text-white fw-700 mb-3" style="font-size:.85rem;">
         <i class="fas fa-play-circle me-2" style="color:var(--orange);"></i>
-        Toutes les vidéos
+        Vidéos par catégorie
         <span class="badge ms-1 rounded-pill" style="background:rgba(247,148,29,.15);color:var(--orange);font-size:.65rem;">
           {{ all_videos|length }}
         </span>
       </h6>
       <div class="sidebar-scroll">
-        {% for rv in all_videos %}
+        {% for cat_label, cat_videos in videos_by_category %}
+        <div class="cat-divider">
+          <span>{{ cat_label }}</span>
+          <span class="cat-count">{{ cat_videos|length }}</span>
+        </div>
+        {% for rv in cat_videos %}
         <a href="{% url 'video_detail' rv.pk %}"
            class="vid-thumb-item mb-1 {% if rv.pk == video.pk %}active-vid{% endif %}">
           <div class="position-relative" style="flex-shrink:0;">
@@ -212,7 +223,7 @@
               </div>
             {% endif %}
             {% if rv.pk == video.pk %}
-            <div class="position-absolute inset-0 d-flex align-items-center justify-content-center"
+            <div class="position-absolute d-flex align-items-center justify-content-center"
                  style="inset:0;border-radius:6px;background:rgba(0,104,55,.5);">
               <i class="fas fa-play text-white" style="font-size:.85rem;"></i>
             </div>
@@ -223,13 +234,9 @@
               {{ rv.title }}
             </div>
             <small class="text-muted" style="font-size:.68rem;">{{ rv.created_at|date:"d/m/Y" }}</small>
-            <div class="mt-1">
-              <span class="badge rounded-pill" style="background:rgba(247,148,29,.12);color:var(--orange);font-size:.6rem;">
-                {{ rv.get_category_display }}
-              </span>
-            </div>
           </div>
         </a>
+        {% endfor %}
         {% empty %}
         <p class="text-muted small text-center py-3">Aucune vidéo disponible.</p>
         {% endfor %}

@@ -217,7 +217,15 @@ class VideoDetailView(LoginRequiredMixin, UpdateLastSeenMixin, DetailView):
             VideoContent.objects.filter(category=video.category)
             .exclude(pk=video.pk)[:4]
         )
-        context['all_videos'] = VideoContent.objects.all()[:30]
+        # Grouper toutes les vidéos par catégorie pour la sidebar
+        all_vids = VideoContent.objects.all()
+        videos_by_category = []
+        for cat_key, cat_label in VideoContent.CATEGORY_CHOICES:
+            vids = [v for v in all_vids if v.category == cat_key]
+            if vids:
+                videos_by_category.append((cat_label, vids))
+        context['videos_by_category'] = videos_by_category
+        context['all_videos'] = all_vids
         context['user_liked'] = (
             self.request.user.is_authenticated
             and VideoLike.objects.filter(video=video, user=self.request.user).exists()
