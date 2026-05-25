@@ -12,30 +12,73 @@
   /* Task badges */
   .task-deadline { font-size:.7rem; color:var(--text-muted); }
   .task-item {
-    padding: .7rem 1rem; border-bottom: 1px solid var(--border);
-    display: flex; align-items: flex-start; gap: .75rem;
-    transition: background .15s;
+    padding:.7rem 1rem; border-bottom:1px solid var(--border);
+    display:flex; align-items:flex-start; gap:.75rem; transition:background .15s;
   }
-  .task-item:last-child { border-bottom: none; }
-  .task-item:hover { background: var(--green-pale); }
+  .task-item:last-child { border-bottom:none; }
+  .task-item:hover { background:var(--green-pale); }
 
   /* Online members */
   .member-pill {
-    display: flex; align-items: center; gap: 8px;
-    padding: .45rem .85rem; border-radius: var(--radius-pill);
-    background: #fff; border: 1px solid var(--border);
-    font-size: .8rem; font-weight: 500; box-shadow: var(--shadow-sm);
+    display:flex; align-items:center; gap:8px;
+    padding:.45rem .85rem; border-radius:var(--radius-pill);
+    background:#fff; border:1px solid var(--border);
+    font-size:.8rem; font-weight:500; box-shadow:var(--shadow-sm);
   }
 
-  /* Chat input */
+  /* Chat */
   .chat-input {
-    background: rgba(255,255,255,.08) !important;
-    border: 1px solid rgba(255,255,255,.15) !important;
-    color: #fff !important; border-radius: var(--radius-pill) !important;
-    flex: 1; font-size: .88rem;
+    background:rgba(255,255,255,.08)!important;
+    border:1px solid rgba(255,255,255,.15)!important;
+    color:#fff!important; border-radius:var(--radius-pill)!important;
+    flex:1; font-size:.88rem;
   }
-  .chat-input::placeholder { color: rgba(255,255,255,.35) !important; }
-  .chat-input:focus { box-shadow: 0 0 0 2px rgba(0,104,55,.4) !important; }
+  .chat-input::placeholder { color:rgba(255,255,255,.35)!important; }
+  .chat-input:focus { box-shadow:0 0 0 2px rgba(0,104,55,.4)!important; }
+
+  /* Chat toolbar */
+  .chat-toolbar { display:flex; align-items:center; gap:6px; padding:8px 14px 0; }
+  .toolbar-btn {
+    width:34px; height:34px; border-radius:50%; border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:.95rem;
+    background:rgba(255,255,255,.1); color:rgba(255,255,255,.75);
+    transition:background .18s, color .18s; flex-shrink:0;
+  }
+  .toolbar-btn:hover { background:rgba(255,255,255,.22); color:#fff; }
+  .toolbar-btn.recording { background:rgba(220,38,38,.35); color:#fca5a5; animation:recPulse 1s infinite; }
+  @keyframes recPulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+  /* Image preview */
+  #imgPreviewWrap {
+    display:none; padding:8px 14px 0; gap:8px; align-items:center;
+  }
+  #imgPreviewWrap img { height:56px; width:56px; object-fit:cover; border-radius:8px; border:2px solid rgba(255,255,255,.2); }
+  #imgPreviewWrap .remove-img { background:rgba(220,38,38,.7); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:.65rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+  /* Sticker picker modal */
+  #stickerModal .modal-content { background:#1a1a2e; border:1px solid rgba(255,255,255,.12); border-radius:16px; }
+  #stickerModal .modal-header { border-bottom:1px solid rgba(255,255,255,.08); }
+  .sticker-search { background:rgba(255,255,255,.08)!important; border:1px solid rgba(255,255,255,.15)!important; color:#fff!important; border-radius:20px!important; }
+  .sticker-search::placeholder { color:rgba(255,255,255,.35)!important; }
+  .sticker-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; max-height:320px; overflow-y:auto; }
+  .sticker-grid::-webkit-scrollbar { width:4px; }
+  .sticker-grid::-webkit-scrollbar-thumb { background:rgba(255,255,255,.2); border-radius:2px; }
+  .sticker-item { cursor:pointer; border-radius:10px; overflow:hidden; aspect-ratio:1; transition:transform .15s, box-shadow .15s; }
+  .sticker-item:hover { transform:scale(1.08); box-shadow:0 4px 14px rgba(0,0,0,.4); }
+  .sticker-item img { width:100%; height:100%; object-fit:cover; }
+  .sticker-cats { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .sticker-cat { background:rgba(255,255,255,.1); color:rgba(255,255,255,.7); border:none; border-radius:12px; padding:4px 10px; font-size:.75rem; cursor:pointer; transition:background .15s; }
+  .sticker-cat:hover, .sticker-cat.active { background:var(--green); color:#fff; }
+
+  /* Chat bubble media */
+  .chat-bubble img.chat-img { max-width:220px; max-height:220px; border-radius:10px; display:block; cursor:pointer; }
+  .chat-bubble img.chat-sticker { max-width:140px; max-height:140px; border-radius:6px; display:block; background:transparent; }
+  .chat-audio { width:180px; outline:none; }
+  .chat-bubble.sticker-bubble { background:transparent!important; box-shadow:none!important; padding:2px!important; }
+
+  /* Voice recording UI */
+  #voiceTimerWrap { display:none; align-items:center; gap:8px; padding:8px 14px 0; color:rgba(255,255,255,.8); font-size:.82rem; }
+  .rec-dot { width:8px; height:8px; border-radius:50%; background:#ef4444; animation:recPulse 1s infinite; }
 </style>
 {% endblock %}
 
@@ -54,16 +97,16 @@
           Notre <span style="color:var(--orange);">Communauté</span>
         </h1>
         <p style="color:rgba(255,255,255,.65);font-size:.95rem;">
-          Discutez en temps réel, consultez les tâches ouvertes et suivez nos rapports d'activité.
+          Discutez en temps réel, partagez des images, stickers et messages vocaux.
         </p>
       </div>
       <div class="col-lg-5">
-        <!-- Membres en ligne -->
         <div class="p-3 rounded-xl" style="background:rgba(255,255,255,.07);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);">
           <div class="d-flex align-items-center gap-2 mb-3">
             <span class="online-dot"></span>
             <span class="text-white fw-600" style="font-size:.85rem;">
-              Membres en ligne <span class="badge rounded-pill ms-1" style="background:rgba(34,197,94,.2);color:#22c55e;" id="onlineCount">{{ online_users|length }}</span>
+              Membres en ligne
+              <span class="badge rounded-pill ms-1" style="background:rgba(34,197,94,.2);color:#22c55e;" id="onlineCount">{{ online_users|length }}</span>
             </span>
           </div>
           <div class="d-flex flex-wrap gap-2">
@@ -104,7 +147,6 @@
 
         <!-- Messages -->
         <div class="chat-messages" id="chatMessages">
-          <!-- Initial messages -->
           {% for msg in recent_messages reversed %}
           <div class="d-flex flex-column {% if msg.user == user %}align-items-end{% else %}align-items-start{% endif %}" data-mid="{{ msg.id }}">
             {% if msg.user != user %}
@@ -112,8 +154,16 @@
               {{ msg.user.display_name }}{% if msg.user.country %} <span style="color:rgba(247,148,29,.75);">({{ msg.user.country }})</span>{% endif %} • {{ msg.user.get_role_display }}
             </small>
             {% endif %}
-            <div class="chat-bubble {% if msg.user == user %}own{% else %}other{% endif %}">
-              {{ msg.text }}
+            <div class="chat-bubble {% if msg.user == user %}own{% else %}other{% endif %}{% if msg.msg_type == 'sticker' %} sticker-bubble{% endif %}">
+              {% if msg.msg_type == 'image' and msg.image %}
+                <img src="{{ msg.image.url }}" class="chat-img" onclick="window.open(this.src,'_blank')" alt="image">
+              {% elif msg.msg_type == 'sticker' and msg.sticker_url %}
+                <img src="{{ msg.sticker_url }}" class="chat-sticker" alt="sticker">
+              {% elif msg.msg_type == 'voice' and msg.voice_file %}
+                <audio class="chat-audio" controls src="{{ msg.voice_file.url }}"></audio>
+              {% else %}
+                {{ msg.text }}
+              {% endif %}
             </div>
             <div class="chat-meta {% if msg.user == user %}text-end{% endif %}" style="color:rgba(255,255,255,.35);">
               {{ msg.created_at|date:"H:i" }}
@@ -127,7 +177,44 @@
           {% endfor %}
         </div>
 
-        <!-- Input -->
+        <!-- Image preview -->
+        <div id="imgPreviewWrap" class="d-flex">
+          <img id="imgPreview" src="" alt="aperçu">
+          <button class="remove-img" onclick="clearImage()" title="Supprimer"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Voice timer -->
+        <div id="voiceTimerWrap" class="d-flex">
+          <span class="rec-dot"></span>
+          <span>Enregistrement… <span id="voiceTimer">0:00</span></span>
+          <button class="btn btn-sm ms-2" style="background:rgba(220,38,38,.3);color:#fca5a5;border:none;border-radius:8px;font-size:.75rem;" onclick="stopRecording()">
+            <i class="fas fa-stop me-1"></i>Arrêter &amp; Envoyer
+          </button>
+          <button class="btn btn-sm ms-1" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);border:none;border-radius:8px;font-size:.75rem;" onclick="cancelRecording()">
+            Annuler
+          </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="chat-toolbar">
+          <!-- Image -->
+          <button class="toolbar-btn" title="Envoyer une image" onclick="document.getElementById('imgFileInput').click()">
+            <i class="fas fa-image"></i>
+          </button>
+          <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="onImageSelected(this)">
+
+          <!-- Sticker -->
+          <button class="toolbar-btn" title="Stickers Google" data-bs-toggle="modal" data-bs-target="#stickerModal">
+            <i class="fas fa-face-grin-stars"></i>
+          </button>
+
+          <!-- Vocal -->
+          <button class="toolbar-btn" id="voiceBtn" title="Message vocal" onclick="toggleRecording()">
+            <i class="fas fa-microphone"></i>
+          </button>
+        </div>
+
+        <!-- Input texte -->
         <div class="chat-input-area">
           <input type="text" class="form-control chat-input" id="msgInput"
                  placeholder="Écrire un message… (Entrée pour envoyer)"
@@ -191,7 +278,7 @@
         </div>
         {% endif %}
 
-        <!-- Rapports d'activité (partenaires + bénévoles) -->
+        <!-- Rapports d'activité -->
         {% if activity_reports %}
         <div class="community-card">
           <div class="card-header-cf" style="background:linear-gradient(90deg,#1565c0,#1976d2);">
@@ -200,7 +287,7 @@
           <div class="p-2">
             {% for report in activity_reports %}
             <a href="{{ report.report_file.url }}" target="_blank"
-               class="d-flex align-items-center gap-3 p-2 rounded-xl text-decoration-none mb-1"
+               class="d-flex align-items:center gap-3 p-2 rounded-xl text-decoration-none mb-1"
                style="transition:background .15s;" onmouseover="this.style.background='var(--green-pale)'" onmouseout="this.style.background=''">
               <div style="width:38px;height:38px;border-radius:10px;background:rgba(21,101,192,.1);color:#1565c0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i class="fas fa-file-pdf"></i>
@@ -222,42 +309,92 @@
   </div>
 </div>
 
+<!-- ═══ MODALE STICKERS (Tenor / Google) ═══ -->
+<div class="modal fade" id="stickerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+    <div class="modal-content" id="stickerModal">
+      <div class="modal-header border-0 pb-1">
+        <h6 class="modal-title text-white fw-bold">
+          <i class="fas fa-face-grin-stars me-2" style="color:var(--orange);"></i>Stickers &amp; GIFs
+        </h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-1">
+        <!-- Catégories rapides -->
+        <div class="sticker-cats" id="stickerCats">
+          <button class="sticker-cat active" onclick="searchStickers('praise jesus',this)">Louange</button>
+          <button class="sticker-cat" onclick="searchStickers('amen pray',this)">Prière</button>
+          <button class="sticker-cat" onclick="searchStickers('heart love',this)">Amour</button>
+          <button class="sticker-cat" onclick="searchStickers('happy celebrate',this)">Fête</button>
+          <button class="sticker-cat" onclick="searchStickers('funny laugh',this)">Rires</button>
+          <button class="sticker-cat" onclick="searchStickers('welcome greeting',this)">Bienvenue</button>
+        </div>
+        <!-- Recherche -->
+        <input type="text" class="form-control sticker-search mb-3" id="stickerSearch"
+               placeholder="Rechercher un sticker…" oninput="debounceSearch(this.value)">
+        <!-- Grille résultats -->
+        <div class="sticker-grid" id="stickerGrid">
+          <div class="text-center py-4" style="color:rgba(255,255,255,.35);grid-column:1/-1;">
+            <i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>Chargement…
+          </div>
+        </div>
+        <div class="text-center mt-2">
+          <small style="color:rgba(255,255,255,.25);font-size:.65rem;">Propulsé par Tenor (Google)</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-const CSRF    = '{{ csrf_token }}';
-const ME      = '{{ user.username }}';
-let lastId    = 0;
+const CSRF = '{{ csrf_token }}';
+const ME   = '{{ user.username }}';
+let lastId = 0;
 
-// Initialiser lastId depuis les messages déjà affichés
+// Init lastId depuis messages SSR
 document.querySelectorAll('[data-mid]').forEach(el => {
   const id = parseInt(el.dataset.mid);
   if (id > lastId) lastId = id;
 });
-// Scroll to bottom
 const chatBox = document.getElementById('chatMessages');
 chatBox.scrollTop = chatBox.scrollHeight;
 
-/* ── Rendu d'un message ── */
+/* ────────────────── Rendu d'un message ────────────────── */
 function msgHTML(m) {
   const isMe = m.user === ME;
   const nameLabel = m.display_name || m.user;
   const countrySpan = m.country ? ` <span style="color:rgba(247,148,29,.75);">(${m.country})</span>` : '';
+  const nameHtml = !isMe ? `<small style="color:rgba(255,255,255,.45);font-size:.68rem;margin-bottom:2px;padding-left:4px;">${nameLabel}${countrySpan} • ${m.role}</small>` : '';
+
+  let content = '';
+  if (m.msg_type === 'image' && m.image_url) {
+    content = `<img src="${m.image_url}" class="chat-img" onclick="window.open(this.src,'_blank')" alt="image">`;
+  } else if (m.msg_type === 'sticker' && m.sticker_url) {
+    content = `<img src="${m.sticker_url}" class="chat-sticker" alt="sticker">`;
+  } else if (m.msg_type === 'voice' && m.voice_url) {
+    content = `<audio class="chat-audio" controls src="${m.voice_url}"></audio>`;
+  } else {
+    content = m.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  const bubbleExtra = m.msg_type === 'sticker' ? ' sticker-bubble' : '';
   return `
     <div class="d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'}">
-      ${!isMe ? `<small style="color:rgba(255,255,255,.45);font-size:.68rem;margin-bottom:2px;padding-left:4px;">${nameLabel}${countrySpan} • ${m.role}</small>` : ''}
-      <div class="chat-bubble ${isMe ? 'own' : 'other'}">${m.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      ${nameHtml}
+      <div class="chat-bubble ${isMe ? 'own' : 'other'}${bubbleExtra}">${content}</div>
       <div class="chat-meta ${isMe ? 'text-end' : ''}" style="color:rgba(255,255,255,.35);">${m.created_at}</div>
     </div>`;
 }
 
-/* ── Polling toutes les 3s ── */
+/* ────────────────── Polling 3s ────────────────── */
 function pollMessages() {
   fetch(`/communaute/messages/?after=${lastId}`)
     .then(r => r.json())
     .then(data => {
-      if (data.messages.length > 0) {
+      if (data.messages && data.messages.length > 0) {
         const empty = document.getElementById('emptyChat');
         if (empty) empty.remove();
         const atBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 60;
@@ -272,26 +409,20 @@ function pollMessages() {
 }
 setInterval(pollMessages, 3000);
 
-/* ── Envoi ── */
+/* ────────────────── Envoi texte ────────────────── */
 function sendMsg() {
   const input = document.getElementById('msgInput');
   const text  = input.value.trim();
+
+  // Si une image est sélectionnée, envoyer l'image
+  if (pendingImageFile) { sendImage(); return; }
   if (!text) return;
+
   input.value = '';
-  fetch('/communaute/messages/', {
-    method:  'POST',
-    headers: {'X-CSRFToken': CSRF},
-    body:    new URLSearchParams({text}),
-  })
-  .then(r => r.json())
-  .then(m => {
-    if (m.error) return;
-    if (m.id > lastId) lastId = m.id;
-    const empty = document.getElementById('emptyChat');
-    if (empty) empty.remove();
-    chatBox.insertAdjacentHTML('beforeend', msgHTML(m));
-    chatBox.scrollTop = chatBox.scrollHeight;
-  });
+  const fd = new FormData();
+  fd.append('msg_type', 'text');
+  fd.append('text', text);
+  postMessage(fd);
 }
 
 document.getElementById('sendBtn').addEventListener('click', sendMsg);
@@ -299,10 +430,181 @@ document.getElementById('msgInput').addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
 });
 
-/* ── Tâches live ── */
-function pollTasks() {
-  // Simple: reload task section every 30s via fetch would need a dedicated endpoint
-  // For now, static render is sufficient; tasks update on page reload
+function postMessage(formData) {
+  fetch('/communaute/messages/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': CSRF},
+    body: formData,
+  })
+  .then(r => r.json())
+  .then(m => {
+    if (m.error) { alert(m.error); return; }
+    if (m.id > lastId) lastId = m.id;
+    const empty = document.getElementById('emptyChat');
+    if (empty) empty.remove();
+    chatBox.insertAdjacentHTML('beforeend', msgHTML(m));
+    chatBox.scrollTop = chatBox.scrollHeight;
+  })
+  .catch(() => {});
+}
+
+/* ────────────────── Image ────────────────── */
+let pendingImageFile = null;
+
+function onImageSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) { alert('Image trop grande (max 8 Mo)'); return; }
+  pendingImageFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('imgPreview').src = e.target.result;
+    document.getElementById('imgPreviewWrap').style.display = 'flex';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage() {
+  pendingImageFile = null;
+  document.getElementById('imgPreviewWrap').style.display = 'none';
+  document.getElementById('imgFileInput').value = '';
+}
+
+function sendImage() {
+  if (!pendingImageFile) return;
+  const fd = new FormData();
+  fd.append('msg_type', 'image');
+  fd.append('image', pendingImageFile);
+  clearImage();
+  postMessage(fd);
+}
+
+/* ────────────────── Stickers (Tenor API) ────────────────── */
+const TENOR_KEY = 'AIzaSyAOmVBPZP-6VZQtbCbPFKYXW-a1BN1ygxk'; // clé demo Tenor/Google
+
+let stickerDebounce = null;
+function debounceSearch(q) {
+  clearTimeout(stickerDebounce);
+  stickerDebounce = setTimeout(() => searchStickers(q || 'sticker'), 450);
+}
+
+function searchStickers(q, btn) {
+  if (btn) {
+    document.querySelectorAll('.sticker-cat').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('stickerSearch').value = '';
+  }
+  const grid = document.getElementById('stickerGrid');
+  grid.innerHTML = '<div class="text-center py-4" style="color:rgba(255,255,255,.35);grid-column:1/-1;"><i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i></div>';
+
+  fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${TENOR_KEY}&client_key=childrensfruit&limit=20&media_filter=gif`)
+    .then(r => r.json())
+    .then(data => {
+      grid.innerHTML = '';
+      if (!data.results || data.results.length === 0) {
+        grid.innerHTML = '<p style="color:rgba(255,255,255,.35);grid-column:1/-1;text-align:center;font-size:.8rem;">Aucun résultat</p>';
+        return;
+      }
+      data.results.forEach(item => {
+        const url = item.media_formats?.gif?.url || item.media_formats?.tinygif?.url;
+        if (!url) return;
+        const div = document.createElement('div');
+        div.className = 'sticker-item';
+        div.innerHTML = `<img src="${url}" alt="sticker" loading="lazy">`;
+        div.onclick = () => sendSticker(url);
+        grid.appendChild(div);
+      });
+    })
+    .catch(() => {
+      grid.innerHTML = '<p style="color:rgba(255,100,100,.6);grid-column:1/-1;text-align:center;font-size:.8rem;"><i class="fas fa-exclamation-circle me-1"></i>Erreur de chargement</p>';
+    });
+}
+
+function sendSticker(url) {
+  // Fermer la modale
+  const modal = bootstrap.Modal.getInstance(document.getElementById('stickerModal'));
+  if (modal) modal.hide();
+
+  const fd = new FormData();
+  fd.append('msg_type', 'sticker');
+  fd.append('sticker_url', url);
+  postMessage(fd);
+}
+
+// Charger les stickers au premier ouverture
+document.getElementById('stickerModal').addEventListener('show.bs.modal', function() {
+  if (document.getElementById('stickerGrid').children.length <= 1) {
+    searchStickers('praise jesus');
+  }
+});
+
+/* ────────────────── Voice / Vocal ────────────────── */
+let mediaRecorder = null;
+let audioChunks  = [];
+let recInterval  = null;
+let recSeconds   = 0;
+
+async function toggleRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    stopRecording();
+  } else {
+    await startRecording();
+  }
+}
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.start();
+
+    document.getElementById('voiceBtn').classList.add('recording');
+    document.getElementById('voiceTimerWrap').style.display = 'flex';
+    recSeconds = 0;
+    recInterval = setInterval(() => {
+      recSeconds++;
+      const m = Math.floor(recSeconds / 60);
+      const s = String(recSeconds % 60).padStart(2,'0');
+      document.getElementById('voiceTimer').textContent = `${m}:${s}`;
+      if (recSeconds >= 120) stopRecording(); // max 2 min
+    }, 1000);
+  } catch(e) {
+    alert('Microphone non disponible. Vérifiez les permissions.');
+  }
+}
+
+function stopRecording() {
+  if (!mediaRecorder) return;
+  mediaRecorder.onstop = () => {
+    const blob = new Blob(audioChunks, {type: 'audio/webm'});
+    const fd = new FormData();
+    fd.append('msg_type', 'voice');
+    fd.append('voice', blob, 'vocal.webm');
+    postMessage(fd);
+    mediaRecorder.stream.getTracks().forEach(t => t.stop());
+    mediaRecorder = null;
+  };
+  mediaRecorder.stop();
+  resetVoiceUI();
+}
+
+function cancelRecording() {
+  if (!mediaRecorder) return;
+  mediaRecorder.onstop = () => {
+    mediaRecorder.stream.getTracks().forEach(t => t.stop());
+    mediaRecorder = null;
+  };
+  mediaRecorder.stop();
+  resetVoiceUI();
+}
+
+function resetVoiceUI() {
+  clearInterval(recInterval);
+  document.getElementById('voiceBtn').classList.remove('recording');
+  document.getElementById('voiceTimerWrap').style.display = 'none';
+  document.getElementById('voiceTimer').textContent = '0:00';
 }
 </script>
 {% endblock %}

@@ -284,9 +284,24 @@ class ActivityReport(models.Model):
 
 
 class CommunityMessage(models.Model):
-    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='community_messages')
-    text = models.TextField(max_length=2000)
-    created_at = models.DateTimeField(auto_now_add=True)
+    TYPE_TEXT    = 'text'
+    TYPE_IMAGE   = 'image'
+    TYPE_STICKER = 'sticker'
+    TYPE_VOICE   = 'voice'
+    MSG_TYPES = [
+        (TYPE_TEXT,    'Texte'),
+        (TYPE_IMAGE,   'Image'),
+        (TYPE_STICKER, 'Sticker'),
+        (TYPE_VOICE,   'Vocal'),
+    ]
+
+    user        = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='community_messages')
+    msg_type    = models.CharField(max_length=10, choices=MSG_TYPES, default=TYPE_TEXT)
+    text        = models.TextField(max_length=2000, blank=True)
+    image       = models.ImageField(upload_to='chat/images/', blank=True, null=True)
+    sticker_url = models.URLField(blank=True)
+    voice_file  = models.FileField(upload_to='chat/voice/', blank=True, null=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['created_at']
@@ -294,7 +309,7 @@ class CommunityMessage(models.Model):
         verbose_name_plural = 'Messages communauté'
 
     def __str__(self):
-        return f"{self.user.username}: {self.text[:50]}"
+        return f"{self.user.username} [{self.msg_type}]: {self.text[:40]}"
 
 
 class DonationRecord(models.Model):

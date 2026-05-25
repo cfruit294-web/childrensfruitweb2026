@@ -157,43 +157,65 @@ class CommunityView(LoginRequiredMixin, UpdateLastSeenMixin, TemplateView):
 class CommunityMessageView(LoginRequiredMixin, View):
     login_url = '/accounts/login/'
 
+    def _serialize(self, m, request):
+        base = {
+            'id': m.id,
+            'user': m.user.username,
+            'display_name': m.user.display_name,
+            'country': m.user.country,
+            'role': m.user.get_role_display(),
+            'msg_type': m.msg_type,
+            'text': m.text,
+            'sticker_url': m.sticker_url,
+            'image_url': request.build_absolute_uri(m.image.url) if m.image else '',
+            'voice_url': request.build_absolute_uri(m.voice_file.url) if m.voice_file else '',
+            'created_at': m.created_at.strftime('%H:%M'),
+        }
+        return base
+
     def get(self, request):
         after = request.GET.get('after')
         qs = CommunityMessage.objects.select_related('user').order_by('created_at')
         if after and after.isdigit():
             qs = qs.filter(id__gt=int(after))
-        msgs = [
-            {
-                'id': m.id,
-                'user': m.user.username,
-                'display_name': m.user.display_name,
-                'country': m.user.country,
-                'role': m.user.get_role_display(),
-                'text': m.text,
-                'created_at': m.created_at.strftime('%H:%M'),
-            }
-            for m in qs[:100]
-        ]
-        return JsonResponse({'messages': msgs})
+        return JsonResponse({'messages': [self._serialize(m, request) for m in qs[:100]]})
 
     def post(self, request):
-        text = request.POST.get('text', '').strip()
-        if not text:
-            return JsonResponse({'error': 'Message vide'}, status=400)
-        if len(text) > 2000:
-            return JsonResponse({'error': 'Message trop long'}, status=400)
+        msg_type = request.POST.get('msg_type', 'text')
         request.user.last_seen = timezone.now()
         request.user.save(update_fields=['last_seen'])
-        msg = CommunityMessage.objects.create(user=request.user, text=text)
-        return JsonResponse({
-            'id': msg.id,
-            'user': msg.user.username,
-            'display_name': msg.user.display_name,
-            'country': msg.user.country,
-            'role': msg.user.get_role_display(),
-            'text': msg.text,
-            'created_at': msg.created_at.strftime('%H:%M'),
-        })
+
+        if msg_type == 'image':
+            img = request.FILES.get('image')
+            if not img:
+                return JsonResponse({'error': 'Aucune image'}, status=400)
+            if img.size > 8 * 1024 * 1024:
+                return JsonResponse({'error': 'Image trop grande (max 8 Mo)'}, status=400)
+            msg = CommunityMessage.objects.create(user=request.user, msg_type='image', image=img)
+
+        elif msg_type == 'sticker':
+            sticker_url = request.POST.get('sticker_url', '').strip()
+            if not sticker_url:
+                return JsonResponse({'error': 'Sticker invalide'}, status=400)
+            msg = CommunityMessage.objects.create(user=request.user, msg_type='sticker', sticker_url=sticker_url)
+
+        elif msg_type == 'voice':
+            voice = request.FILES.get('voice')
+            if not voice:
+                return JsonResponse({'error': 'Aucun fichier vocal'}, status=400)
+            if voice.size > 10 * 1024 * 1024:
+                return JsonResponse({'error': 'Fichier trop grand (max 10 Mo)'}, status=400)
+            msg = CommunityMessage.objects.create(user=request.user, msg_type='voice', voice_file=voice)
+
+        else:
+            text = request.POST.get('text', '').strip()
+            if not text:
+                return JsonResponse({'error': 'Message vide'}, status=400)
+            if len(text) > 2000:
+                return JsonResponse({'error': 'Message trop long'}, status=400)
+            msg = CommunityMessage.objects.create(user=request.user, msg_type='text', text=text)
+
+        return JsonResponse(self._serialize(msg, request))
 
 
 # ─────────────────────────────────────────────────────────────
