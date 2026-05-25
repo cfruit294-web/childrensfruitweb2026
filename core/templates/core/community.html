@@ -220,42 +220,131 @@ body { background: #0d1117; }
 #uploadProgressBar { display:none; height:3px; background:rgba(255,255,255,.08); flex-shrink:0; }
 #uploadProgress { height:3px; background:var(--green); width:0; transition:width .1s; border-radius:2px; }
 
-/* Voice timer */
-#voiceTimerWrap { display:none; padding:8px 16px 0; align-items:center; gap:8px; color:rgba(255,255,255,.75); font-size:.8rem; flex-shrink:0; }
-.rec-dot { width:8px; height:8px; border-radius:50%; background:#ef4444; animation:rp 1s infinite; flex-shrink:0; }
 @keyframes rp { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-/* Toolbar */
-.chat-toolbar { display:flex; align-items:center; gap:4px; padding:8px 16px 0; flex-shrink:0; }
-.tb-btn {
-  width:34px; height:34px; border-radius:10px; border:none; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; font-size:.9rem;
-  background:rgba(255,255,255,.07); color:rgba(255,255,255,.6); transition:.15s;
-  flex-shrink:0; position:relative;
-}
-.tb-btn:hover { background:rgba(255,255,255,.18); color:#fff; }
-.tb-btn.recording { background:rgba(220,38,38,.3); color:#fca5a5; animation:rp 1s infinite; }
-.tb-sep { width:1px; height:22px; background:rgba(255,255,255,.08); margin:0 2px; }
+/* ═══════════════ WHATSAPP INPUT BAR ═══════════════ */
+.wa-bar { position:relative; padding:6px 10px 12px; flex-shrink:0; }
 
-/* Text input area */
-.chat-input-area { display:flex; align-items:flex-end; gap:8px; padding:10px 16px 16px; flex-shrink:0; }
-.chat-input {
-  background:rgba(255,255,255,.06)!important; border:1px solid rgba(255,255,255,.1)!important;
-  color:#fff!important; border-radius:14px!important; flex:1; font-size:.88rem;
-  resize:none; min-height:42px; max-height:120px; padding:10px 14px!important;
-  line-height:1.45; overflow-y:auto; transition:border-color .2s;
+/* Attach popup */
+.wa-attach-menu {
+  position:absolute; bottom:calc(100% + 4px); left:10px;
+  background:#1e2235; border:1px solid rgba(255,255,255,.1);
+  border-radius:16px; padding:8px; display:none; flex-direction:column;
+  gap:2px; z-index:200; box-shadow:0 12px 40px rgba(0,0,0,.6); min-width:200px;
 }
-.chat-input::placeholder { color:rgba(255,255,255,.3)!important; }
-.chat-input:focus { box-shadow:0 0 0 2px rgba(0,145,58,.35)!important; border-color:rgba(0,200,100,.4)!important; outline:none; }
-.char-count { font-size:.6rem; color:rgba(255,255,255,.2); align-self:flex-end; padding-bottom:12px; flex-shrink:0; }
-.send-btn {
-  width:42px; height:42px; border-radius:12px; border:none; cursor:pointer;
-  background:var(--green); color:#fff; font-size:.9rem; display:flex;
-  align-items:center; justify-content:center; flex-shrink:0;
-  transition:background .15s, transform .1s; box-shadow:0 3px 10px rgba(0,145,58,.4);
+.wa-attach-menu.open { display:flex; }
+.wa-attach-item {
+  display:flex; align-items:center; gap:10px; padding:9px 12px;
+  border-radius:10px; border:none; background:transparent;
+  color:rgba(255,255,255,.78); font-size:.83rem; cursor:pointer;
+  text-align:left; transition:.15s; width:100%;
 }
-.send-btn:hover { background:#007a32; }
-.send-btn:active { transform:scale(.93); }
+.wa-attach-item:hover { background:rgba(255,255,255,.08); color:#fff; }
+.wa-attach-icon {
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.88rem; flex-shrink:0;
+}
+.wa-attach-sub { opacity:.35; font-size:.68rem; margin-left:auto; }
+.wa-attach-sep { height:1px; background:rgba(255,255,255,.07); margin:4px 0; }
+
+/* Input row */
+.wa-input-row { display:flex; align-items:flex-end; gap:8px; }
+.wa-input-inner {
+  flex:1; display:flex; align-items:flex-end;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+  border-radius:24px; padding:5px 6px 5px 4px; gap:2px;
+  transition:border-color .2s, box-shadow .2s;
+}
+.wa-input-inner:focus-within {
+  border-color:rgba(0,200,100,.4);
+  box-shadow:0 0 0 2px rgba(0,145,58,.12);
+}
+.wa-emoji-btn {
+  width:36px; height:36px; border-radius:50%; border:none;
+  background:transparent; color:rgba(255,255,255,.38);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.18rem; cursor:pointer; flex-shrink:0; transition:.15s;
+}
+.wa-emoji-btn:hover { color:rgba(255,255,255,.75); }
+.wa-textarea {
+  flex:1; background:transparent; border:none; outline:none;
+  color:#fff; font-size:.88rem; line-height:1.45;
+  resize:none; min-height:36px; max-height:120px;
+  padding:6px 0; overflow-y:auto; font-family:inherit; align-self:center;
+}
+.wa-textarea::placeholder { color:rgba(255,255,255,.28); }
+.wa-char { font-size:.58rem; color:rgba(255,255,255,.16); padding-bottom:3px; flex-shrink:0; align-self:flex-end; }
+.wa-attach-btn {
+  width:34px; height:34px; border-radius:50%; border:none;
+  background:transparent; color:rgba(255,255,255,.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:.92rem; cursor:pointer; flex-shrink:0; transition:.15s;
+}
+.wa-attach-btn:hover { color:rgba(255,255,255,.8); }
+.wa-send-btn {
+  width:46px; height:46px; border-radius:50%; border:none;
+  background:var(--green); color:#fff; font-size:.95rem;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; flex-shrink:0; transition:background .15s, transform .12s;
+  box-shadow:0 3px 14px rgba(0,145,58,.45);
+}
+.wa-send-btn:hover { background:#007a32; transform:scale(1.07); }
+.wa-send-btn:active { transform:scale(.9); }
+.wa-send-btn.mic-mode { background:rgba(255,255,255,.1); box-shadow:none; }
+.wa-send-btn.mic-mode:hover { background:rgba(255,255,255,.18); }
+.wa-send-btn.recording { background:#dc2626; animation:rp 1s infinite; box-shadow:0 0 16px rgba(220,38,38,.5); }
+
+/* Recording bar */
+.wa-rec-bar { display:none; align-items:center; gap:8px; padding:4px 2px 8px; }
+.wa-rec-bar.active { display:flex; }
+.wa-rec-wave {
+  flex:1; height:38px; border-radius:20px;
+  background:rgba(255,255,255,.05);
+  display:flex; align-items:center; justify-content:center; gap:3px;
+}
+.wave-bar { width:3px; border-radius:3px; background:rgba(239,68,68,.5); }
+@keyframes waveAnim { 0%,100%{height:5px;opacity:.4} 50%{height:22px;opacity:1} }
+.wa-rec-time { font-size:.88rem; color:#ef4444; font-weight:700; min-width:40px; text-align:right; }
+.wa-cancel-rec {
+  width:36px; height:36px; border-radius:50%; border:none;
+  background:rgba(255,255,255,.08); color:rgba(255,255,255,.55);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:.82rem; transition:.15s; flex-shrink:0;
+}
+.wa-cancel-rec:hover { background:rgba(220,38,38,.3); color:#fca5a5; }
+
+/* Image preview */
+#imgPreviewWrap { display:none; align-items:center; gap:10px; padding:0 4px 8px; }
+#imgPreviewWrap img { height:54px; width:54px; object-fit:cover; border-radius:10px; border:2px solid rgba(255,255,255,.15); }
+.rm-img { background:rgba(220,38,38,.7); color:#fff; border:none; border-radius:50%; width:22px; height:22px; font-size:.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+/* Upload progress */
+#uploadProgressBar { display:none; height:3px; background:rgba(255,255,255,.08); margin-bottom:4px; flex-shrink:0; }
+#uploadProgress { height:3px; background:var(--green); width:0; transition:width .1s; border-radius:2px; }
+
+/* Wallpaper button in header */
+.wall-btn { background:rgba(255,255,255,.07); border:none; color:rgba(255,255,255,.55); border-radius:8px; padding:5px 9px; font-size:.78rem; cursor:pointer; transition:.15s; }
+.wall-btn:hover { background:rgba(255,255,255,.15); color:#fff; }
+
+/* Wallpaper modal presets */
+.wall-presets { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.wall-preset {
+  aspect-ratio:1; border-radius:10px; cursor:pointer;
+  border:2px solid transparent; transition:.2s; position:relative;
+  overflow:hidden;
+}
+.wall-preset:hover { transform:scale(1.05); border-color:rgba(255,255,255,.4); }
+.wall-preset.active { border-color:var(--green); }
+.wall-preset.none-preset { background:rgba(255,255,255,.07); display:flex; align-items:center; justify-content:center; font-size:.72rem; color:rgba(255,255,255,.4); flex-direction:column; gap:4px; }
+
+/* Chat messages with wallpaper */
+.chat-messages.has-wallpaper { background-size:cover; background-position:center; }
+.chat-messages.has-wallpaper .chat-bubble.own { background:rgba(0,80,35,.85); backdrop-filter:blur(4px); }
+.chat-messages.has-wallpaper .chat-bubble.other { background:rgba(20,24,40,.85); backdrop-filter:blur(4px); }
+.chat-messages.has-wallpaper .date-sep::before,
+.chat-messages.has-wallpaper .date-sep::after { background:rgba(255,255,255,.2); }
+.chat-messages.has-wallpaper .date-sep span { background:rgba(0,0,0,.4); padding:2px 10px; border-radius:20px; backdrop-filter:blur(4px); }
 
 /* Scroll-to-bottom */
 #scrollDown {
@@ -443,6 +532,7 @@ body { background: #0d1117; }
           </div>
           <div class="head-actions">
             <button class="head-btn" onclick="toggleSearch()" title="Rechercher"><i class="fas fa-search"></i></button>
+            <button class="wall-btn" onclick="openWallModal()" title="Fond d'écran"><i class="fas fa-image"></i></button>
             <span style="font-size:.72rem;color:rgba(255,255,255,.35);">
               <i class="fas fa-sync-alt me-1"></i>Live
             </span>
@@ -573,7 +663,7 @@ body { background: #0d1117; }
         </div><!-- /chatBox -->
 
         <!-- Reply bar -->
-        <div id="replyBar" class="d-flex" style="display:none!important;">
+        <div id="replyBar" style="display:none;align-items:center;gap:10px;padding:8px 14px;background:rgba(0,104,55,.15);border-left:3px solid var(--green);flex-shrink:0;">
           <i class="fas fa-reply" style="color:var(--green);font-size:.85rem;flex-shrink:0;margin-top:2px;"></i>
           <div class="reply-bar-text">
             <div class="reply-bar-author" id="replyAuthor"></div>
@@ -582,55 +672,71 @@ body { background: #0d1117; }
           <button class="reply-cancel" onclick="cancelReply()"><i class="fas fa-times"></i></button>
         </div>
 
-        <!-- Image preview -->
-        <div id="imgPreviewWrap" class="d-flex">
-          <img id="imgPreview" src="" alt="">
-          <button class="rm-img" onclick="clearImg()"><i class="fas fa-times"></i></button>
-          <small style="color:rgba(255,255,255,.4);font-size:.74rem;align-self:center;">Prêt — cliquez Envoyer</small>
-        </div>
-
-        <!-- Voice timer -->
-        <div id="voiceTimerWrap" class="d-flex">
-          <span class="rec-dot"></span>
-          <span>Enregistrement… <b id="voiceTimer">0:00</b></span>
-          <button onclick="stopRec()" style="background:rgba(220,38,38,.25);color:#fca5a5;border:none;border-radius:8px;padding:3px 10px;font-size:.72rem;cursor:pointer;margin-left:8px;">
-            <i class="fas fa-stop me-1"></i>Envoyer
-          </button>
-          <button onclick="cancelRec()" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);border:none;border-radius:8px;padding:3px 10px;font-size:.72rem;cursor:pointer;margin-left:4px;">
-            Annuler
-          </button>
-        </div>
-
         <!-- Upload progress -->
         <div id="uploadProgressBar"><div id="uploadProgress"></div></div>
 
-        <!-- Toolbar -->
-        <div class="chat-toolbar">
-          <button class="tb-btn" title="Image" onclick="document.getElementById('imgFileInput').click()"><i class="fas fa-image"></i></button>
+        <!-- WhatsApp-style bar -->
+        <div class="wa-bar">
+
+          <!-- Attach popup menu -->
+          <div class="wa-attach-menu" id="attachMenu">
+            <button class="wa-attach-item" onclick="triggerImg()">
+              <span class="wa-attach-icon" style="background:rgba(0,200,130,.15);"><i class="fas fa-image" style="color:#4ade80;"></i></span>
+              Image<span class="wa-attach-sub">max 8 Mo</span>
+            </button>
+            <button class="wa-attach-item" data-bs-toggle="modal" data-bs-target="#videoModal" onclick="closeAttach()">
+              <span class="wa-attach-icon" style="background:rgba(59,130,246,.15);"><i class="fas fa-video" style="color:#60a5fa;"></i></span>
+              Vidéo<span class="wa-attach-sub">YouTube / fichier</span>
+            </button>
+            <button class="wa-attach-item" onclick="triggerDoc()">
+              <span class="wa-attach-icon" style="background:rgba(239,68,68,.15);"><i class="fas fa-file-alt" style="color:#f87171;"></i></span>
+              Document<span class="wa-attach-sub">PDF / Word</span>
+            </button>
+            <div class="wa-attach-sep"></div>
+            <button class="wa-attach-item" data-bs-toggle="modal" data-bs-target="#stickerModal" onclick="closeAttach()">
+              <span class="wa-attach-icon" style="background:rgba(247,148,29,.15);"><i class="fas fa-face-grin-stars" style="color:var(--orange);"></i></span>
+              Stickers &amp; GIFs
+            </button>
+          </div>
+
+          <!-- Hidden inputs -->
           <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="onImgSelected(this)">
-
-          <button class="tb-btn" title="Vidéo" data-bs-toggle="modal" data-bs-target="#videoModal"><i class="fas fa-video"></i></button>
-
-          <button class="tb-btn" title="PDF / Word" onclick="document.getElementById('docFileInput').click()"><i class="fas fa-file-alt"></i></button>
           <input type="file" id="docFileInput" accept=".pdf,.doc,.docx" style="display:none" onchange="onDocSelected(this)">
 
-          <div class="tb-sep"></div>
+          <!-- Image preview -->
+          <div id="imgPreviewWrap">
+            <img id="imgPreview" src="" alt="">
+            <button class="rm-img" onclick="clearImg()"><i class="fas fa-times"></i></button>
+            <small style="color:rgba(255,255,255,.4);font-size:.74rem;">Prêt — cliquez Envoyer</small>
+          </div>
 
-          <button class="tb-btn" title="Stickers & GIFs" data-bs-toggle="modal" data-bs-target="#stickerModal"><i class="fas fa-face-grin-stars"></i></button>
+          <!-- Recording bar -->
+          <div class="wa-rec-bar" id="waRecBar">
+            <button class="wa-cancel-rec" onclick="cancelRec()"><i class="fas fa-times"></i></button>
+            <div class="wa-rec-wave" id="recWave"></div>
+            <span class="wa-rec-time" id="voiceTimer">0:00</span>
+          </div>
 
-          <button class="tb-btn" id="voiceBtn" title="Message vocal" onclick="toggleRec()"><i class="fas fa-microphone"></i></button>
-        </div>
+          <!-- Input row -->
+          <div class="wa-input-row">
+            <div class="wa-input-inner">
+              <button class="wa-emoji-btn" data-bs-toggle="modal" data-bs-target="#stickerModal" title="Stickers & GIFs">
+                <i class="fas fa-face-smile"></i>
+              </button>
+              <textarea class="wa-textarea" id="msgInput"
+                        placeholder="Message…"
+                        maxlength="2000" rows="1" autocomplete="off"></textarea>
+              <span class="wa-char" id="charCount"></span>
+              <button class="wa-attach-btn" id="attachBtn" onclick="toggleAttachMenu()" title="Joindre">
+                <i class="fas fa-paperclip"></i>
+              </button>
+            </div>
+            <button class="wa-send-btn mic-mode" id="sendBtn" title="Envoyer / Enregistrer">
+              <i class="fas fa-microphone" id="sendIcon"></i>
+            </button>
+          </div>
 
-        <!-- Text input -->
-        <div class="chat-input-area">
-          <textarea class="form-control chat-input" id="msgInput"
-                    placeholder="Écrire un message… (Entrée pour envoyer, Maj+Entrée pour sauter)"
-                    maxlength="2000" rows="1" autocomplete="off"></textarea>
-          <span class="char-count" id="charCount"></span>
-          <button class="send-btn" id="sendBtn" title="Envoyer (Entrée)">
-            <i class="fas fa-paper-plane"></i>
-          </button>
-        </div>
+        </div><!-- /wa-bar -->
 
       </div><!-- /chat-wrap -->
 
@@ -799,8 +905,30 @@ body { background: #0d1117; }
 </div>
 
 <!-- Image lightbox -->
-<div id="imgLightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;cursor:zoom-out;display:flex;align-items:center;justify-content:center;">
+<div id="imgLightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;cursor:zoom-out;align-items:center;justify-content:center;">
   <img id="lbImg" src="" style="max-width:92vw;max-height:90vh;border-radius:10px;object-fit:contain;">
+</div>
+
+<!-- ═══ MODAL FOND D'ÉCRAN ═══ -->
+<div class="modal fade" id="wallModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+    <div class="modal-content cf-mc">
+      <div class="modal-header border-0 pb-1">
+        <h6 class="modal-title text-white fw-bold"><i class="fas fa-image me-2" style="color:var(--green);"></i>Fond d'écran du chat</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p style="color:rgba(255,255,255,.4);font-size:.78rem;margin-bottom:12px;">Choisissez un fond ou téléchargez votre propre image. La sélection est sauvegardée sur cet appareil.</p>
+        <div class="wall-presets" id="wallPresets">
+          <!-- généré par JS -->
+        </div>
+        <div style="margin-top:14px;">
+          <label class="text-white-50 small mb-2 d-block"><i class="fas fa-upload me-1"></i>Image personnalisée</label>
+          <input type="file" id="wallFileInput" accept="image/*" class="form-control cf-inp" style="font-size:.8rem;">
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 {% endblock %}
@@ -854,6 +982,35 @@ chatBox.addEventListener('scroll', () => {
     document.getElementById('newBadge').style.display = 'none';
   }
 });
+
+/* ── Attach menu ── */
+function toggleAttachMenu() {
+  const m = document.getElementById('attachMenu');
+  m.classList.toggle('open');
+}
+function closeAttach() { document.getElementById('attachMenu').classList.remove('open'); }
+function triggerImg() { closeAttach(); document.getElementById('imgFileInput').click(); }
+function triggerDoc() { closeAttach(); document.getElementById('docFileInput').click(); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('#attachMenu') && !e.target.closest('#attachBtn'))
+    document.getElementById('attachMenu').classList.remove('open');
+});
+
+/* ── Send/mic button toggle ── */
+function updateSendBtn() {
+  const btn  = document.getElementById('sendBtn');
+  const icon = document.getElementById('sendIcon');
+  const has  = document.getElementById('msgInput').value.trim().length > 0 || pendingImgFile;
+  if (has) {
+    btn.className  = 'wa-send-btn';
+    icon.className = 'fas fa-paper-plane';
+    btn.onclick    = sendText;
+  } else {
+    btn.className  = 'wa-send-btn mic-mode';
+    icon.className = 'fas fa-microphone';
+    btn.onclick    = toggleRec;
+  }
+}
 
 /* ── Search ── */
 function toggleSearch() {
@@ -1088,16 +1245,17 @@ function sendText() {
   const fd=new FormData(); fd.append('msg_type','text'); fd.append('text',text);
   postMsg(fd, msgHTML(fakeM));
 }
-document.getElementById('sendBtn').addEventListener('click', sendText);
 document.getElementById('msgInput').addEventListener('keydown', e=>{
   if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendText(); }
 });
 document.getElementById('msgInput').addEventListener('input', function(){
-  this.style.height='42px';
+  this.style.height='36px';
   this.style.height=Math.min(this.scrollHeight,120)+'px';
   const len=this.value.length;
-  document.getElementById('charCount').textContent = len>0 ? `${len}/2000`:'';
+  document.getElementById('charCount').textContent = len>1800 ? `${len}/2000`:'';
+  updateSendBtn();
 });
+updateSendBtn();
 
 /* ── EDIT ── */
 function editMsg(id){
@@ -1165,9 +1323,20 @@ function onImgSelected(input){
   const file=input.files[0]; if(!file) return;
   if(file.size>8*1024*1024){toast('Image trop grande (max 8 Mo)','err');return;}
   pendingImgFile=file;
-  const r=new FileReader(); r.onload=e=>{ document.getElementById('imgPreview').src=e.target.result; document.getElementById('imgPreviewWrap').style.display='flex'; }; r.readAsDataURL(file);
+  const r=new FileReader();
+  r.onload=e=>{
+    document.getElementById('imgPreview').src=e.target.result;
+    document.getElementById('imgPreviewWrap').style.display='flex';
+    updateSendBtn();
+  };
+  r.readAsDataURL(file);
 }
-function clearImg(){ pendingImgFile=null; document.getElementById('imgPreviewWrap').style.display='none'; document.getElementById('imgFileInput').value=''; }
+function clearImg(){
+  pendingImgFile=null;
+  document.getElementById('imgPreviewWrap').style.display='none';
+  document.getElementById('imgFileInput').value='';
+  updateSendBtn();
+}
 function sendImage(){
   if(!pendingImgFile) return;
   const fd=new FormData(); fd.append('msg_type','image'); fd.append('image',pendingImgFile);
@@ -1224,24 +1393,128 @@ document.getElementById('stickerModal').addEventListener('show.bs.modal',()=>{ i
 
 /* ── VOCAL ── */
 let mediaRec=null,audioChunks=[],recIv=null,recSec=0;
+
+function buildRecWave(){
+  const wave=document.getElementById('recWave'); wave.innerHTML='';
+  for(let i=0;i<22;i++){
+    const b=document.createElement('div'); b.className='wave-bar';
+    const h=4+Math.random()*18;
+    b.style.cssText=`height:${h}px;animation:waveAnim ${0.6+Math.random()*.8}s ease-in-out ${Math.random()*.5}s infinite;`;
+    wave.appendChild(b);
+  }
+}
+
 async function toggleRec(){
   if(mediaRec&&mediaRec.state==='recording'){stopRec();return;}
   try{
     const stream=await navigator.mediaDevices.getUserMedia({audio:true});
     mediaRec=new MediaRecorder(stream); audioChunks=[];
     mediaRec.ondataavailable=e=>audioChunks.push(e.data); mediaRec.start();
-    document.getElementById('voiceBtn').classList.add('recording');
-    document.getElementById('voiceTimerWrap').style.display='flex';
+    buildRecWave();
+    const btn=document.getElementById('sendBtn'); const icon=document.getElementById('sendIcon');
+    btn.className='wa-send-btn recording'; icon.className='fas fa-stop'; btn.onclick=stopRec;
+    document.getElementById('waRecBar').classList.add('active');
+    document.getElementById('msgInput').style.display='none';
+    document.getElementById('attachBtn').style.display='none';
+    document.querySelector('.wa-emoji-btn').style.display='none';
+    document.getElementById('charCount').style.display='none';
     recSec=0;
-    recIv=setInterval(()=>{ recSec++; const m=Math.floor(recSec/60),s=String(recSec%60).padStart(2,'0'); document.getElementById('voiceTimer').textContent=`${m}:${s}`; if(recSec>=120)stopRec(); },1000);
+    recIv=setInterval(()=>{
+      recSec++;
+      const m=Math.floor(recSec/60),s=String(recSec%60).padStart(2,'0');
+      document.getElementById('voiceTimer').textContent=`${m}:${s}`;
+      if(recSec>=120) stopRec();
+    },1000);
   }catch(e){ toast('Microphone non disponible — vérifiez les permissions.','err'); }
 }
 function stopRec(){
   if(!mediaRec) return;
-  mediaRec.onstop=()=>{ const blob=new Blob(audioChunks,{type:'audio/webm'}); const fd=new FormData(); fd.append('msg_type','voice'); fd.append('voice',blob,'vocal.webm'); postMsg(fd,null); mediaRec.stream.getTracks().forEach(t=>t.stop()); mediaRec=null; };
+  mediaRec.onstop=()=>{
+    const blob=new Blob(audioChunks,{type:'audio/webm'});
+    const fd=new FormData(); fd.append('msg_type','voice'); fd.append('voice',blob,'vocal.webm');
+    postMsg(fd,null);
+    mediaRec.stream.getTracks().forEach(t=>t.stop()); mediaRec=null;
+  };
   mediaRec.stop(); resetVUI();
 }
-function cancelRec(){ if(!mediaRec) return; mediaRec.onstop=()=>{ mediaRec.stream.getTracks().forEach(t=>t.stop()); mediaRec=null; }; mediaRec.stop(); resetVUI(); }
-function resetVUI(){ clearInterval(recIv); document.getElementById('voiceBtn').classList.remove('recording'); document.getElementById('voiceTimerWrap').style.display='none'; document.getElementById('voiceTimer').textContent='0:00'; }
+function cancelRec(){
+  if(!mediaRec) return;
+  mediaRec.onstop=()=>{ mediaRec.stream.getTracks().forEach(t=>t.stop()); mediaRec=null; };
+  mediaRec.stop(); resetVUI();
+}
+function resetVUI(){
+  clearInterval(recIv);
+  document.getElementById('waRecBar').classList.remove('active');
+  document.getElementById('voiceTimer').textContent='0:00';
+  document.getElementById('msgInput').style.display='';
+  document.getElementById('attachBtn').style.display='';
+  document.querySelector('.wa-emoji-btn').style.display='';
+  document.getElementById('charCount').style.display='';
+  updateSendBtn();
+}
+
+/* ── WALLPAPER ── */
+const WALL_KEY = `cf_chat_bg_${ME}`;
+const WALL_PRESETS = [
+  {id:'none', label:'Aucun', css:''},
+  {id:'dark1', label:'Nuit', css:'linear-gradient(160deg,#0a0f1e 0%,#111827 100%)'},
+  {id:'green1', label:'Forêt', css:'linear-gradient(160deg,#052e1c 0%,#0a1628 100%)'},
+  {id:'purple', label:'Violet', css:'linear-gradient(160deg,#1a0533 0%,#0f0a2e 100%)'},
+  {id:'sunset', label:'Coucher', css:'linear-gradient(160deg,#1a0a00 0%,#2d1206 50%,#0a0d1e 100%)'},
+  {id:'ocean', label:'Océan', css:'linear-gradient(160deg,#001a2c 0%,#003955 100%)'},
+  {id:'stars', label:'Étoiles', css:'radial-gradient(ellipse at 20% 20%,rgba(255,255,255,.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(100,150,255,.06) 0%,transparent 50%),linear-gradient(135deg,#060812 0%,#0d1126 100%)'},
+  {id:'earth', label:'Terre', css:'linear-gradient(160deg,#0d1f0a 0%,#1a2e0d 50%,#0a1a08 100%)'},
+];
+
+function applyWallpaper(val){
+  const cb=document.getElementById('chatBox');
+  if(!val){ cb.style.background=''; cb.classList.remove('has-wallpaper'); return; }
+  cb.style.background=val;
+  cb.classList.add('has-wallpaper');
+}
+
+function openWallModal(){
+  const saved=localStorage.getItem(WALL_KEY)||'';
+  const grid=document.getElementById('wallPresets');
+  grid.innerHTML='';
+  WALL_PRESETS.forEach(p=>{
+    const el=document.createElement('div');
+    el.className='wall-preset'+((!saved&&p.id==='none')||saved===p.css?' active':'');
+    if(p.id==='none'){
+      el.classList.add('none-preset');
+      el.innerHTML='<i class="fas fa-ban" style="font-size:1.1rem;opacity:.4;"></i><span>Aucun</span>';
+    } else {
+      el.style.background=p.css;
+      el.innerHTML=`<span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:.6rem;color:rgba(255,255,255,.5);">${p.label}</span>`;
+    }
+    el.onclick=()=>{
+      grid.querySelectorAll('.wall-preset').forEach(x=>x.classList.remove('active'));
+      el.classList.add('active');
+      const val=p.css;
+      localStorage.setItem(WALL_KEY,val);
+      applyWallpaper(val);
+    };
+    grid.appendChild(el);
+  });
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('wallModal')).show();
+}
+
+document.getElementById('wallFileInput').addEventListener('change',function(){
+  const file=this.files[0]; if(!file) return;
+  if(file.size>5*1024*1024){toast('Image trop grande (max 5 Mo)','warn');this.value='';return;}
+  const r=new FileReader();
+  r.onload=e=>{
+    const dataUrl=e.target.result;
+    localStorage.setItem(WALL_KEY,`url("${dataUrl}")`);
+    applyWallpaper(`url("${dataUrl}")`);
+    document.querySelectorAll('.wall-preset').forEach(x=>x.classList.remove('active'));
+    toast('Fond d\'écran appliqué','ok');
+    bootstrap.Modal.getInstance(document.getElementById('wallModal'))?.hide();
+  };
+  r.readAsDataURL(file);
+});
+
+// Appliquer le wallpaper sauvegardé au chargement
+(()=>{ const saved=localStorage.getItem(WALL_KEY); if(saved) applyWallpaper(saved); })();
 </script>
 {% endblock %}
