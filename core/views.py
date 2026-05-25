@@ -58,9 +58,24 @@ class HomeView(UpdateLastSeenMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['featured_videos'] = (
-            VideoContent.objects.filter(is_featured=True).order_by('-created_at')[:6]
-        )
+
+        # Hero carousel : vidéos en vedette d'abord, complété par les plus récentes
+        hero_qs = list(VideoContent.objects.filter(is_featured=True).order_by('-created_at')[:8])
+        if len(hero_qs) < 5:
+            ids = [v.pk for v in hero_qs]
+            hero_qs += list(
+                VideoContent.objects.exclude(pk__in=ids).order_by('-created_at')[: 8 - len(hero_qs)]
+            )
+        context['hero_videos'] = hero_qs
+
+        # Section Web TV : vedettes sinon les plus récentes
+        featured = VideoContent.objects.filter(is_featured=True).order_by('-created_at')[:6]
+        context['featured_videos'] = featured if featured.exists() else VideoContent.objects.order_by('-created_at')[:6]
+
+        # Compteurs réels pour les stats
+        context['video_count'] = VideoContent.objects.count()
+        context['member_count'] = get_user_model().objects.filter(is_active=True).count()
+
         context['recent_videos'] = VideoContent.objects.order_by('-created_at')[:3]
         context['kpis'] = KPI.objects.all()
         context['default_kpis'] = _DEFAULT_KPIS
