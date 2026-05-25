@@ -284,29 +284,56 @@ class ActivityReport(models.Model):
 
 
 class CommunityMessage(models.Model):
-    TYPE_TEXT    = 'text'
-    TYPE_IMAGE   = 'image'
-    TYPE_STICKER = 'sticker'
-    TYPE_VOICE   = 'voice'
+    TYPE_TEXT     = 'text'
+    TYPE_IMAGE    = 'image'
+    TYPE_STICKER  = 'sticker'
+    TYPE_VOICE    = 'voice'
+    TYPE_VIDEO    = 'video'
+    TYPE_DOCUMENT = 'document'
     MSG_TYPES = [
-        (TYPE_TEXT,    'Texte'),
-        (TYPE_IMAGE,   'Image'),
-        (TYPE_STICKER, 'Sticker'),
-        (TYPE_VOICE,   'Vocal'),
+        (TYPE_TEXT,     'Texte'),
+        (TYPE_IMAGE,    'Image'),
+        (TYPE_STICKER,  'Sticker'),
+        (TYPE_VOICE,    'Vocal'),
+        (TYPE_VIDEO,    'Vidéo'),
+        (TYPE_DOCUMENT, 'Document'),
     ]
 
-    user        = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='community_messages')
-    msg_type    = models.CharField(max_length=10, choices=MSG_TYPES, default=TYPE_TEXT)
-    text        = models.TextField(max_length=2000, blank=True)
-    image       = models.ImageField(upload_to='chat/images/', blank=True, null=True)
-    sticker_url = models.URLField(blank=True)
-    voice_file  = models.FileField(upload_to='chat/voice/', blank=True, null=True)
-    created_at  = models.DateTimeField(auto_now_add=True)
+    user          = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='community_messages')
+    msg_type      = models.CharField(max_length=10, choices=MSG_TYPES, default=TYPE_TEXT)
+    text          = models.TextField(max_length=2000, blank=True)
+    image         = models.ImageField(upload_to='chat/images/', blank=True, null=True)
+    sticker_url   = models.URLField(blank=True)
+    voice_file    = models.FileField(upload_to='chat/voice/', blank=True, null=True)
+    video_file    = models.FileField(upload_to='chat/videos/', blank=True, null=True)
+    video_url     = models.URLField(blank=True)
+    document      = models.FileField(upload_to='chat/documents/', blank=True, null=True)
+    document_name = models.CharField(max_length=255, blank=True)
+    is_deleted    = models.BooleanField(default=False)
+    edited_at     = models.DateTimeField(null=True, blank=True)
+    created_at    = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['created_at']
         verbose_name = 'Message communauté'
         verbose_name_plural = 'Messages communauté'
+
+    @property
+    def youtube_embed_url(self):
+        import re
+        if not self.video_url:
+            return ''
+        m = re.search(r'(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/)([^&\n?#]+)', self.video_url)
+        return f'https://www.youtube.com/embed/{m.group(1)}?rel=0' if m else ''
+
+    @property
+    def document_icon(self):
+        ext = (self.document_name.rsplit('.', 1)[-1] if '.' in self.document_name else '').lower()
+        if ext == 'pdf':
+            return ('fa-file-pdf', '#ef4444')
+        if ext in ('doc', 'docx'):
+            return ('fa-file-word', '#3b82f6')
+        return ('fa-file', '#9ca3af')
 
     def __str__(self):
         return f"{self.user.username} [{self.msg_type}]: {self.text[:40]}"

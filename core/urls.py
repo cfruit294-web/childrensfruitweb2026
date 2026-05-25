@@ -24,6 +24,7 @@ urlpatterns = [
     # Communauté
     path('communaute/', views.CommunityView.as_view(), name='community'),
     path('communaute/messages/', views.CommunityMessageView.as_view(), name='community_messages'),
+    path('communaute/messages/<int:pk>/', views.CommunityMessageDetailView.as_view(), name='community_message_detail'),
 
     # Dashboards
     path('dashboard/', views.DashboardRedirectView.as_view(), name='dashboard_redirect'),

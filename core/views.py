@@ -154,31 +154,39 @@ class CommunityView(LoginRequiredMixin, UpdateLastSeenMixin, TemplateView):
         return context
 
 
+def _serialize_msg(m, request):
+    if m.is_deleted:
+        return {'id': m.id, 'msg_type': 'deleted', 'user': m.user.username, 'created_at': m.created_at.strftime('%H:%M')}
+    return {
+        'id':            m.id,
+        'user':          m.user.username,
+        'display_name':  m.user.display_name,
+        'country':       m.user.country,
+        'role':          m.user.get_role_display(),
+        'msg_type':      m.msg_type,
+        'text':          m.text,
+        'sticker_url':   m.sticker_url,
+        'image_url':     request.build_absolute_uri(m.image.url) if m.image else '',
+        'voice_url':     request.build_absolute_uri(m.voice_file.url) if m.voice_file else '',
+        'video_file_url': request.build_absolute_uri(m.video_file.url) if m.video_file else '',
+        'video_url':     m.video_url,
+        'youtube_embed': m.youtube_embed_url,
+        'document_url':  request.build_absolute_uri(m.document.url) if m.document else '',
+        'document_name': m.document_name,
+        'is_edited':     bool(m.edited_at),
+        'created_at':    m.created_at.strftime('%H:%M'),
+    }
+
+
 class CommunityMessageView(LoginRequiredMixin, View):
     login_url = '/accounts/login/'
-
-    def _serialize(self, m, request):
-        base = {
-            'id': m.id,
-            'user': m.user.username,
-            'display_name': m.user.display_name,
-            'country': m.user.country,
-            'role': m.user.get_role_display(),
-            'msg_type': m.msg_type,
-            'text': m.text,
-            'sticker_url': m.sticker_url,
-            'image_url': request.build_absolute_uri(m.image.url) if m.image else '',
-            'voice_url': request.build_absolute_uri(m.voice_file.url) if m.voice_file else '',
-            'created_at': m.created_at.strftime('%H:%M'),
-        }
-        return base
 
     def get(self, request):
         after = request.GET.get('after')
         qs = CommunityMessage.objects.select_related('user').order_by('created_at')
         if after and after.isdigit():
             qs = qs.filter(id__gt=int(after))
-        return JsonResponse({'messages': [self._serialize(m, request) for m in qs[:100]]})
+        return JsonResponse({'messages': [_serialize_msg(m, request) for m in qs[:100]]})
 
     def post(self, request):
         msg_type = request.POST.get('msg_type', 'text')
@@ -207,6 +215,27 @@ class CommunityMessageView(LoginRequiredMixin, View):
                 return JsonResponse({'error': 'Fichier trop grand (max 10 Mo)'}, status=400)
             msg = CommunityMessage.objects.create(user=request.user, msg_type='voice', voice_file=voice)
 
+        elif msg_type == 'video':
+            video_url  = request.POST.get('video_url', '').strip()
+            video_file = request.FILES.get('video_file')
+            if not video_url and not video_file:
+                return JsonResponse({'error': 'Aucune vidéo fournie'}, status=400)
+            if video_file and video_file.size > 100 * 1024 * 1024:
+                return JsonResponse({'error': 'Vidéo trop grande (max 100 Mo)'}, status=400)
+            kw = {'msg_type': 'video'}
+            if video_url:  kw['video_url']  = video_url
+            if video_file: kw['video_file'] = video_file
+            msg = CommunityMessage.objects.create(user=request.user, **kw)
+
+        elif msg_type == 'document':
+            doc = request.FILES.get('document')
+            if not doc:
+                return JsonResponse({'error': 'Aucun document'}, status=400)
+            if doc.size > 15 * 1024 * 1024:
+                return JsonResponse({'error': 'Document trop grand (max 15 Mo)'}, status=400)
+            msg = CommunityMessage.objects.create(
+                user=request.user, msg_type='document', document=doc, document_name=doc.name)
+
         else:
             text = request.POST.get('text', '').strip()
             if not text:
@@ -215,7 +244,52 @@ class CommunityMessageView(LoginRequiredMixin, View):
                 return JsonResponse({'error': 'Message trop long'}, status=400)
             msg = CommunityMessage.objects.create(user=request.user, msg_type='text', text=text)
 
-        return JsonResponse(self._serialize(msg, request))
+        return JsonResponse(_serialize_msg(msg, request))
+
+
+class CommunityMessageDetailView(LoginRequiredMixin, View):
+    login_url = '/accounts/login/'
+
+    def _get(self, pk, user):
+        try:
+            msg = CommunityMessage.objects.get(pk=pk)
+        except CommunityMessage.DoesNotExist:
+            return None, JsonResponse({'error': 'Message introuvable'}, status=404)
+        if msg.user != user and not user.is_staff:
+            return None, JsonResponse({'error': 'Non autorisé'}, status=403)
+        return msg, None
+
+    def patch(self, request, pk):
+        import json as _json
+        msg, err = self._get(pk, request.user)
+        if err:
+            return err
+        if msg.is_deleted:
+            return JsonResponse({'error': 'Message supprimé'}, status=400)
+        if msg.msg_type != 'text':
+            return JsonResponse({'error': 'Seuls les textes sont modifiables'}, status=400)
+        try:
+            data = _json.loads(request.body)
+        except Exception:
+            return JsonResponse({'error': 'Corps invalide'}, status=400)
+        text = data.get('text', '').strip()
+        if not text:
+            return JsonResponse({'error': 'Message vide'}, status=400)
+        if len(text) > 2000:
+            return JsonResponse({'error': 'Trop long'}, status=400)
+        msg.text = text
+        msg.edited_at = timezone.now()
+        msg.save(update_fields=['text', 'edited_at'])
+        return JsonResponse({'ok': True, 'text': msg.text})
+
+    def delete(self, request, pk):
+        msg, err = self._get(pk, request.user)
+        if err:
+            return err
+        if not msg.is_deleted:
+            msg.is_deleted = True
+            msg.save(update_fields=['is_deleted'])
+        return JsonResponse({'ok': True})
 
 
 # ─────────────────────────────────────────────────────────────
