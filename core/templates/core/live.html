@@ -44,39 +44,97 @@
     align-items: center; justify-content: center;
     color: rgba(255,255,255,.5);
   }
-  /* Schedule grid */
-  .schedule-section { background: #f0f4f0; padding: 3rem 0; }
-  .schedule-day-title {
-    font-size: .7rem; font-weight: 800; letter-spacing: .1em;
-    text-transform: uppercase; color: var(--green);
-    padding: .4rem .8rem; background: rgba(0,104,55,.08);
-    border-radius: 6px; display: inline-block; margin-bottom: 1rem;
+  /* ── Grille 24h ── */
+  .grid-24h { display: flex; flex-direction: column; }
+
+  .grid-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    min-height: 56px;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    transition: background .2s;
   }
-  .slot-card {
-    background: #fff; border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
-    padding: .85rem 1rem;
-    border-left: 4px solid var(--slot-color, #006837);
-    display: flex; gap: 1rem; align-items: flex-start;
-    transition: transform .15s, box-shadow .15s;
+  .grid-row:hover { background: rgba(255,255,255,.02); }
+  .grid-row--now {
+    background: rgba(0,104,55,.07);
+    border-bottom-color: rgba(0,104,55,.25);
   }
-  .slot-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
-  .slot-card.on-air {
-    background: linear-gradient(135deg, #fff 0%, rgba(0,104,55,.04) 100%);
+
+  .grid-hour {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start; padding: .7rem .4rem .7rem 0;
+    border-right: 2px solid rgba(255,255,255,.07); gap: .3rem;
+    position: sticky; left: 0;
+  }
+  .grid-row--now .grid-hour { border-right-color: var(--green); }
+
+  .hour-label {
+    font-size: .72rem; font-weight: 700; color: rgba(255,255,255,.35);
+    font-family: monospace; letter-spacing: .03em;
+  }
+  .hour-label--now { color: var(--green); font-size: .78rem; }
+
+  .now-pill {
+    font-size: .55rem; font-weight: 800; letter-spacing: .06em;
+    background: var(--green); color: #fff;
+    padding: .15rem .4rem; border-radius: 10px;
+    text-transform: uppercase;
+  }
+
+  .grid-content {
+    padding: .5rem .75rem; display: flex; flex-direction: column; gap: .4rem;
+  }
+
+  .program-block {
+    border-left: 3px solid var(--pc, #006837);
+    border-radius: 0 8px 8px 0;
+    background: rgba(255,255,255,.04);
+    transition: background .2s, transform .15s;
+  }
+  .program-block:hover { background: rgba(255,255,255,.08); transform: translateX(2px); }
+  .program-block--live {
+    background: rgba(220,38,38,.08);
     border-left-color: #dc2626;
-    box-shadow: 0 0 0 2px rgba(220,38,38,.15), 0 4px 16px rgba(0,0,0,.08);
+    box-shadow: 0 0 0 1px rgba(220,38,38,.2);
   }
-  .slot-time {
-    font-size: .78rem; font-weight: 700; color: #555;
-    white-space: nowrap; min-width: 80px; padding-top: 2px;
+  .program-block--special {
+    background: rgba(247,148,29,.07);
   }
-  .slot-cat-dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: var(--slot-color, #006837); flex-shrink: 0; margin-top: 5px;
+
+  .program-inner { padding: .6rem .85rem; }
+
+  .program-time {
+    font-size: .68rem; color: rgba(255,255,255,.4);
+    margin-bottom: .25rem; font-weight: 600;
   }
-  .slot-title { font-weight: 700; font-size: .9rem; margin-bottom: .15rem; }
-  .slot-presenter { font-size: .75rem; color: #777; }
-  .slot-duration { font-size: .7rem; color: #aaa; margin-top: .2rem; }
+  .program-title {
+    font-size: .88rem; font-weight: 700; color: #fff;
+    line-height: 1.3;
+  }
+  .program-presenter {
+    font-size: .72rem; color: rgba(255,255,255,.45); margin-top: .2rem;
+  }
+  .program-cat-badge {
+    font-size: .6rem; font-weight: 700; color: #fff;
+    padding: .2rem .6rem; border-radius: 20px;
+    letter-spacing: .03em; white-space: nowrap;
+  }
+
+  .program-empty {
+    font-size: .72rem; color: rgba(255,255,255,.18);
+    padding: .55rem .85rem; font-style: italic;
+  }
+
+  /* Légende */
+  .legend-pill {
+    font-size: .68rem; font-weight: 600; color: #fff;
+    background: var(--lc, #006837); opacity: .75;
+    padding: .2rem .7rem; border-radius: 20px;
+  }
+
+  @keyframes livePulse {
+    0%,100% { opacity:1; } 50% { opacity:.4; }
+  }
 </style>
 {% endblock %}
 
@@ -153,76 +211,144 @@
   </div>
 </div>
 
-<!-- ── Schedule section ── -->
-<section class="schedule-section">
-  <div class="container">
+<!-- ══════════════════════════════════════════════════════════
+     GRILLE 24H
+     ══════════════════════════════════════════════════════════ -->
+<section style="background:#0d1117;padding:3rem 0 5rem;">
+  <div class="container-fluid px-lg-5">
 
-    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <!-- En-tête -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
       <div>
-        <h2 class="fw-800 mb-1" style="font-size:1.4rem;">Grille des émissions</h2>
-        <p class="text-muted small mb-0">Programme de la journée et des prochains jours</p>
+        <span style="background:rgba(0,104,55,.15);color:var(--green);font-size:.72rem;font-weight:700;
+                     padding:.3rem .85rem;border-radius:20px;letter-spacing:.05em;border:1px solid rgba(0,104,55,.3);">
+          <i class="fas fa-calendar-alt me-1"></i>PROGRAMME
+        </span>
+        <h2 class="text-white fw-800 mt-2 mb-0" style="font-size:1.5rem;">
+          Grille 24h — <span style="color:var(--green);">{{ today|date:"l d F Y"|capfirst }}</span>
+        </h2>
+        <p style="color:rgba(255,255,255,.4);font-size:.82rem;margin-top:.3rem;">
+          Heure locale · Abidjan (GMT+0)
+        </p>
       </div>
-      <a href="{% url 'live_control' %}" class="btn btn-sm rounded-pill px-3"
-         style="background:rgba(0,104,55,.08);color:var(--green);border:1px solid rgba(0,104,55,.2);font-size:.78rem;">
-        <i class="fas fa-sliders me-1"></i>Gérer le programme
-      </a>
+      <div class="d-flex gap-2 flex-wrap">
+        <!-- Horloge live -->
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+                    border-radius:12px;padding:.6rem 1.1rem;display:flex;align-items:center;gap:.5rem;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;animation:livePulse 1.5s infinite;"></span>
+          <span class="text-white fw-700" id="liveClock" style="font-size:1rem;font-family:monospace;letter-spacing:.05em;">
+            {{ now_hour|stringformat:"02d" }}:{{ now_min|stringformat:"02d" }}
+          </span>
+        </div>
+        <a href="{% url 'live_control' %}" class="btn btn-sm rounded-pill px-4"
+           style="background:rgba(0,104,55,.15);color:var(--green);border:1px solid rgba(0,104,55,.3);font-size:.8rem;">
+          <i class="fas fa-sliders me-1"></i>Gérer
+        </a>
+      </div>
     </div>
 
-    {% if schedule_today %}
-    <div class="mb-5">
-      <div class="schedule-day-title">Aujourd'hui</div>
-      <div class="d-flex flex-column gap-2">
-        {% for slot in schedule_today %}
-        <div class="slot-card {% if slot.is_on_air %}on-air{% endif %}" style="--slot-color:{{ slot.color }};">
-          {% if slot.is_on_air %}
-          <span class="live-badge me-1" style="font-size:.65rem;padding:.2rem .5rem;white-space:nowrap;">LIVE</span>
-          {% endif %}
-          <div class="slot-time">
-            {{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}
-          </div>
-          <div class="slot-cat-dot"></div>
-          <div class="flex-grow-1 min-w-0">
-            <div class="slot-title">{{ slot.title }}</div>
-            {% if slot.presenter %}
-            <div class="slot-presenter"><i class="fas fa-microphone me-1" style="font-size:.65rem;"></i>{{ slot.presenter }}</div>
-            {% endif %}
-            <div class="slot-duration">{{ slot.duration_minutes }} min · {{ slot.get_category_display }}</div>
-          </div>
-          {% if slot.is_highlighted %}
-          <span class="badge rounded-pill" style="background:rgba(247,148,29,.15);color:var(--orange);font-size:.65rem;white-space:nowrap;align-self:flex-start;">✦ Spécial</span>
+    <!-- Légende catégories -->
+    <div class="d-flex flex-wrap gap-2 mb-4">
+      <span style="font-size:.7rem;color:rgba(255,255,255,.4);align-self:center;margin-right:.3rem;">Catégories :</span>
+      <span class="legend-pill" style="--lc:#006837;">Culte & Prière</span>
+      <span class="legend-pill" style="--lc:#8b5cf6;">Témoignages</span>
+      <span class="legend-pill" style="--lc:#f59e0b;">Enfants</span>
+      <span class="legend-pill" style="--lc:#3b82f6;">Enseignement</span>
+      <span class="legend-pill" style="--lc:#ef4444;">Actualités</span>
+      <span class="legend-pill" style="--lc:#ec4899;">Musique</span>
+      <span class="legend-pill" style="--lc:#f7941d;">Spéciale</span>
+      <span class="legend-pill" style="--lc:#06b6d4;">Conférence</span>
+    </div>
+
+    <!-- Grille 24h -->
+    <div class="grid-24h" id="grid24h">
+      {% for block in grid_24h %}
+      <div class="grid-row {% if block.is_now %}grid-row--now{% endif %}" id="hour-{{ block.hour }}">
+
+        <!-- Colonne heure -->
+        <div class="grid-hour">
+          <span class="hour-label {% if block.is_now %}hour-label--now{% endif %}">
+            {{ block.hour|stringformat:"02d" }}:00
+          </span>
+          {% if block.is_now %}
+          <span class="now-pill">EN COURS</span>
           {% endif %}
         </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% else %}
-    <div class="text-center py-4 text-muted small mb-5">
-      <i class="fas fa-calendar-xmark fa-2x opacity-25 d-block mb-2"></i>
-      Aucune émission programmée aujourd'hui.
-    </div>
-    {% endif %}
 
+        <!-- Colonne programme -->
+        <div class="grid-content">
+          {% if block.slots %}
+            {% for slot in block.slots %}
+            <div class="program-block {% if slot.is_on_air %}program-block--live{% endif %} {% if slot.is_highlighted %}program-block--special{% endif %}"
+                 style="--pc:{{ slot.color }};">
+              <div class="program-inner">
+                <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
+                  <div class="flex-grow-1 min-w-0">
+                    <div class="program-time">
+                      <i class="far fa-clock me-1" style="font-size:.62rem;"></i>
+                      {{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}
+                      <span class="ms-1" style="opacity:.6;">· {{ slot.duration_minutes }} min</span>
+                    </div>
+                    <div class="program-title">{{ slot.title }}</div>
+                    {% if slot.presenter %}
+                    <div class="program-presenter">
+                      <i class="fas fa-microphone me-1" style="font-size:.6rem;"></i>{{ slot.presenter }}
+                    </div>
+                    {% endif %}
+                  </div>
+                  <div class="d-flex flex-column align-items-end gap-1 flex-shrink-0">
+                    <span class="program-cat-badge" style="background:var(--pc);">
+                      {{ slot.get_category_display }}
+                    </span>
+                    {% if slot.is_on_air %}
+                    <span class="live-badge" style="font-size:.6rem;padding:.15rem .5rem;">
+                      <span style="width:5px;height:5px;border-radius:50%;background:#fff;display:inline-block;"></span>
+                      LIVE
+                    </span>
+                    {% endif %}
+                    {% if slot.is_highlighted %}
+                    <span style="font-size:.62rem;color:var(--orange);">&#9733; Spécial</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="program-empty">
+              <i class="fas fa-circle-dashed me-2" style="opacity:.3;font-size:.7rem;"></i>
+              Disponible
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Prochains jours -->
     {% if schedule_week %}
-    <div>
-      <div class="schedule-day-title">Prochainement</div>
+    <div class="mt-5">
+      <h3 class="text-white fw-700 mb-4" style="font-size:1.1rem;">
+        <i class="fas fa-calendar-week me-2" style="color:var(--orange);"></i>Prochainement
+      </h3>
       {% regroup schedule_week by date as week_days %}
       {% for day in week_days %}
       <div class="mb-4">
-        <p class="fw-700 small mb-2" style="color:#333;">
-          <i class="fas fa-calendar me-1 text-green"></i>
-          {{ day.grouper|date:"l d F Y"|capfirst }}
-        </p>
+        <div class="mb-2" style="font-size:.72rem;font-weight:700;text-transform:uppercase;
+                                  letter-spacing:.08em;color:var(--green);">
+          <i class="fas fa-calendar me-1"></i>{{ day.grouper|date:"l d F Y"|capfirst }}
+        </div>
         <div class="d-flex flex-column gap-2">
           {% for slot in day.list %}
-          <div class="slot-card" style="--slot-color:{{ slot.color }};">
-            <div class="slot-time">{{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}</div>
-            <div class="slot-cat-dot"></div>
-            <div class="flex-grow-1 min-w-0">
-              <div class="slot-title">{{ slot.title }}</div>
-              {% if slot.presenter %}
-              <div class="slot-presenter"><i class="fas fa-microphone me-1" style="font-size:.65rem;"></i>{{ slot.presenter }}</div>
-              {% endif %}
-              <div class="slot-duration">{{ slot.duration_minutes }} min · {{ slot.get_category_display }}</div>
+          <div class="program-block" style="--pc:{{ slot.color }};">
+            <div class="program-inner d-flex gap-3 align-items-center">
+              <div class="program-time" style="min-width:110px;">{{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}</div>
+              <div class="flex-grow-1">
+                <div class="program-title" style="font-size:.88rem;">{{ slot.title }}</div>
+                {% if slot.presenter %}<div class="program-presenter">{{ slot.presenter }}</div>{% endif %}
+              </div>
+              <span class="program-cat-badge" style="background:var(--pc);">{{ slot.get_category_display }}</span>
             </div>
           </div>
           {% endfor %}
@@ -232,10 +358,12 @@
     </div>
     {% endif %}
 
-    {% if not schedule_today and not schedule_week %}
-    <div class="text-center py-5 text-muted">
-      <i class="fas fa-calendar-plus fa-3x opacity-20 d-block mb-3"></i>
-      <p>La grille des émissions n'a pas encore été remplie.</p>
+    {% if not grid_24h and not schedule_week %}
+    <div class="text-center py-5" style="color:rgba(255,255,255,.3);">
+      <i class="fas fa-calendar-plus fa-3x d-block mb-3 opacity-25"></i>
+      <p>La grille n'a pas encore été remplie.<br>
+        <a href="{% url 'live_control' %}" style="color:var(--green);">Ajouter des émissions</a>
+      </p>
     </div>
     {% endif %}
 
@@ -246,16 +374,38 @@
 
 {% block extra_js %}
 <script>
-// Auto-refresh du statut live toutes les 30 secondes
-(function() {
+// ── Horloge temps réel ──
+(function () {
+  function tick() {
+    const now = new Date();
+    const hh  = String(now.getHours()).padStart(2, '0');
+    const mm  = String(now.getMinutes()).padStart(2, '0');
+    const el  = document.getElementById('liveClock');
+    if (el) el.textContent = hh + ':' + mm;
+  }
+  tick();
+  setInterval(tick, 10000);
+})();
+
+// ── Scroll vers l'heure actuelle ──
+(function () {
+  const nowHour = {{ now_hour }};
+  const target  = document.getElementById('hour-' + nowHour);
+  if (target) {
+    setTimeout(() => {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 400);
+  }
+})();
+
+// ── Auto-refresh si hors ligne (vérifie toutes les 30s) ──
+(function () {
   const isLive = {{ live|yesno:"true,false" }};
   if (!isLive) {
-    setInterval(function() {
+    setInterval(function () {
       fetch('{% url "live_status" %}')
         .then(r => r.json())
-        .then(data => {
-          if (data.is_live) location.reload();
-        })
+        .then(data => { if (data.is_live) location.reload(); })
         .catch(() => {});
     }, 30000);
   }

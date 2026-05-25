@@ -711,13 +711,40 @@ class LiveView(TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         from django.utils import timezone
-        today = timezone.localdate()
-        ctx['live']           = LiveStream.get_active()
-        ctx['schedule_today'] = EmissionSlot.objects.filter(date=today)
-        ctx['schedule_week']  = (EmissionSlot.objects
-                                  .filter(date__gte=today)
-                                  .exclude(date=today)
-                                  .order_by('date', 'start_time')[:30])
+        from datetime import time as dt_time
+
+        now_local = timezone.localtime()
+        today     = now_local.date()
+
+        ctx['live']      = LiveStream.get_active()
+        ctx['now_hour']  = now_local.hour
+        ctx['now_min']   = now_local.minute
+        ctx['today']     = today
+
+        today_slots = list(EmissionSlot.objects.filter(date=today).order_by('start_time'))
+
+        # Grille 24h : pour chaque heure, les créneaux qui y sont actifs
+        grid = []
+        for h in range(24):
+            active = [
+                s for s in today_slots
+                if s.start_time.hour <= h < (s.end_time.hour if s.end_time > s.start_time else 24)
+                or s.start_time.hour == h
+            ]
+            # Dédoublonner
+            seen = set()
+            unique = []
+            for s in active:
+                if s.pk not in seen:
+                    seen.add(s.pk)
+                    unique.append(s)
+            grid.append({'hour': h, 'slots': unique, 'is_now': now_local.hour == h})
+
+        ctx['grid_24h'] = grid
+
+        ctx['schedule_week'] = (EmissionSlot.objects
+                                .filter(date__gt=today)
+                                .order_by('date', 'start_time')[:40])
         return ctx
 
 
