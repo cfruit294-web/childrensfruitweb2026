@@ -1,0 +1,204 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Demande de Partenariat — Children's Fruit{% endblock %}
+
+{% block extra_css %}
+<style>
+  .partnership-hero {
+    padding: 4rem 0 3rem;
+    background: linear-gradient(135deg, #006837 0%, #004d28 60%, #003319 100%);
+    border-bottom: 3px solid rgba(255,255,255,.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .partnership-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(247,148,29,.12) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .map-frame {
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+    border: none;
+    border-radius: 16px;
+    display: block;
+  }
+  .map-wrapper {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,.12);
+    height: 100%;
+    min-height: 420px;
+    position: relative;
+  }
+  .address-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: #fff;
+    border: 1px solid rgba(0,104,55,.15);
+    border-radius: 10px;
+    padding: .55rem .9rem;
+    font-size: .82rem;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="partnership-hero text-center">
+  <div class="container">
+    <span class="badge px-3 py-2 rounded-pill mb-3 d-inline-block"
+          style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);">
+      <i class="fas fa-handshake me-1"></i>Partenariat
+    </span>
+    <h1 class="fw-bold display-5 mb-2 text-white">Construisons ensemble</h1>
+    <p class="mb-0 fw-500" style="color:rgba(255,255,255,.85);font-size:1.05rem;">
+      Rejoignez le réseau des partenaires de Children's Fruit.
+    </p>
+  </div>
+</section>
+
+<!-- Why partner -->
+<section style="background:#f7f9f7;padding:3rem 0 0;">
+  <div class="container">
+    <div class="row g-3 mb-5">
+      <div class="col-md-4 text-center">
+        <div class="p-3 rounded-xl bg-white shadow-sm">
+          <i class="fas fa-tv fa-2x mb-2 text-green"></i>
+          <div class="fw-semibold small">Visibilité WebTV</div>
+          <small class="text-muted">Accès aux flux et contenus exclusifs</small>
+        </div>
+      </div>
+      <div class="col-md-4 text-center">
+        <div class="p-3 rounded-xl bg-white shadow-sm">
+          <i class="fas fa-chart-line fa-2x mb-2" style="color:var(--orange);"></i>
+          <div class="fw-semibold small">Impact mesurable</div>
+          <small class="text-muted">Rapports d'activité et KPIs</small>
+        </div>
+      </div>
+      <div class="col-md-4 text-center">
+        <div class="p-3 rounded-xl bg-white shadow-sm">
+          <i class="fas fa-users fa-2x mb-2 text-green"></i>
+          <div class="fw-semibold small">Réseau engagé</div>
+          <small class="text-muted">Communauté active de bénévoles</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Map + Form -->
+<section style="background:#f7f9f7;padding:0 0 4rem;">
+  <div class="container">
+    <div class="row g-4 align-items-stretch">
+
+      <!-- ── Carte (gauche) ── -->
+      <div class="col-lg-5 d-flex flex-column gap-3">
+
+        <div class="map-wrapper">
+          <iframe
+            class="map-frame"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=-4.0850%2C5.3400%2C-4.0250%2C5.3900&layer=mapnik&marker=5.3650%2C-4.0550"
+            loading="lazy"
+            allowfullscreen
+            title="Localisation Children's Fruit — Abidjan">
+          </iframe>
+        </div>
+
+        <div class="address-chip">
+          <i class="fas fa-map-marker-alt" style="color:var(--green);font-size:1rem;"></i>
+          <div>
+            <div class="fw-600" style="font-size:.82rem;">Children's Fruit</div>
+            <div class="text-muted" style="font-size:.75rem;">Abidjan, M'pouto, Côte d'Ivoire</div>
+          </div>
+        </div>
+
+        <div class="address-chip">
+          <i class="fas fa-phone" style="color:var(--green);font-size:.9rem;"></i>
+          <div>
+            <div class="text-muted" style="font-size:.72rem;">Téléphone</div>
+            <div class="fw-600" style="font-size:.82rem;">+225 01 01 92 80 13</div>
+          </div>
+        </div>
+
+        <a href="https://maps.google.com/?q=M%27pouto%2C+Abidjan%2C+C%C3%B4te+d%27Ivoire"
+           target="_blank" rel="noopener"
+           class="btn btn-sm rounded-pill px-4"
+           style="background:rgba(0,104,55,.08);color:var(--green);border:1px solid rgba(0,104,55,.2);font-size:.8rem;align-self:flex-start;">
+          <i class="fas fa-diamond-turn-right me-1"></i>Ouvrir dans Google Maps
+        </a>
+
+      </div>
+
+      <!-- ── Formulaire (droite) ── -->
+      <div class="col-lg-7">
+        <div class="card dash-card p-4 h-100">
+          <h4 class="fw-bold mb-1">Formulaire de demande</h4>
+          <p class="text-muted small mb-4">
+            Remplissez ce formulaire et notre équipe vous contactera sous 48 h.
+          </p>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">{{ form.organization_name.label }}</label>
+              {{ form.organization_name }}
+              {% if form.organization_name.errors %}
+              <div class="text-danger small mt-1">{{ form.organization_name.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">{{ form.contact_name.label }}</label>
+                {{ form.contact_name }}
+                {% if form.contact_name.errors %}
+                <div class="text-danger small mt-1">{{ form.contact_name.errors.0 }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">{{ form.contact_email.label }}</label>
+                {{ form.contact_email }}
+                {% if form.contact_email.errors %}
+                <div class="text-danger small mt-1">{{ form.contact_email.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label small fw-semibold">{{ form.message.label }}</label>
+              {{ form.message }}
+              {% if form.message.errors %}
+              <div class="text-danger small mt-1">{{ form.message.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-orange btn-lg w-100 fw-bold">
+              <i class="fas fa-paper-plane me-2"></i>Envoyer ma demande
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Séparateur avant footer -->
+<div style="background:#f7f9f7;padding:0 0 1.5rem;">
+  <div class="container">
+    <div style="height:2px;background:linear-gradient(90deg,transparent,#006837,rgba(247,148,29,.7),#006837,transparent);border-radius:2px;"></div>
+  </div>
+</div>
+
+{% endblock %}

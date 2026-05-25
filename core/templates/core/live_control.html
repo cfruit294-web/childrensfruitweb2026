@@ -1,0 +1,307 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Contrôle Live — Children's Fruit{% endblock %}
+
+{% block extra_css %}
+<style>
+  .ctrl-section { background: #f0f4f0; min-height: calc(100vh - 72px); padding: 2rem 0; }
+  .ctrl-card { background: #fff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+  .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .status-dot.live { background: #dc2626; animation: blink 1s infinite; }
+  .status-dot.offline { background: #9ca3af; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .btn-toggle-live {
+    font-size: 1.05rem; font-weight: 800; padding: .85rem 2.5rem;
+    border-radius: 50px; border: none; cursor: pointer;
+    transition: all .2s; width: 100%;
+  }
+  .btn-toggle-live.start { background: linear-gradient(135deg,#dc2626,#b91c1c); color:#fff; box-shadow: 0 4px 20px rgba(220,38,38,.35); }
+  .btn-toggle-live.stop  { background: linear-gradient(135deg,#374151,#1f2937); color:#fff; }
+  .btn-toggle-live:hover { transform: translateY(-2px); }
+  .slot-row { background: #f9fafb; border-radius: 10px; padding: .65rem .9rem; display: flex; align-items: center; gap: .75rem; }
+  .slot-color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .obs-block { background: #0d1117; border-radius: 12px; padding: 1.25rem; font-family: monospace; font-size: .8rem; color: #7ee787; }
+  .obs-label { font-size: .68rem; color: #8b949e; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .3rem; }
+  .obs-value { color: #f0f6fc; font-size: .82rem; word-break: break-all; }
+  .copy-obs-btn { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); color: #cdd9e5; border-radius: 6px; padding: .2rem .5rem; font-size: .72rem; cursor: pointer; }
+  .copy-obs-btn:hover { background: rgba(255,255,255,.12); }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="ctrl-section">
+  <div class="container">
+
+    <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+      <div>
+        <h2 class="fw-800 mb-0" style="font-size:1.5rem;">Contrôle du Live</h2>
+        <small class="text-muted">Gestion du streaming et de la grille des émissions</small>
+      </div>
+      <a href="{% url 'live' %}" class="btn btn-sm rounded-pill px-3 ms-auto"
+         style="background:rgba(0,104,55,.08);color:var(--green);border:1px solid rgba(0,104,55,.2);" target="_blank">
+        <i class="fas fa-eye me-1"></i>Voir la page Live
+      </a>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- ── Colonne gauche ── -->
+      <div class="col-lg-5">
+
+        <!-- Statut & Toggle -->
+        <div class="ctrl-card mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="status-dot {% if live.is_live %}live{% else %}offline{% endif %}"></span>
+            <span class="fw-bold">
+              {% if live.is_live %}
+                🔴 EN DIRECT — {{ live.title }}
+              {% else %}
+                ⚫ Hors ligne
+              {% endif %}
+            </span>
+          </div>
+
+          {% if live.is_live and live.started_at %}
+          <p class="text-muted small mb-3">
+            <i class="fas fa-clock me-1"></i>Démarré à {{ live.started_at|time:"H:i" }} ({{ live.started_at|timesince }} ago)
+          </p>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_live">
+            <button type="submit" class="btn-toggle-live {% if live.is_live %}stop{% else %}start{% endif %}">
+              {% if live.is_live %}
+                <i class="fas fa-stop-circle me-2"></i>Arrêter le Direct
+              {% else %}
+                <i class="fas fa-circle me-2"></i>Lancer le Direct
+              {% endif %}
+            </button>
+          </form>
+        </div>
+
+        <!-- Configuration du flux -->
+        <div class="ctrl-card mb-4">
+          <h6 class="fw-bold mb-3" style="font-size:.88rem;color:var(--green);text-transform:uppercase;letter-spacing:.05em;">
+            <i class="fas fa-sliders me-1"></i>Configuration du flux
+          </h6>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_stream">
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Titre du direct</label>
+              <input type="text" name="title" class="form-control form-control-sm" value="{{ live.title }}">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Plateforme</label>
+              <select name="platform" class="form-select form-select-sm" id="platformSel" onchange="updateObsGuide(this.value)">
+                <option value="youtube"  {% if live.platform == 'youtube'  %}selected{% endif %}>YouTube Live</option>
+                <option value="facebook" {% if live.platform == 'facebook' %}selected{% endif %}>Facebook Live</option>
+                <option value="hls"      {% if live.platform == 'hls'      %}selected{% endif %}>Flux HLS (serveur RTMP)</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">
+                URL du flux
+                <small class="text-muted fw-normal" id="urlHint">— URL YouTube Live (watch ou embed)</small>
+              </label>
+              <input type="url" name="stream_url" class="form-control form-control-sm"
+                     value="{{ live.stream_url }}" placeholder="https://…">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Description (optionnel)</label>
+              <textarea name="description" class="form-control form-control-sm" rows="2">{{ live.description }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-green btn-sm w-100 fw-bold">
+              <i class="fas fa-save me-1"></i>Enregistrer
+            </button>
+          </form>
+        </div>
+
+        <!-- Guide OBS -->
+        <div class="ctrl-card">
+          <h6 class="fw-bold mb-3" style="font-size:.88rem;color:var(--green);text-transform:uppercase;letter-spacing:.05em;">
+            <i class="fas fa-video me-1"></i>Configuration OBS
+          </h6>
+
+          <div id="obsYoutube">
+            <p class="small text-muted mb-3">Paramètres OBS Studio → Diffusion :</p>
+            <div class="obs-block mb-2">
+              <div class="obs-label">Service</div>
+              <div class="obs-value">YouTube - RTMPS</div>
+            </div>
+            <div class="obs-block mb-2">
+              <div class="obs-label">Serveur</div>
+              <div class="d-flex align-items-center gap-2">
+                <div class="obs-value flex-grow-1">rtmp://a.rtmp.youtube.com/live2</div>
+                <button class="copy-obs-btn" onclick="copyObs('rtmp://a.rtmp.youtube.com/live2',this)"><i class="fas fa-copy"></i></button>
+              </div>
+            </div>
+            <div class="obs-block mb-3">
+              <div class="obs-label">Clé de diffusion</div>
+              <div class="obs-value text-warning">⟶ Obtenez-la dans YouTube Studio → Direct</div>
+            </div>
+            <ol class="small text-muted ps-3 mb-0">
+              <li>Lancez le direct dans YouTube Studio</li>
+              <li>Copiez l'URL <strong>youtube.com/watch?v=…</strong> dans le champ ci-dessus</li>
+              <li>Cliquez <strong>Enregistrer</strong> puis <strong>Lancer le Direct</strong></li>
+            </ol>
+          </div>
+
+          <div id="obsFacebook" style="display:none;">
+            <div class="obs-block mb-2">
+              <div class="obs-label">Serveur</div>
+              <div class="obs-value">rtmps://live-api-s.facebook.com:443/rtmp/</div>
+            </div>
+            <div class="obs-block mb-3">
+              <div class="obs-label">Clé de diffusion</div>
+              <div class="obs-value text-warning">⟶ Depuis Facebook → Vidéo en direct → Clé de flux</div>
+            </div>
+            <ol class="small text-muted ps-3 mb-0">
+              <li>Récupérez l'URL du live Facebook (facebook.com/video/…)</li>
+              <li>Collez-la dans le champ "URL du flux" ci-dessus</li>
+            </ol>
+          </div>
+
+          <div id="obsHls" style="display:none;">
+            <div class="obs-block mb-2">
+              <div class="obs-label">Serveur RTMP (nginx-rtmp / mediamtx)</div>
+              <div class="obs-value">rtmp://votre-serveur/live</div>
+            </div>
+            <div class="obs-block mb-3">
+              <div class="obs-label">URL HLS à coller dans le champ URL</div>
+              <div class="obs-value">http://votre-serveur:8080/hls/stream.m3u8</div>
+            </div>
+            <p class="small text-muted mb-0">Installez <strong>mediamtx</strong> ou <strong>nginx-rtmp</strong> sur votre VPS pour un flux auto-hébergé.</p>
+          </div>
+        </div>
+
+      </div><!-- /col-left -->
+
+      <!-- ── Colonne droite : Grille des émissions ── -->
+      <div class="col-lg-7">
+
+        <!-- Ajouter un créneau -->
+        <div class="ctrl-card mb-4">
+          <h6 class="fw-bold mb-3" style="font-size:.88rem;color:var(--green);text-transform:uppercase;letter-spacing:.05em;">
+            <i class="fas fa-calendar-plus me-1"></i>Ajouter un créneau
+          </h6>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_slot">
+            <div class="row g-2">
+              <div class="col-12">
+                <input type="text" name="slot_title" class="form-control form-control-sm" placeholder="Titre de l'émission *" required>
+              </div>
+              <div class="col-sm-4">
+                <input type="date" name="slot_date" class="form-control form-control-sm" value="{{ today|date:'Y-m-d' }}" required>
+              </div>
+              <div class="col-sm-3">
+                <input type="time" name="start_time" class="form-control form-control-sm" placeholder="Début *" required>
+              </div>
+              <div class="col-sm-3">
+                <input type="time" name="end_time" class="form-control form-control-sm" placeholder="Fin *" required>
+              </div>
+              <div class="col-sm-6">
+                <select name="category" class="form-select form-select-sm">
+                  {% for key, label in category_choices %}
+                  <option value="{{ key }}">{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <input type="text" name="presenter" class="form-control form-control-sm" placeholder="Présentateur·rice">
+              </div>
+              <div class="col-12">
+                <textarea name="slot_description" class="form-control form-control-sm" rows="2" placeholder="Description (optionnel)"></textarea>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-orange btn-sm w-100 fw-bold">
+                  <i class="fas fa-plus me-1"></i>Ajouter à la grille
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Grille du jour -->
+        <div class="ctrl-card">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-bold mb-0" style="font-size:.88rem;color:var(--green);text-transform:uppercase;letter-spacing:.05em;">
+              <i class="fas fa-list me-1"></i>Grille — {{ today|date:"d F Y" }}
+            </h6>
+            <small class="text-muted">{{ slots_today|length }} créneau{{ slots_today|length|pluralize }}</small>
+          </div>
+
+          {% if slots_today %}
+          <div class="d-flex flex-column gap-2">
+            {% for slot in slots_today %}
+            <div class="slot-row">
+              <div class="slot-color-dot" style="background:{{ slot.color }};"></div>
+              <div class="flex-grow-1 min-w-0">
+                <div class="fw-700 small text-truncate">{{ slot.title }}</div>
+                <div class="text-muted" style="font-size:.72rem;">
+                  {{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }} ·
+                  {{ slot.get_category_display }}
+                  {% if slot.presenter %} · {{ slot.presenter }}{% endif %}
+                </div>
+              </div>
+              {% if slot.is_on_air %}
+              <span class="badge rounded-pill" style="background:#dc2626;color:#fff;font-size:.65rem;">LIVE</span>
+              {% endif %}
+              <form method="post" onsubmit="return confirm('Supprimer ce créneau ?')">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete_slot">
+                <input type="hidden" name="slot_id" value="{{ slot.pk }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" style="font-size:.7rem;padding:.15rem .5rem;">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-4 text-muted small">
+            <i class="fas fa-calendar-xmark fa-2x opacity-20 d-block mb-2"></i>
+            Aucun créneau pour aujourd'hui.
+          </div>
+          {% endif %}
+        </div>
+
+      </div><!-- /col-right -->
+
+    </div><!-- /row -->
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const URL_HINTS = {
+  youtube:  '— URL YouTube Live (watch ou embed)',
+  facebook: '— URL de la vidéo Facebook Live',
+  hls:      '— URL HLS .m3u8 (ex: http://serveur/hls/stream.m3u8)',
+};
+function updateObsGuide(platform) {
+  document.getElementById('obsYoutube').style.display  = platform === 'youtube'  ? '' : 'none';
+  document.getElementById('obsFacebook').style.display = platform === 'facebook' ? '' : 'none';
+  document.getElementById('obsHls').style.display      = platform === 'hls'      ? '' : 'none';
+  document.getElementById('urlHint').textContent = URL_HINTS[platform] || '';
+}
+updateObsGuide(document.getElementById('platformSel').value);
+
+function copyObs(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i>';
+    setTimeout(() => btn.innerHTML = orig, 2000);
+  });
+}
+</script>
+{% endblock %}

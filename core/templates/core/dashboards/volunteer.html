@@ -1,0 +1,127 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Dashboard Bénévole — Children's Fruit{% endblock %}
+{% block extra_css %}<style>body{background:#f4f6f9;}</style>{% endblock %}
+
+{% block content %}
+<div class="dash-wrap">
+  <aside class="dash-sidebar">
+    <div class="sidebar-brand"><img src="{% static 'core/img/logo.jpg' %}" alt="Children's Fruit" style="height:36px;object-fit:contain;"></div>
+    <div class="px-3 mb-3">
+      <div class="d-flex align-items-center gap-2 p-2 rounded-xl" style="background:rgba(0,104,55,.12);">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0;">{{ user.username|slice:":1"|upper }}</div>
+        <div><div class="text-white fw-600" style="font-size:.8rem;">{{ user.username }}</div><span class="badge rounded-pill" style="background:rgba(0,104,55,.3);color:#4ade80;font-size:.6rem;">Bénévole</span></div>
+      </div>
+    </div>
+    <a class="dash-nav-link active" href="{% url 'volunteer_dashboard' %}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span>Tableau de bord</a>
+    <a class="dash-nav-link" href="{% url 'video_list' %}"><span class="icon"><i class="fas fa-tv"></i></span>Web TV</a>
+    <a class="dash-nav-link" href="{% url 'community' %}"><span class="icon"><i class="fas fa-users"></i></span>Communauté</a>
+    <a class="dash-nav-link" href="{% url 'bible' %}"><span class="icon"><i class="fas fa-book-open"></i></span>Bible</a>
+    <a class="dash-nav-link" href="{% url 'donation' %}"><span class="icon"><i class="fas fa-hand-holding-heart"></i></span>Faire un Don</a>
+    <div class="px-3 pt-4">
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+        <button type="submit" class="btn btn-sm w-100 rounded-pill" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);font-size:.78rem;"><i class="fas fa-sign-out-alt me-1"></i>Déconnexion</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+      <div><h4 class="fw-700 mb-1">Espace Bénévole 🤝</h4><small class="text-muted">{{ user.username }} — Children's Fruit</small></div>
+      <a href="{% url 'community' %}" class="btn btn-green px-4"><i class="fas fa-users me-1"></i>Communauté</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:rgba(0,104,55,.1);color:var(--green);"><i class="fas fa-tasks"></i></div><div><div class="fw-800 fs-4">{{ my_tasks|length }}</div><small class="text-muted">Mes tâches</small></div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:rgba(247,148,29,.1);color:var(--orange);"><i class="fas fa-list-check"></i></div><div><div class="fw-800 fs-4">{{ open_tasks|length }}</div><small class="text-muted">Tâches ouvertes</small></div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:rgba(21,101,192,.1);color:#1565c0;"><i class="fas fa-file-alt"></i></div><div><div class="fw-800 fs-4">{{ activity_reports|length }}</div><small class="text-muted">Rapports</small></div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:rgba(168,85,247,.1);color:#a855f7;"><i class="fas fa-clapperboard"></i></div><div><div class="fw-800 fs-4">{{ castings|length }}</div><small class="text-muted">Castings</small></div></div></div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+
+        <!-- Mes tâches -->
+        <div class="bg-white rounded-xl shadow-card p-3 mb-4">
+          <h6 class="fw-700 mb-3"><i class="fas fa-tasks me-2 text-green"></i>Mes tâches assignées</h6>
+          {% if my_tasks %}
+          {% for task in my_tasks %}
+          <div class="task-item">
+            <div class="task-status {{ task.status }}" style="margin-top:5px;"></div>
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="fw-600" style="font-size:.85rem;">{{ task.title }}</div>
+              <div class="text-muted" style="font-size:.75rem;">{{ task.description|truncatewords:15 }}</div>
+              <small class="text-muted" style="font-size:.7rem;">{% if task.deadline %}<i class="fas fa-calendar me-1"></i>{{ task.deadline|date:"d/m/Y" }}{% endif %}</small>
+            </div>
+            <span class="badge rounded-pill flex-shrink-0" style="font-size:.65rem;background:{% if task.status == 'open' %}rgba(34,197,94,.12);color:#16a34a{% elif task.status == 'assigned' %}rgba(247,148,29,.12);color:var(--orange){% else %}rgba(100,116,139,.12);color:#64748b{% endif %};">{{ task.get_status_display }}</span>
+          </div>
+          {% endfor %}
+          {% else %}<p class="text-muted small text-center py-3">Aucune tâche assignée.</p>{% endif %}
+        </div>
+
+        <!-- Tâches ouvertes -->
+        <div class="bg-white rounded-xl shadow-card p-3">
+          <h6 class="fw-700 mb-3"><i class="fas fa-list-check me-2 text-orange"></i>Tâches disponibles</h6>
+          {% for task in open_tasks %}
+          <div class="task-item">
+            <div class="task-status open" style="margin-top:5px;"></div>
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="fw-600" style="font-size:.83rem;">{{ task.title }}</div>
+              <small class="text-muted" style="font-size:.7rem;">{{ task.description|truncatewords:10 }}</small>
+            </div>
+          </div>
+          {% empty %}<p class="text-muted small text-center py-2">Aucune tâche ouverte.</p>{% endfor %}
+        </div>
+
+      </div>
+
+      <div class="col-lg-4">
+        <!-- Rapports -->
+        <div class="bg-white rounded-xl shadow-card p-3 mb-3">
+          <h6 class="fw-700 mb-3"><i class="fas fa-file-pdf me-2" style="color:#1565c0;"></i>Rapports d'activité</h6>
+          {% if activity_reports %}
+          {% for r in activity_reports %}
+          <a href="{{ r.report_file.url }}" target="_blank"
+             class="d-flex align-items-center gap-2 p-2 rounded-xl text-decoration-none mb-2"
+             style="border:1px solid var(--border);transition:background .15s;"
+             onmouseover="this.style.background='var(--green-pale)'" onmouseout="this.style.background=''">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(21,101,192,.08);color:#1565c0;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-file-pdf" style="font-size:.85rem;"></i></div>
+            <div class="flex-grow-1 overflow-hidden"><div class="fw-600 text-dark" style="font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.title }}</div><small class="text-muted" style="font-size:.65rem;">{{ r.created_at|date:"d/m/Y" }}</small></div>
+            <i class="fas fa-download text-muted" style="font-size:.7rem;"></i>
+          </a>
+          {% endfor %}
+          {% else %}<p class="text-muted small text-center">Aucun rapport.</p>{% endif %}
+        </div>
+
+        <!-- Castings -->
+        {% if castings %}
+        <div class="bg-white rounded-xl shadow-card p-3 mb-3">
+          <h6 class="fw-700 mb-3"><i class="fas fa-clapperboard me-2 text-orange"></i>Castings ouverts</h6>
+          {% for c in castings %}
+          <div class="task-item">
+            <div class="task-status" style="background:var(--orange);margin-top:5px;"></div>
+            <div><div class="fw-600" style="font-size:.82rem;">{{ c.title }}</div><small class="text-muted" style="font-size:.7rem;"><i class="fas fa-calendar me-1"></i>{{ c.deadline|date:"d/m/Y" }}</small></div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Vidéos rapides -->
+        <div class="bg-white rounded-xl shadow-card p-3">
+          <h6 class="fw-700 mb-3"><i class="fas fa-film me-2 text-green"></i>Vidéos récentes</h6>
+          {% for v in videos %}
+          <a href="{% url 'video_detail' v.pk %}" class="d-flex gap-2 mb-2 text-decoration-none align-items-center">
+            <div style="width:54px;height:34px;border-radius:6px;overflow:hidden;flex-shrink:0;">
+              {% if v.thumbnail %}<img src="{{ v.thumbnail.url }}" alt="{{ v.title }}" style="width:100%;height:100%;object-fit:cover;">
+              {% else %}<img src="https://img.youtube.com/vi/{{ v.get_youtube_id }}/mqdefault.jpg" alt="{{ v.title }}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">{% endif %}
+            </div>
+            <div class="overflow-hidden"><div class="text-dark fw-600" style="font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ v.title }}</div></div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

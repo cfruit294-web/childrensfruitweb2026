@@ -1,0 +1,308 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Communauté — Children's Fruit{% endblock %}
+{% block meta_desc %}Espace communautaire Children's Fruit — discutez en temps réel, consultez les tâches et rapports d'activité.{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #f4f6f9; }
+  .comm-sidebar { position: sticky; top: 80px; }
+
+  /* Task badges */
+  .task-deadline { font-size:.7rem; color:var(--text-muted); }
+  .task-item {
+    padding: .7rem 1rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: .75rem;
+    transition: background .15s;
+  }
+  .task-item:last-child { border-bottom: none; }
+  .task-item:hover { background: var(--green-pale); }
+
+  /* Online members */
+  .member-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: .45rem .85rem; border-radius: var(--radius-pill);
+    background: #fff; border: 1px solid var(--border);
+    font-size: .8rem; font-weight: 500; box-shadow: var(--shadow-sm);
+  }
+
+  /* Chat input */
+  .chat-input {
+    background: rgba(255,255,255,.08) !important;
+    border: 1px solid rgba(255,255,255,.15) !important;
+    color: #fff !important; border-radius: var(--radius-pill) !important;
+    flex: 1; font-size: .88rem;
+  }
+  .chat-input::placeholder { color: rgba(255,255,255,.35) !important; }
+  .chat-input:focus { box-shadow: 0 0 0 2px rgba(0,104,55,.4) !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══ HERO ═══ -->
+<section class="community-hero">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <span class="badge rounded-pill px-3 py-2 mb-3 d-inline-block"
+              style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.9);font-size:.78rem;font-weight:600;">
+          <i class="fas fa-users me-1"></i>Espace Communautaire
+        </span>
+        <h1 class="fw-800 text-white mb-2" style="font-size:clamp(1.8rem,3vw,2.6rem);">
+          Notre <span style="color:var(--orange);">Communauté</span>
+        </h1>
+        <p style="color:rgba(255,255,255,.65);font-size:.95rem;">
+          Discutez en temps réel, consultez les tâches ouvertes et suivez nos rapports d'activité.
+        </p>
+      </div>
+      <div class="col-lg-5">
+        <!-- Membres en ligne -->
+        <div class="p-3 rounded-xl" style="background:rgba(255,255,255,.07);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="online-dot"></span>
+            <span class="text-white fw-600" style="font-size:.85rem;">
+              Membres en ligne <span class="badge rounded-pill ms-1" style="background:rgba(34,197,94,.2);color:#22c55e;" id="onlineCount">{{ online_users|length }}</span>
+            </span>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <div class="member-pill">
+              <span class="online-dot" style="width:7px;height:7px;"></span>
+              <span>{{ user.username }}</span>
+              <span class="badge rounded-pill" style="background:rgba(247,148,29,.15);color:var(--orange);font-size:.6rem;">Vous</span>
+            </div>
+            {% for u in online_users %}
+            <div class="member-pill">
+              <span class="online-dot" style="width:7px;height:7px;"></span>
+              <span>{{ u.username }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container py-4">
+  <div class="row g-4">
+
+    <!-- ═══ CHAT ═══ -->
+    <div class="col-lg-7">
+      <div class="chat-container shadow-card">
+        <!-- En-tête -->
+        <div class="chat-header">
+          <div class="d-flex align-items-center gap-2">
+            <span class="online-dot"></span>
+            <span class="text-white fw-600" style="font-size:.9rem;">Discussion en direct</span>
+          </div>
+          <small style="color:rgba(255,255,255,.4);font-size:.72rem;" id="chatStatus">
+            <i class="fas fa-sync-alt me-1"></i>Actualisation auto.
+          </small>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages" id="chatMessages">
+          <!-- Initial messages -->
+          {% for msg in recent_messages reversed %}
+          <div class="d-flex flex-column {% if msg.user == user %}align-items-end{% else %}align-items-start{% endif %}" data-mid="{{ msg.id }}">
+            {% if msg.user != user %}
+            <small style="color:rgba(255,255,255,.45);font-size:.68rem;margin-bottom:2px;padding-left:4px;">
+              {{ msg.user.display_name }}{% if msg.user.country %} <span style="color:rgba(247,148,29,.75);">({{ msg.user.country }})</span>{% endif %} • {{ msg.user.get_role_display }}
+            </small>
+            {% endif %}
+            <div class="chat-bubble {% if msg.user == user %}own{% else %}other{% endif %}">
+              {{ msg.text }}
+            </div>
+            <div class="chat-meta {% if msg.user == user %}text-end{% endif %}" style="color:rgba(255,255,255,.35);">
+              {{ msg.created_at|date:"H:i" }}
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-5" style="color:rgba(255,255,255,.3);" id="emptyChat">
+            <i class="fas fa-comments fa-3x mb-3 opacity-50 d-block"></i>
+            Soyez le premier à envoyer un message !
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Input -->
+        <div class="chat-input-area">
+          <input type="text" class="form-control chat-input" id="msgInput"
+                 placeholder="Écrire un message… (Entrée pour envoyer)"
+                 maxlength="2000" autocomplete="off">
+          <button class="btn btn-green px-3 rounded-pill" id="sendBtn" style="font-size:.85rem;">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <div class="col-lg-5">
+      <div class="comm-sidebar">
+
+        <!-- Tâches ouvertes -->
+        <div class="community-card mb-4">
+          <div class="card-header-cf">
+            <i class="fas fa-tasks"></i>
+            Tâches ouvertes
+            <span class="badge rounded-pill ms-auto" style="background:rgba(255,255,255,.2);">{{ open_tasks|length }}</span>
+          </div>
+          <div>
+            {% for task in open_tasks %}
+            <div class="task-item" id="task-{{ task.pk }}">
+              <div class="task-status open mt-1"></div>
+              <div class="flex-grow-1 overflow-hidden">
+                <div class="fw-600" style="font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ task.title }}</div>
+                <div class="task-deadline">
+                  <i class="fas fa-calendar me-1"></i>
+                  {% if task.deadline %}{{ task.deadline|date:"d/m/Y" }}{% else %}Sans deadline{% endif %}
+                </div>
+              </div>
+              <span class="badge rounded-pill flex-shrink-0" style="background:rgba(34,197,94,.1);color:#16a34a;font-size:.68rem;">Ouvert</span>
+            </div>
+            {% empty %}
+            <div class="text-center py-3 text-muted small">
+              <i class="fas fa-check-circle me-1"></i>Aucune tâche ouverte
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Castings -->
+        {% if castings %}
+        <div class="community-card mb-4">
+          <div class="card-header-cf" style="background:linear-gradient(90deg,var(--orange-dark),var(--orange));">
+            <i class="fas fa-clapperboard"></i>Castings ouverts
+          </div>
+          <div>
+            {% for casting in castings %}
+            <div class="task-item">
+              <div class="task-status" style="background:var(--orange);margin-top:5px;"></div>
+              <div class="flex-grow-1">
+                <div class="fw-600" style="font-size:.85rem;">{{ casting.title }}</div>
+                <div class="task-deadline"><i class="fas fa-calendar me-1"></i>Limite : {{ casting.deadline|date:"d/m/Y" }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Rapports d'activité (partenaires + bénévoles) -->
+        {% if activity_reports %}
+        <div class="community-card">
+          <div class="card-header-cf" style="background:linear-gradient(90deg,#1565c0,#1976d2);">
+            <i class="fas fa-file-alt"></i>Rapports d'activité
+          </div>
+          <div class="p-2">
+            {% for report in activity_reports %}
+            <a href="{{ report.report_file.url }}" target="_blank"
+               class="d-flex align-items-center gap-3 p-2 rounded-xl text-decoration-none mb-1"
+               style="transition:background .15s;" onmouseover="this.style.background='var(--green-pale)'" onmouseout="this.style.background=''">
+              <div style="width:38px;height:38px;border-radius:10px;background:rgba(21,101,192,.1);color:#1565c0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div class="flex-grow-1 overflow-hidden">
+                <div class="fw-600 text-dark" style="font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ report.title }}</div>
+                <small class="text-muted" style="font-size:.7rem;">{{ report.created_at|date:"d/m/Y" }}</small>
+              </div>
+              <i class="fas fa-download text-muted" style="font-size:.8rem;"></i>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF    = '{{ csrf_token }}';
+const ME      = '{{ user.username }}';
+let lastId    = 0;
+
+// Initialiser lastId depuis les messages déjà affichés
+document.querySelectorAll('[data-mid]').forEach(el => {
+  const id = parseInt(el.dataset.mid);
+  if (id > lastId) lastId = id;
+});
+// Scroll to bottom
+const chatBox = document.getElementById('chatMessages');
+chatBox.scrollTop = chatBox.scrollHeight;
+
+/* ── Rendu d'un message ── */
+function msgHTML(m) {
+  const isMe = m.user === ME;
+  const nameLabel = m.display_name || m.user;
+  const countrySpan = m.country ? ` <span style="color:rgba(247,148,29,.75);">(${m.country})</span>` : '';
+  return `
+    <div class="d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'}">
+      ${!isMe ? `<small style="color:rgba(255,255,255,.45);font-size:.68rem;margin-bottom:2px;padding-left:4px;">${nameLabel}${countrySpan} • ${m.role}</small>` : ''}
+      <div class="chat-bubble ${isMe ? 'own' : 'other'}">${m.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      <div class="chat-meta ${isMe ? 'text-end' : ''}" style="color:rgba(255,255,255,.35);">${m.created_at}</div>
+    </div>`;
+}
+
+/* ── Polling toutes les 3s ── */
+function pollMessages() {
+  fetch(`/communaute/messages/?after=${lastId}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.messages.length > 0) {
+        const empty = document.getElementById('emptyChat');
+        if (empty) empty.remove();
+        const atBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 60;
+        data.messages.forEach(m => {
+          if (m.id > lastId) lastId = m.id;
+          chatBox.insertAdjacentHTML('beforeend', msgHTML(m));
+        });
+        if (atBottom) chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    })
+    .catch(() => {});
+}
+setInterval(pollMessages, 3000);
+
+/* ── Envoi ── */
+function sendMsg() {
+  const input = document.getElementById('msgInput');
+  const text  = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  fetch('/communaute/messages/', {
+    method:  'POST',
+    headers: {'X-CSRFToken': CSRF},
+    body:    new URLSearchParams({text}),
+  })
+  .then(r => r.json())
+  .then(m => {
+    if (m.error) return;
+    if (m.id > lastId) lastId = m.id;
+    const empty = document.getElementById('emptyChat');
+    if (empty) empty.remove();
+    chatBox.insertAdjacentHTML('beforeend', msgHTML(m));
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+}
+
+document.getElementById('sendBtn').addEventListener('click', sendMsg);
+document.getElementById('msgInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+
+/* ── Tâches live ── */
+function pollTasks() {
+  // Simple: reload task section every 30s via fetch would need a dedicated endpoint
+  // For now, static render is sufficient; tasks update on page reload
+}
+</script>
+{% endblock %}

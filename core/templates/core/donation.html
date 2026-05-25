@@ -1,0 +1,367 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Faire un Don — Children's Fruit{% endblock %}
+{% block meta_desc %}Soutenez Children's Fruit. Chaque don transforme une vie. Wave CI, Orange Money, MTN MoMo disponibles.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .pay-card {
+    border: 2px solid transparent; border-radius: var(--radius);
+    padding: 1.25rem; cursor: pointer; transition: var(--transition);
+    background: #fff; box-shadow: var(--shadow-sm);
+  }
+  .pay-card:hover, .pay-card.selected { border-color: var(--green); box-shadow: 0 0 0 3px rgba(0,104,55,.1); }
+  .pay-card-icon { width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #fff; flex-shrink: 0; }
+  .step-circle {
+    width: 44px; height: 44px; border-radius: 50%; background: var(--green); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 800;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .amount-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; }
+  @media(max-width:576px) { .amount-grid { grid-template-columns: repeat(2, 1fr); } }
+  .amt-btn {
+    padding: .75rem; border: 2px solid #e0e0e0; border-radius: var(--radius-sm);
+    text-align: center; font-weight: 700; font-size: .9rem; cursor: pointer;
+    background: #fff; transition: var(--transition); color: var(--text);
+  }
+  .amt-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .amt-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; box-shadow: 0 4px 14px rgba(247,148,29,.35); }
+  .phone-copy {
+    background: var(--green-pale); border-radius: var(--radius-sm);
+    padding: .75rem 1rem; display: flex; align-items: center; justify-content: space-between;
+  }
+  .impact-card {
+    background: #fff; border-radius: var(--radius); padding: 1.5rem;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border); text-align: center;
+    transition: var(--transition);
+  }
+  .impact-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+  .impact-icon { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══ HERO DON ═══ -->
+<section class="donation-hero">
+  <div class="container text-center">
+    <span class="badge rounded-pill px-3 py-2 mb-3 d-inline-block"
+          style="background:rgba(255,255,255,.2);color:#fff;font-size:.8rem;font-weight:700;">
+      <i class="fas fa-hand-holding-heart me-1"></i>Faire un Don
+    </span>
+    <h1 class="fw-800 mb-3" style="font-size:clamp(2rem,4vw,3rem);">
+      Chaque Don <span style="color:#ffe082;">Change une Vie</span>
+    </h1>
+    <p class="mb-0" style="opacity:.9;max-width:560px;margin:0 auto;font-size:1.05rem;">
+      Votre générosité permet à Children's Fruit de produire du contenu inspirant
+      et de financer des actions caritatives pour les enfants.
+    </p>
+    {% if total_raised %}
+    <div class="mt-4 d-inline-flex align-items-center gap-3 px-4 py-2 rounded-pill"
+         style="background:rgba(255,255,255,.15);backdrop-filter:blur(10px);">
+      <i class="fas fa-chart-line" style="color:#ffe082;"></i>
+      <span class="fw-700">{{ total_raised|floatformat:0 }} FCFA collectés</span>
+      <span style="opacity:.6;">par notre communauté</span>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ═══ IMPACT ═══ -->
+<section style="background:#f9fafb;padding:4rem 0;">
+  <div class="container">
+    <div class="section-header text-center mb-4">
+      <span class="section-badge"><i class="fas fa-seedling me-1"></i>Impact de vos dons</span>
+      <h2 class="section-title">Ce que <span>votre don</span> permet</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="row g-3 mb-5">
+      <div class="col-6 col-lg-3">
+        <div class="impact-card">
+          <div class="impact-icon" style="background:var(--green-pale);color:var(--green);"><i class="fas fa-book-open"></i></div>
+          <div class="fw-700 mb-1">1 000 FCFA</div>
+          <small class="text-muted">Finance du matériel scolaire pour 1 enfant</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="impact-card">
+          <div class="impact-icon" style="background:var(--orange-pale);color:var(--orange);"><i class="fas fa-utensils"></i></div>
+          <div class="fw-700 mb-1">2 000 FCFA</div>
+          <small class="text-muted">Nourrit un enfant pendant une semaine</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="impact-card">
+          <div class="impact-icon" style="background:var(--green-pale);color:var(--green);"><i class="fas fa-tv"></i></div>
+          <div class="fw-700 mb-1">5 000 FCFA</div>
+          <small class="text-muted">Finance la production d'une vidéo inspirante</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="impact-card">
+          <div class="impact-icon" style="background:var(--orange-pale);color:var(--orange);"><i class="fas fa-heart"></i></div>
+          <div class="fw-700 mb-1">10 000 FCFA</div>
+          <small class="text-muted">Soutient une famille dans le besoin pendant un mois</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FORMULAIRE + PAIEMENT ═══ -->
+    <div class="row g-5 justify-content-center">
+
+      <!-- Formulaire gauche -->
+      <div class="col-lg-6">
+        <div class="bg-white rounded-xl shadow-card p-4">
+          <h4 class="fw-700 mb-4">
+            <i class="fas fa-edit me-2" style="color:var(--green);"></i>
+            Votre intention de don
+          </h4>
+
+          {% if messages %}
+          {% for m in messages %}
+          <div class="alert alert-{{ m.tags|default:'success' }} alert-dismissible fade show" role="alert">
+            {{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          {% endfor %}
+          {% endif %}
+
+          <form method="post" id="donationForm">
+            {% csrf_token %}
+
+            <!-- Montants rapides -->
+            <div class="mb-4">
+              <label class="form-label">Montant du don (FCFA)</label>
+              <div class="amount-grid mb-2" id="amountGrid">
+                <div class="amt-btn" onclick="setAmt(1000,this)">1 000</div>
+                <div class="amt-btn" onclick="setAmt(2000,this)">2 000</div>
+                <div class="amt-btn" onclick="setAmt(5000,this)">5 000</div>
+                <div class="amt-btn" onclick="setAmt(10000,this)">10 000</div>
+                <div class="amt-btn" onclick="setAmt(25000,this)">25 000</div>
+                <div class="amt-btn" onclick="setAmt(50000,this)">50 000</div>
+                <div class="amt-btn" onclick="setAmt(100000,this)">100 000</div>
+                <div class="amt-btn amt-custom" onclick="focusCustom(this)"><i class="fas fa-pen me-1"></i>Autre</div>
+              </div>
+              {{ form.amount }}
+              {% if form.amount.errors %}
+              <div class="text-danger small mt-1">{{ form.amount.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">{{ form.name.label }}</label>
+                {{ form.name }}
+                {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">{{ form.phone.label }}</label>
+                {{ form.phone }}
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">{{ form.email.label }}</label>
+              {{ form.email }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">{{ form.payment_method.label }}</label>
+              {{ form.payment_method }}
+            </div>
+            <div class="mb-4">
+              <label class="form-label">{{ form.message.label }}</label>
+              {{ form.message }}
+            </div>
+
+            <button type="submit" class="btn btn-orange btn-lg w-100 fw-700">
+              <i class="fas fa-check-circle me-2"></i>Confirmer mon intention de don
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Instructions paiement droite -->
+      <div class="col-lg-6">
+        <div class="sticky-top" style="top:90px;">
+
+          <!-- Étapes -->
+          <div class="bg-white rounded-xl shadow-card p-4 mb-4">
+            <h5 class="fw-700 mb-4"><i class="fas fa-list-ol me-2" style="color:var(--green);"></i>Comment donner</h5>
+            <div class="d-flex gap-3 mb-3">
+              <div class="step-circle">1</div>
+              <div><strong>Choisissez votre montant</strong><br><small class="text-muted">Utilisez les boutons rapides ou saisissez un montant personnalisé.</small></div>
+            </div>
+            <div class="d-flex gap-3 mb-3">
+              <div class="step-circle">2</div>
+              <div><strong>Remplissez le formulaire</strong><br><small class="text-muted">Votre nom et méthode de paiement préférée.</small></div>
+            </div>
+            <div class="d-flex gap-3 mb-3">
+              <div class="step-circle">3</div>
+              <div><strong>Effectuez le virement</strong><br><small class="text-muted">Via Wave, Orange Money ou MTN Mobile Money.</small></div>
+            </div>
+            <div class="d-flex gap-3">
+              <div class="step-circle">4</div>
+              <div><strong>Envoyez la preuve</strong><br><small class="text-muted">Partagez une capture d'écran via WhatsApp ou notre page contact.</small></div>
+            </div>
+          </div>
+
+          <!-- Numéros de paiement -->
+          <div class="bg-white rounded-xl shadow-card p-4">
+            <h5 class="fw-700 mb-4"><i class="fas fa-mobile-screen-button me-2" style="color:var(--orange);"></i>Numéros de paiement</h5>
+
+            <!-- Wave -->
+            <div class="pay-card mb-3" id="wave-card">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="pay-card-icon" style="background:#1565c0;"><i class="fas fa-bolt"></i></div>
+                <div class="flex-grow-1">
+                  <div class="fw-700">Wave Côte d'Ivoire</div>
+                  <small class="text-muted">Envoi instantané — Recommandé</small>
+                </div>
+                <span class="badge rounded-pill" style="background:rgba(21,101,192,.1);color:#1565c0;">Rapide</span>
+              </div>
+              <div class="phone-copy">
+                <div>
+                  <small class="text-muted d-block" style="font-size:.72rem;">Numéro Wave</small>
+                  <span class="fw-700" style="font-size:1.05rem;color:var(--green);letter-spacing:.5px;">+225 05 44 82 20 43</span>
+                </div>
+                <button class="btn btn-sm btn-outline-success rounded-pill" onclick="cpyNum('+2250544822043',this)">
+                  <i class="fas fa-copy me-1"></i>Copier
+                </button>
+              </div>
+              <small class="text-muted d-block mt-2" style="font-size:.75rem;">
+                <i class="fas fa-arrow-right me-1"></i>Wave → Envoyer → Numéro → Montant → Confirmer
+              </small>
+            </div>
+
+            <!-- Orange Money -->
+            <div class="pay-card mb-3" id="orange-card">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="pay-card-icon" style="background:#e65100;"><i class="fas fa-mobile-screen-button"></i></div>
+                <div>
+                  <div class="fw-700">Orange Money</div>
+                  <small class="text-muted">24h/24 — 7j/7</small>
+                </div>
+              </div>
+              <div class="phone-copy">
+                <div>
+                  <small class="text-muted d-block" style="font-size:.72rem;">Numéro Orange Money</small>
+                  <span class="fw-700" style="font-size:1.05rem;color:var(--green);letter-spacing:.5px;">+225 07 12 39 84 42</span>
+                </div>
+                <button class="btn btn-sm btn-outline-warning rounded-pill" onclick="cpyNum('+2250712398442',this)">
+                  <i class="fas fa-copy me-1"></i>Copier
+                </button>
+              </div>
+              <small class="text-muted d-block mt-2" style="font-size:.75rem;">
+                <i class="fas fa-arrow-right me-1"></i>Composez <strong>#144#</strong> → Transfert → Numéro → Montant
+              </small>
+            </div>
+
+            <!-- MTN MoMo -->
+            <div class="pay-card" id="mtn-card">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="pay-card-icon" style="background:#f9a825;"><i class="fas fa-sim-card" style="color:#333;"></i></div>
+                <div>
+                  <div class="fw-700">MTN Mobile Money</div>
+                  <small class="text-muted">Réseau MTN Côte d'Ivoire</small>
+                </div>
+              </div>
+              <div class="phone-copy">
+                <div>
+                  <small class="text-muted d-block" style="font-size:.72rem;">Numéro MTN MoMo</small>
+                  <span class="fw-700" style="font-size:1.05rem;color:var(--green);letter-spacing:.5px;">+225 05 44 82 20 43</span>
+                </div>
+                <button class="btn btn-sm btn-outline-warning rounded-pill" onclick="cpyNum('+2250544822043',this)">
+                  <i class="fas fa-copy me-1"></i>Copier
+                </button>
+              </div>
+              <small class="text-muted d-block mt-2" style="font-size:.75rem;">
+                <i class="fas fa-arrow-right me-1"></i>Composez <strong>*133#</strong> → Transférer → Numéro → Montant
+              </small>
+            </div>
+
+            <!-- WhatsApp -->
+            <a href="https://wa.me/2250544822043?text=Don%20Children%27s%20Fruit%20-%20J%27ai%20effectu%C3%A9%20un%20don"
+               target="_blank" class="btn btn-success w-100 mt-3 fw-600" style="border-radius:var(--radius-sm);">
+              <i class="fab fa-whatsapp me-2"></i>Envoyer la preuve par WhatsApp
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══ PROJETS EN COURS ═══ -->
+{% if funding_projects %}
+<section style="background:#fff;padding:4rem 0;">
+  <div class="container">
+    <div class="section-header text-center mb-5">
+      <span class="section-badge"><i class="fas fa-bullhorn me-1"></i>Projets actifs</span>
+      <h2 class="section-title">Vos Dons <span>en Action</span></h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="row g-4">
+      {% for project in funding_projects %}
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-card rounded-xl overflow-hidden">
+          {% if project.thumbnail %}
+          <img src="{{ project.thumbnail.url }}" alt="{{ project.title }}" style="height:160px;object-fit:cover;">
+          {% else %}
+          <div style="height:160px;background:linear-gradient(135deg,var(--green),var(--green-mid));display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:2.5rem;"><i class="fas fa-seedling"></i></div>
+          {% endif %}
+          <div class="card-body p-3">
+            <h6 class="fw-700 mb-2">{{ project.title }}</h6>
+            <p class="text-muted small mb-2">{{ project.description|truncatewords:15 }}</p>
+            <div class="mb-1">
+              <div class="d-flex justify-content-between mb-1">
+                <small class="fw-600 text-green" style="font-size:.75rem;">{{ project.raised_amount|floatformat:0 }} FCFA</small>
+                <small class="text-muted" style="font-size:.75rem;">{{ project.progress_percentage }}%</small>
+              </div>
+              <div class="progress" style="height:6px;">
+                <div class="progress-bar bg-green" style="width:{{ project.progress_percentage }}%;"></div>
+              </div>
+            </div>
+            <small class="text-muted" style="font-size:.72rem;">Objectif : {{ project.goal_amount|floatformat:0 }} FCFA</small>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function setAmt(v, btn) {
+  document.querySelectorAll('.amt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('id_amount').value = v;
+}
+function focusCustom(btn) {
+  document.querySelectorAll('.amt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('id_amount').focus();
+  document.getElementById('id_amount').value = '';
+}
+function cpyNum(n, btn) {
+  navigator.clipboard.writeText(n).then(() => {
+    const o = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check me-1"></i>Copié !';
+    btn.classList.add('btn-success');
+    setTimeout(() => { btn.innerHTML = o; btn.classList.remove('btn-success'); }, 2500);
+  });
+}
+// Highlight payment card based on select
+document.getElementById('id_payment_method')?.addEventListener('change', function() {
+  ['wave-card','orange-card','mtn-card'].forEach(id => document.getElementById(id)?.classList.remove('selected'));
+  const map = { wave: 'wave-card', orange: 'orange-card', mtn: 'mtn-card' };
+  const target = map[this.value];
+  if (target) document.getElementById(target)?.classList.add('selected');
+});
+</script>
+{% endblock %}

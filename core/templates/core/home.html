@@ -1,0 +1,499 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Children's Fruit — WebTV & Charité{% endblock %}
+{% block meta_desc %}Porte ta croix et suis moi. WebTV chrétienne inspirante et actions caritatives pour les enfants.{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+<section class="hero-section" style="background-image:url('{% static 'core/img/hero-photo.png' %}');background-size:cover;background-position:center;">
+  <div class="hero-photo-overlay"></div>
+  <div class="container z-1 position-relative">
+    <div class="row align-items-center g-5">
+
+      <!-- Texte -->
+      <div class="col-lg-5" data-aos="fade-right">
+        <div class="hero-tag">
+          <i class="fas fa-seedling"></i>
+          Children's Fruit • "Porte ta croix et suis moi"
+        </div>
+        <h1 class="hero-title">
+          Inspirez.<br>Donnez.<br>
+          <span>Transformez</span> des Vies.
+        </h1>
+        <p class="hero-lead">
+          Une plateforme unique combinant contenu multimédia inspirant et
+          actions caritatives pour changer le monde, un enfant à la fois.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{% url 'video_list' %}" class="btn btn-orange btn-lg px-4">
+            <i class="fas fa-play me-2"></i>Regarder WebTV
+          </a>
+          <a href="{% url 'donation' %}" class="btn btn-outline-light btn-lg px-4">
+            <i class="fas fa-hand-holding-heart me-2"></i>Faire un Don
+          </a>
+        </div>
+        <!-- Mini stats -->
+        <div class="row g-2 mt-4">
+          <div class="col-4">
+            <div class="hero-stat-pill">
+              <i class="fas fa-users icon"></i>
+              <div><div class="number">5k+</div><div class="label">Membres</div></div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="hero-stat-pill">
+              <i class="fas fa-film icon"></i>
+              <div><div class="number">200+</div><div class="label">Vidéos</div></div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="hero-stat-pill">
+              <i class="fas fa-heart icon"></i>
+              <div><div class="number">10k+</div><div class="label">Vies</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vidéo embarquée -->
+      <div class="col-lg-7" data-aos="fade-left">
+        <div class="hero-video-wrapper">
+          <div class="ratio ratio-16x9">
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/jfKfPfyJRdk?autoplay=1&mute=1&loop=1&playlist=jfKfPfyJRdk&controls=0&rel=0"
+              title="Message du Fondateur — Children's Fruit"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen>
+            </iframe>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ IMPACT RAPIDE ═══════════════════════════════ -->
+<section style="background:#fff;padding:2rem 0;border-bottom:1px solid #f0f0f0;">
+  <div class="container">
+    <div class="row g-3 justify-content-center text-center">
+      <div class="col-6 col-md-3">
+        <div class="d-flex align-items-center justify-content-center gap-3">
+          <div style="width:50px;height:50px;border-radius:12px;background:var(--green-pale);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;"><i class="fas fa-tv"></i></div>
+          <div class="text-start"><div class="fw-800 text-dark" style="font-size:1.3rem;">200+</div><div class="text-muted small">Vidéos</div></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="d-flex align-items-center justify-content-center gap-3">
+          <div style="width:50px;height:50px;border-radius:12px;background:var(--orange-pale);color:var(--orange);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;"><i class="fas fa-users"></i></div>
+          <div class="text-start"><div class="fw-800 text-dark" style="font-size:1.3rem;">5 000+</div><div class="text-muted small">Membres</div></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="d-flex align-items-center justify-content-center gap-3">
+          <div style="width:50px;height:50px;border-radius:12px;background:var(--green-pale);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;"><i class="fas fa-handshake"></i></div>
+          <div class="text-start"><div class="fw-800 text-dark" style="font-size:1.3rem;">50+</div><div class="text-muted small">Partenaires</div></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="d-flex align-items-center justify-content-center gap-3">
+          <div style="width:50px;height:50px;border-radius:12px;background:var(--orange-pale);color:var(--orange);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;"><i class="fas fa-heart"></i></div>
+          <div class="text-start"><div class="fw-800 text-dark" style="font-size:1.3rem;">10 000+</div><div class="text-muted small">Vies touchées</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ WEB TV VEDETTE ═══════════════════════════════ -->
+<section class="py-5" id="webtv" style="background:#f9fafb;">
+  <div class="container">
+    <div class="section-header text-center mb-5">
+      <span class="section-badge"><i class="fas fa-tv me-1"></i>Web TV</span>
+      <h2 class="section-title">Contenu <span>Inspirant</span></h2>
+      <p class="text-muted mt-2 mx-auto" style="max-width:480px;">Découvrez nos films, shows et actualités exclusifs — regardez directement sur notre plateforme.</p>
+      <div class="section-divider"></div>
+    </div>
+
+    {% if featured_videos %}
+    <div class="row g-4">
+      {% for video in featured_videos %}
+      <div class="col-sm-6 col-lg-4">
+        <div class="card video-card h-100">
+          <div class="video-thumb-wrapper">
+            {% if video.thumbnail %}
+              <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" loading="lazy">
+            {% else %}
+              <img src="https://img.youtube.com/vi/{{ video.get_youtube_id }}/mqdefault.jpg"
+                   alt="{{ video.title }}" loading="lazy">
+            {% endif %}
+            <div class="video-play-overlay">
+              <div class="play-btn"><i class="fas fa-play"></i></div>
+            </div>
+            <span class="category-badge">{{ video.get_category_display }}</span>
+          </div>
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title flex-grow-1">{{ video.title }}</h5>
+            {% if video.description %}
+            <p class="text-muted small mb-2" style="font-size:.8rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ video.description }}</p>
+            {% endif %}
+            <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+              <small class="text-muted"><i class="far fa-clock me-1"></i>{{ video.created_at|date:"d M Y" }}</small>
+              {% if user.is_authenticated %}
+                <a href="{% url 'video_detail' video.pk %}" class="btn btn-sm btn-green px-3">
+                  <i class="fas fa-play me-1"></i>Regarder
+                </a>
+              {% else %}
+                <a href="{% url 'login' %}?next={% url 'video_detail' video.pk %}" class="btn btn-sm btn-outline-green px-3">
+                  <i class="fas fa-lock me-1"></i>Connexion
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="text-center mt-5">
+      <a href="{% url 'video_list' %}" class="btn btn-outline-green btn-lg px-5">
+        <i class="fas fa-th me-2"></i>Voir toute la WebTV
+      </a>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="fas fa-film fa-4x opacity-25 d-block mb-3"></i>
+      <p>Aucune vidéo en vedette pour le moment. Revenez bientôt !</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ MISSION ═══════════════════════════════ -->
+<section style="background:#fff;padding:5rem 0;">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div style="border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);">
+          <img src="{% static 'core/img/hero-photo.png' %}" alt="Notre mission" style="width:100%;height:380px;object-fit:cover;">
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <span class="section-badge"><i class="fas fa-bullseye me-1"></i>Notre Mission</span>
+        <h2 class="section-title mt-2 mb-3">Donner Une <span>Chance</span><br>à Chaque Enfant</h2>
+        <div class="section-divider left mb-4"></div>
+        <p class="text-muted lh-lg mb-4">
+          Children's Fruit est une organisation chrétienne dédiée à l'accompagnement des enfants
+          à travers des contenus médiatiques inspirants et des actions caritatives concrètes.
+          Notre slogan — <em>"Porte ta croix et suis moi"</em> — guide chacune de nos actions.
+        </p>
+        <div class="d-flex flex-column gap-3 mb-4">
+          <div class="d-flex align-items-start gap-3">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--green-pale);color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-video"></i></div>
+            <div><strong>WebTV Inspirante</strong><br><small class="text-muted">Films, shows et actualités chrétiens accessibles partout en Afrique.</small></div>
+          </div>
+          <div class="d-flex align-items-start gap-3">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--orange-pale);color:var(--orange);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-hands-helping"></i></div>
+            <div><strong>Actions Caritatives</strong><br><small class="text-muted">Financement de projets pour améliorer les conditions de vie des enfants.</small></div>
+          </div>
+          <div class="d-flex align-items-start gap-3">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--green-pale);color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-users"></i></div>
+            <div><strong>Communauté Active</strong><br><small class="text-muted">Rejoignez des milliers de membres engagés pour changer des vies.</small></div>
+          </div>
+        </div>
+        <a href="{% url 'partnership_request' %}" class="btn btn-green px-4">
+          <i class="fas fa-handshake me-2"></i>Devenir Partenaire
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ KPI ═══════════════════════════════ -->
+<section class="kpi-section" id="impact">
+  <div class="container z-1 position-relative">
+    <div class="text-center mb-5">
+      <span class="badge rounded-pill px-3 py-2 d-inline-block mb-3"
+            style="background:rgba(247,148,29,.2);color:var(--orange);border:1px solid rgba(247,148,29,.3);font-size:.78rem;font-weight:700;">
+        <i class="fas fa-chart-line me-1"></i>Notre Impact
+      </span>
+      <h2 class="text-white fw-800">Chaque Chiffre Raconte une Histoire</h2>
+    </div>
+    <div class="row g-4 justify-content-center">
+      {% if kpis %}
+        {% for kpi in kpis %}
+        <div class="col-6 col-md-3 text-center kpi-card">
+          <div class="kpi-icon-wrapper"><i class="{{ kpi.icon }}"></i></div>
+          <div class="kpi-number"><span class="kpi-counter" data-target="{{ kpi.value }}">0</span>+</div>
+          <div class="kpi-label">{{ kpi.label }}</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        {% for kpi in default_kpis %}
+        <div class="col-6 col-md-3 text-center kpi-card">
+          <div class="kpi-icon-wrapper"><i class="{{ kpi.icon }}"></i></div>
+          <div class="kpi-number"><span class="kpi-counter" data-target="{{ kpi.value }}">0</span>+</div>
+          <div class="kpi-label">{{ kpi.label }}</div>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ PROJETS DE FINANCEMENT ═══════════════════════════════ -->
+{% if funding_projects %}
+<section style="background:#f9fafb;padding:5rem 0;">
+  <div class="container">
+    <div class="section-header text-center mb-5">
+      <span class="section-badge"><i class="fas fa-bullhorn me-1"></i>Projets</span>
+      <h2 class="section-title">Soutenez Nos <span>Initiatives</span></h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="row g-4">
+      {% for project in funding_projects %}
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-card rounded-xl overflow-hidden">
+          {% if project.thumbnail %}
+          <img src="{{ project.thumbnail.url }}" alt="{{ project.title }}" style="height:180px;object-fit:cover;">
+          {% else %}
+          <div style="height:180px;background:linear-gradient(135deg,var(--green),var(--green-mid));display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:3rem;">
+            <i class="fas fa-seedling"></i>
+          </div>
+          {% endif %}
+          <div class="card-body p-4">
+            <h5 class="fw-700 mb-2">{{ project.title }}</h5>
+            <p class="text-muted small mb-3">{{ project.description|truncatewords:20 }}</p>
+            <div class="mb-2">
+              <div class="d-flex justify-content-between mb-1">
+                <small class="fw-600 text-green">{{ project.raised_amount|floatformat:0 }} FCFA collectés</small>
+                <small class="text-muted">{{ project.progress_percentage }}%</small>
+              </div>
+              <div class="progress">
+                <div class="progress-bar bg-green" style="width:{{ project.progress_percentage }}%;"></div>
+              </div>
+            </div>
+            <small class="text-muted">Objectif : <strong>{{ project.goal_amount|floatformat:0 }} FCFA</strong></small>
+          </div>
+          <div class="card-footer bg-transparent border-0 px-4 pb-4">
+            <a href="{% url 'donation' %}" class="btn btn-orange w-100">
+              <i class="fas fa-hand-holding-heart me-2"></i>Soutenir ce projet
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+
+<!-- ═══════════════════════════════ TÉMOIGNAGES ═══════════════════════════════ -->
+<section class="testimonials-section" id="testimonials">
+  <div class="container">
+    <div class="section-header text-center mb-5">
+      <span class="section-badge"><i class="fas fa-quote-left me-1"></i>Témoignages</span>
+      <h2 class="section-title">Ils Parlent de <span>Nous</span></h2>
+      <div class="section-divider"></div>
+    </div>
+    {% if testimonials %}
+    <div id="testimonialsCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+      <div class="carousel-inner">
+        {% for t in testimonials %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+          <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+              <div class="testimonial-card">
+                {% if t.avatar %}
+                  <img src="{{ t.avatar.url }}" alt="{{ t.name }}" class="testimonial-avatar">
+                {% else %}
+                  <div class="testimonial-avatar-placeholder"><i class="fas fa-user"></i></div>
+                {% endif %}
+                <p class="testimonial-text">"{{ t.content }}"</p>
+                <div class="stars mb-2">{% for i in "12345" %}<i class="fas fa-star"></i>{% endfor %}</div>
+                <div class="testimonial-name">{{ t.name }}</div>
+                <div class="testimonial-role">{{ t.role }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if testimonials|length > 1 %}
+      <div class="text-center mt-4 d-flex justify-content-center gap-2">
+        <button class="btn btn-outline-green btn-sm" data-bs-target="#testimonialsCarousel" data-bs-slide="prev"><i class="fas fa-chevron-left"></i></button>
+        <button class="btn btn-outline-green btn-sm" data-bs-target="#testimonialsCarousel" data-bs-slide="next"><i class="fas fa-chevron-right"></i></button>
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="text-center py-4 text-muted">
+      <i class="fas fa-comments fa-3x opacity-25 d-block mb-3"></i>
+      <p>Soyez le premier à partager votre témoignage !</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ CTA DON ═══════════════════════════════ -->
+<section class="cta-section text-center">
+  <div class="container position-relative z-1">
+    <i class="fas fa-hand-holding-heart fa-3x mb-3" style="opacity:.9;"></i>
+    <h2 class="fw-800 mb-3" style="font-size:clamp(1.8rem,3vw,2.8rem);">Votre Générosité Change des Vies</h2>
+    <p class="mb-5 fs-5" style="opacity:.9;max-width:600px;margin:0 auto 2rem;">
+      Chaque don contribue à offrir un avenir meilleur aux enfants.
+    </p>
+    <div class="d-flex justify-content-center flex-wrap gap-3">
+      <a href="{% url 'donation' %}" class="btn btn-light btn-lg px-5 fw-700 shadow">
+        <i class="fas fa-heart me-2 text-danger"></i>Faire un Don
+      </a>
+      <a href="{% url 'partnership_request' %}" class="btn btn-outline-light btn-lg px-5">
+        <i class="fas fa-handshake me-2"></i>Devenir Partenaire
+      </a>
+      {% if not user.is_authenticated %}
+      <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg px-5">
+        <i class="fas fa-users me-2"></i>Rejoindre
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ BLOG ═══════════════════════════════ -->
+<section id="blog" style="background:#f9fafb;padding:5rem 0;">
+  <div class="container">
+
+    <!-- En-tête -->
+    <div class="section-header text-center mb-4">
+      <span class="section-badge"><i class="fas fa-pen-nib me-1"></i>Blog</span>
+      <h2 class="section-title">Nos Derniers <span>Articles</span></h2>
+      <p class="text-muted mt-2 mx-auto" style="max-width:480px;">Actualités, inspirations, témoignages et ressources pour votre foi et votre mission.</p>
+      <div class="section-divider"></div>
+    </div>
+
+    <!-- Filtres catégories -->
+    <div class="d-flex flex-wrap justify-content-center gap-2 mb-5" id="blogFilters">
+      <button class="btn blog-filter-btn active" data-cat="">
+        <i class="fas fa-border-all me-1"></i>Tous
+      </button>
+      {% for cat_key, cat_label in blog_categories %}
+      <button class="btn blog-filter-btn" data-cat="{{ cat_key }}">
+        {{ cat_label }}
+      </button>
+      {% endfor %}
+    </div>
+
+    <!-- Grille d'articles -->
+    {% if blog_posts %}
+    <div class="row g-4" id="blogGrid">
+      {% for post in blog_posts %}
+      <div class="col-sm-6 col-lg-4 blog-item" data-cat="{{ post.category }}">
+        <article class="card h-100 border-0 shadow-card rounded-xl overflow-hidden blog-card">
+
+          <!-- Thumbnail -->
+          {% if post.thumbnail %}
+            <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}"
+                 style="height:200px;object-fit:cover;width:100%;" loading="lazy">
+          {% else %}
+            <div style="height:200px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;
+                        background:linear-gradient(135deg,var(--green) 0%,var(--green-mid) 100%);color:rgba(255,255,255,.35);">
+              <i class="fas fa-pen-nib"></i>
+            </div>
+          {% endif %}
+
+          <!-- Badge catégorie -->
+          <div style="position:relative;">
+            <span class="position-absolute" style="top:-14px;left:16px;
+                  background:var(--orange);color:#fff;font-size:.68rem;font-weight:700;
+                  padding:.3rem .75rem;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:.04em;
+                  box-shadow:0 2px 8px rgba(247,148,29,.4);">
+              {{ post.get_category_display }}
+            </span>
+          </div>
+
+          <div class="card-body d-flex flex-column p-4 pt-5">
+            <h5 class="fw-700 mb-2 lh-sm" style="font-size:.95rem;
+                display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+              {{ post.title }}
+            </h5>
+            <p class="text-muted mb-3 flex-grow-1" style="font-size:.82rem;line-height:1.6;
+                display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
+              {% if post.excerpt %}{{ post.excerpt }}{% else %}{{ post.content|truncatewords:25 }}{% endif %}
+            </p>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 mt-auto border-top">
+              <div class="d-flex align-items-center gap-2">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--green-pale);
+                            color:var(--green);display:flex;align-items:center;justify-content:center;font-size:.7rem;">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div>
+                  <div style="font-size:.72rem;font-weight:600;color:var(--text);">
+                    {% if post.author %}{{ post.author.display_name }}{% else %}Children's Fruit{% endif %}
+                  </div>
+                  <div style="font-size:.65rem;color:var(--text-muted);">
+                    {{ post.created_at|date:"d M Y" }} · {{ post.read_time }} min de lecture
+                  </div>
+                </div>
+              </div>
+              <a href="{{ post.get_absolute_url }}"
+                 class="btn btn-sm btn-green px-3 rounded-pill" style="font-size:.78rem;">
+                Lire <i class="fas fa-arrow-right ms-1"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-5">
+      <a href="{% url 'blog_list' %}" class="btn btn-outline-green btn-lg px-5">
+        <i class="fas fa-newspaper me-2"></i>Voir tous les articles
+      </a>
+    </div>
+
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="fas fa-pen-nib fa-4x opacity-25 d-block mb-3"></i>
+      <p>Aucun article publié pour le moment. Revenez bientôt !</p>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ── Filtre blog par catégorie (sans rechargement) ── */
+(function () {
+  const btns  = document.querySelectorAll('.blog-filter-btn');
+  const items = document.querySelectorAll('.blog-item');
+  if (!btns.length) return;
+
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cat = btn.dataset.cat;
+      items.forEach(item => {
+        item.style.display = (!cat || item.dataset.cat === cat) ? '' : 'none';
+      });
+    });
+  });
+})();
+</script>
+{% endblock %}

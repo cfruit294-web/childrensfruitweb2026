@@ -1,0 +1,264 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}📡 Live — Children's Fruit WebTV{% endblock %}
+{% block meta_desc %}Regardez Children's Fruit en direct. WebTV chrétienne en streaming live.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .live-hero {
+    background: linear-gradient(135deg, #0a0a1a 0%, #0d1b0d 100%);
+    min-height: calc(100vh - 72px);
+    display: flex;
+    flex-direction: column;
+  }
+  .live-player-wrap {
+    position: relative;
+    width: 100%;
+    background: #000;
+    aspect-ratio: 16/9;
+    max-height: 72vh;
+  }
+  .live-player-wrap iframe,
+  .live-player-wrap video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    border: none;
+  }
+  .live-badge {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: #dc2626; color: #fff;
+    font-size: .72rem; font-weight: 800;
+    padding: .25rem .65rem; border-radius: 20px;
+    letter-spacing: .08em; text-transform: uppercase;
+    animation: pulse-badge 1.5s infinite;
+  }
+  @keyframes pulse-badge {
+    0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,.4); }
+    50%      { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
+  }
+  .offline-screen {
+    aspect-ratio: 16/9; max-height: 72vh;
+    background: radial-gradient(ellipse at center, #0f2010 0%, #050a05 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: rgba(255,255,255,.5);
+  }
+  /* Schedule grid */
+  .schedule-section { background: #f0f4f0; padding: 3rem 0; }
+  .schedule-day-title {
+    font-size: .7rem; font-weight: 800; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--green);
+    padding: .4rem .8rem; background: rgba(0,104,55,.08);
+    border-radius: 6px; display: inline-block; margin-bottom: 1rem;
+  }
+  .slot-card {
+    background: #fff; border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    padding: .85rem 1rem;
+    border-left: 4px solid var(--slot-color, #006837);
+    display: flex; gap: 1rem; align-items: flex-start;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .slot-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+  .slot-card.on-air {
+    background: linear-gradient(135deg, #fff 0%, rgba(0,104,55,.04) 100%);
+    border-left-color: #dc2626;
+    box-shadow: 0 0 0 2px rgba(220,38,38,.15), 0 4px 16px rgba(0,0,0,.08);
+  }
+  .slot-time {
+    font-size: .78rem; font-weight: 700; color: #555;
+    white-space: nowrap; min-width: 80px; padding-top: 2px;
+  }
+  .slot-cat-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--slot-color, #006837); flex-shrink: 0; margin-top: 5px;
+  }
+  .slot-title { font-weight: 700; font-size: .9rem; margin-bottom: .15rem; }
+  .slot-presenter { font-size: .75rem; color: #777; }
+  .slot-duration { font-size: .7rem; color: #aaa; margin-top: .2rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Player section ── -->
+<div class="live-hero">
+  <div id="playerSection" style="background:#000;">
+
+    {% if live %}
+      <!-- LIVE info bar -->
+      <div class="d-flex align-items-center gap-3 px-3 py-2" style="background:rgba(0,0,0,.7);border-bottom:1px solid rgba(255,255,255,.06);">
+        <span class="live-badge"><span style="width:7px;height:7px;border-radius:50%;background:#fff;display:inline-block;"></span>EN DIRECT</span>
+        <span class="text-white fw-semibold" style="font-size:.9rem;">{{ live.title }}</span>
+        {% if live.started_at %}
+        <small class="text-muted ms-auto" style="font-size:.72rem;">Démarré à {{ live.started_at|time:"H:i" }}</small>
+        {% endif %}
+      </div>
+
+      <!-- Player -->
+      <div class="live-player-wrap" id="livePlayerWrap">
+        {% if live.platform == 'youtube' %}
+          <iframe
+            src="{{ live.get_embed_url }}"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowfullscreen
+            title="{{ live.title }}">
+          </iframe>
+
+        {% elif live.platform == 'hls' %}
+          <video id="hlsVideo" controls autoplay playsinline style="width:100%;height:100%;background:#000;">
+            Votre navigateur ne supporte pas la lecture HLS.
+          </video>
+          <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+          <script>
+            (function(){
+              const src = "{{ live.stream_url|escapejs }}";
+              const video = document.getElementById('hlsVideo');
+              if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(src);
+                hls.attachMedia(video);
+              } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = src;
+              }
+            })();
+          </script>
+
+        {% elif live.platform == 'facebook' %}
+          <iframe
+            src="{{ live.stream_url }}"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+            allowfullscreen
+            style="width:100%;height:100%;border:none;">
+          </iframe>
+        {% endif %}
+      </div>
+
+    {% else %}
+      <!-- Offline screen -->
+      <div class="offline-screen">
+        <i class="fas fa-satellite-dish fa-3x mb-3" style="opacity:.3;color:var(--green);"></i>
+        <h4 class="text-white fw-bold mb-2">Pas de direct en ce moment</h4>
+        <p style="font-size:.88rem;max-width:360px;text-align:center;">
+          Consultez la grille ci-dessous pour connaître les prochaines émissions.
+        </p>
+        <a href="{% url 'video_list' %}" class="btn btn-sm mt-3 rounded-pill px-4"
+           style="background:rgba(0,104,55,.2);color:var(--green);border:1px solid rgba(0,104,55,.3);">
+          <i class="fas fa-play me-1"></i>Voir les replays
+        </a>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- ── Schedule section ── -->
+<section class="schedule-section">
+  <div class="container">
+
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+      <div>
+        <h2 class="fw-800 mb-1" style="font-size:1.4rem;">Grille des émissions</h2>
+        <p class="text-muted small mb-0">Programme de la journée et des prochains jours</p>
+      </div>
+      <a href="{% url 'live_control' %}" class="btn btn-sm rounded-pill px-3"
+         style="background:rgba(0,104,55,.08);color:var(--green);border:1px solid rgba(0,104,55,.2);font-size:.78rem;">
+        <i class="fas fa-sliders me-1"></i>Gérer le programme
+      </a>
+    </div>
+
+    {% if schedule_today %}
+    <div class="mb-5">
+      <div class="schedule-day-title">Aujourd'hui</div>
+      <div class="d-flex flex-column gap-2">
+        {% for slot in schedule_today %}
+        <div class="slot-card {% if slot.is_on_air %}on-air{% endif %}" style="--slot-color:{{ slot.color }};">
+          {% if slot.is_on_air %}
+          <span class="live-badge me-1" style="font-size:.65rem;padding:.2rem .5rem;white-space:nowrap;">LIVE</span>
+          {% endif %}
+          <div class="slot-time">
+            {{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}
+          </div>
+          <div class="slot-cat-dot"></div>
+          <div class="flex-grow-1 min-w-0">
+            <div class="slot-title">{{ slot.title }}</div>
+            {% if slot.presenter %}
+            <div class="slot-presenter"><i class="fas fa-microphone me-1" style="font-size:.65rem;"></i>{{ slot.presenter }}</div>
+            {% endif %}
+            <div class="slot-duration">{{ slot.duration_minutes }} min · {{ slot.get_category_display }}</div>
+          </div>
+          {% if slot.is_highlighted %}
+          <span class="badge rounded-pill" style="background:rgba(247,148,29,.15);color:var(--orange);font-size:.65rem;white-space:nowrap;align-self:flex-start;">✦ Spécial</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <div class="text-center py-4 text-muted small mb-5">
+      <i class="fas fa-calendar-xmark fa-2x opacity-25 d-block mb-2"></i>
+      Aucune émission programmée aujourd'hui.
+    </div>
+    {% endif %}
+
+    {% if schedule_week %}
+    <div>
+      <div class="schedule-day-title">Prochainement</div>
+      {% regroup schedule_week by date as week_days %}
+      {% for day in week_days %}
+      <div class="mb-4">
+        <p class="fw-700 small mb-2" style="color:#333;">
+          <i class="fas fa-calendar me-1 text-green"></i>
+          {{ day.grouper|date:"l d F Y"|capfirst }}
+        </p>
+        <div class="d-flex flex-column gap-2">
+          {% for slot in day.list %}
+          <div class="slot-card" style="--slot-color:{{ slot.color }};">
+            <div class="slot-time">{{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}</div>
+            <div class="slot-cat-dot"></div>
+            <div class="flex-grow-1 min-w-0">
+              <div class="slot-title">{{ slot.title }}</div>
+              {% if slot.presenter %}
+              <div class="slot-presenter"><i class="fas fa-microphone me-1" style="font-size:.65rem;"></i>{{ slot.presenter }}</div>
+              {% endif %}
+              <div class="slot-duration">{{ slot.duration_minutes }} min · {{ slot.get_category_display }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not schedule_today and not schedule_week %}
+    <div class="text-center py-5 text-muted">
+      <i class="fas fa-calendar-plus fa-3x opacity-20 d-block mb-3"></i>
+      <p>La grille des émissions n'a pas encore été remplie.</p>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh du statut live toutes les 30 secondes
+(function() {
+  const isLive = {{ live|yesno:"true,false" }};
+  if (!isLive) {
+    setInterval(function() {
+      fetch('{% url "live_status" %}')
+        .then(r => r.json())
+        .then(data => {
+          if (data.is_live) location.reload();
+        })
+        .catch(() => {});
+    }, 30000);
+  }
+})();
+</script>
+{% endblock %}

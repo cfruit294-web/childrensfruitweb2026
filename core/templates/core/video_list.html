@@ -1,0 +1,179 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}WebTV — Children's Fruit{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="webtv-hero text-center">
+  <div class="container">
+    <span class="badge rounded-pill px-3 py-2 mb-3 d-inline-block"
+          style="background:rgba(255,255,255,.15);color:#fff;font-size:.8rem;font-weight:600;">
+      <i class="fas fa-tv me-1"></i>Web TV
+    </span>
+    <h1 class="fw-800 text-white" style="font-size:clamp(1.8rem,3vw,2.6rem);">
+      Tout notre <span style="color:var(--orange);">contenu</span>
+    </h1>
+    <p class="text-white mb-0" style="opacity:.7;font-size:.92rem;">
+      Films · Shows · Blog · Actualités · À venir — regardez directement sur notre plateforme
+    </p>
+  </div>
+</section>
+
+<section class="py-4">
+  <div class="container">
+
+    <!-- Filter bar -->
+    <div class="filter-bar mb-4">
+      <a href="{% url 'video_list' %}" class="filter-btn {% if not current_category %}active{% endif %}">
+        <i class="fas fa-border-all me-1"></i>Tous
+      </a>
+      {% for value, label in categories %}
+      <a href="{% url 'video_list' %}?category={{ value }}{% if search_query %}&q={{ search_query }}{% endif %}"
+         class="filter-btn {% if current_category == value %}active{% endif %}">
+        {{ label }}
+      </a>
+      {% endfor %}
+      <form method="get" class="ms-auto d-flex gap-2" style="flex:0 0 auto;">
+        {% if current_category %}<input type="hidden" name="category" value="{{ current_category }}">{% endif %}
+        <input type="search" name="q" value="{{ search_query }}"
+               class="form-control form-control-sm" placeholder="Rechercher…" style="min-width:180px;border-radius:var(--radius-pill);">
+        <button type="submit" class="btn btn-green btn-sm px-3"><i class="fas fa-search"></i></button>
+      </form>
+    </div>
+
+    {% if search_query %}
+    <p class="text-muted mb-3 small">
+      Résultats pour "<strong>{{ search_query }}</strong>" — {{ paginator.count }} vidéo(s) trouvée(s)
+    </p>
+    {% endif %}
+
+    {% if videos %}
+    <div class="row g-4">
+      {% for video in videos %}
+      <div class="col-6 col-md-4 col-xl-3">
+        <div class="card video-card h-100">
+          {% if video.is_youtube %}
+          <a href="#" class="d-block"
+             onclick="playYoutube('{{ video.get_embed_url }}?autoplay=1&rel=0&playsinline=1','{{ video.title|escapejs }}','{% url "video_detail" video.pk %}'); return false;">
+          {% else %}
+          <a href="{% url 'video_detail' video.pk %}" class="d-block">
+          {% endif %}
+            <div class="video-thumb-wrapper">
+              {% if video.thumbnail %}
+                <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" loading="lazy">
+              {% elif video.is_youtube %}
+                <img src="https://img.youtube.com/vi/{{ video.get_youtube_id }}/mqdefault.jpg"
+                     alt="{{ video.title }}" loading="lazy">
+              {% else %}
+                <div style="width:100%;padding-top:56.25%;position:relative;background:#1a1a2e;">
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                    <i class="fas fa-film fa-2x" style="color:rgba(255,255,255,.3);"></i>
+                  </div>
+                </div>
+              {% endif %}
+              <div class="video-play-overlay">
+                <div class="play-btn"><i class="fas fa-play"></i></div>
+              </div>
+              <span class="category-badge">{{ video.get_category_display }}</span>
+            </div>
+          </a>
+          <div class="card-body d-flex flex-column p-3">
+            <h5 class="card-title flex-grow-1" style="font-size:.88rem;">{{ video.title }}</h5>
+            <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+              <small class="text-muted" style="font-size:.72rem;">
+                <i class="far fa-clock me-1"></i>{{ video.created_at|date:"d/m/Y" }}
+              </small>
+              <a href="{% url 'video_detail' video.pk %}" class="btn btn-sm btn-orange px-3" style="font-size:.78rem;">
+                <i class="fas fa-expand me-1"></i>Plein écran
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Video player modal (YouTube uniquement) -->
+    <div class="modal fade" id="videoModal" tabindex="-1" data-bs-backdrop="static">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="background:#000;border:none;border-radius:12px;overflow:hidden;">
+          <div class="modal-header border-0 pb-0 px-3 pt-2" style="position:absolute;top:0;right:0;z-index:10;">
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopVideo()"></button>
+          </div>
+          <div class="ratio ratio-16x9">
+            <iframe id="videoModalFrame" src="" title=""
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen></iframe>
+          </div>
+          <div class="modal-footer border-0 py-2 px-3" style="background:#111;">
+            <span id="videoModalTitle" class="text-white fw-600 small flex-grow-1"></span>
+            <a id="videoModalDetailLink" href="#" class="btn btn-sm btn-outline-light px-3" style="font-size:.78rem;">
+              <i class="fas fa-info-circle me-1"></i>Détails &amp; Commentaires
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-5" aria-label="Pagination">
+      <ul class="pagination justify-content-center gap-1">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">
+            <i class="fas fa-chevron-left"></i>
+          </a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ num }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">{{ num }}</a>
+          </li>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">
+            <i class="fas fa-chevron-right"></i>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="fas fa-film fa-4x opacity-25 d-block mb-3"></i>
+      <h4>Aucune vidéo trouvée</h4>
+      <p>Essayez une autre catégorie ou effacez votre recherche.</p>
+      <a href="{% url 'video_list' %}" class="btn btn-outline-green mt-2 px-4">Voir tout</a>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function playYoutube(embedUrl, title, detailUrl) {
+  document.getElementById('videoModalFrame').src = embedUrl;
+  document.getElementById('videoModalTitle').textContent = title;
+  document.getElementById('videoModalDetailLink').href = detailUrl;
+  new bootstrap.Modal(document.getElementById('videoModal')).show();
+}
+function stopVideo() {
+  document.getElementById('videoModalFrame').src = '';
+}
+document.getElementById('videoModal').addEventListener('hidden.bs.modal', stopVideo);
+</script>
+{% endblock %}

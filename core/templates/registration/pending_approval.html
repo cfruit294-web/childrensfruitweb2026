@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compte en attente — Children's Fruit</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="{% static 'core/css/main.css' %}" rel="stylesheet">
+</head>
+<body>
+
+<section class="auth-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12" style="max-width:500px;">
+
+        <div class="text-center mb-4">
+          <a href="/" class="d-inline-block text-decoration-none">
+            <img src="{% static 'core/img/logo.jpg' %}" alt="Children's Fruit"
+                 style="height:72px;object-fit:contain;border-radius:12px;filter:drop-shadow(0 4px 16px rgba(0,0,0,.4));">
+          </a>
+        </div>
+
+        <div class="auth-card text-center">
+
+          <div class="mb-4" style="font-size:3.5rem;line-height:1;">
+            <span style="color:var(--orange);">⏳</span>
+          </div>
+
+          <h4 class="fw-bold mb-2">Compte en attente d'approbation</h4>
+          <p class="text-muted mb-4" style="font-size:.9rem;line-height:1.7;">
+            Votre compte a bien été créé.<br>
+            L'administrateur de Children's Fruit doit approuver votre accès avant que vous puissiez vous connecter.<br>
+            <strong>Vous serez notifié dès l'activation.</strong>
+          </p>
+
+          <div class="rounded-3 p-3 mb-4" style="background:rgba(0,104,55,.07);border:1px solid rgba(0,104,55,.2);">
+            <p class="mb-0 small" style="color:var(--green);">
+              <i class="fas fa-shield-alt me-2"></i>
+              Ce processus garantit la sécurité et l'authenticité de notre communauté.
+            </p>
+          </div>
+
+          <div class="d-flex flex-column gap-2">
+            <a href="{% url 'login' %}" class="btn btn-green py-2 fw-600">
+              <i class="fas fa-sign-in-alt me-2"></i>Essayer de se connecter
+            </a>
+            <a href="/" class="btn btn-outline-secondary py-2">
+              <i class="fas fa-home me-2"></i>Retour à l'accueil
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

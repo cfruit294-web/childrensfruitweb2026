@@ -1,0 +1,418 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ video.title }} — Children's Fruit{% endblock %}
+{% block meta_desc %}{{ video.description|truncatewords:30 }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #0d1117; }
+  main { background: #0d1117; }
+
+  .player-wrap { background: #000; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+
+  .actions-bar { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: var(--radius); padding: .75rem 1rem; }
+
+  .btn-like { border-radius: var(--radius-pill); font-size: .82rem; font-weight: 600; transition: var(--transition); }
+  .btn-like.liked { background: #e53935 !important; color: #fff !important; border-color: #e53935 !important; }
+
+  /* Comments */
+  .comments-panel { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: var(--radius); padding: 1.25rem; }
+  .comment-item { border-bottom: 1px solid rgba(255,255,255,.06); padding-bottom: .85rem; margin-bottom: .85rem; }
+  .comment-item:last-child { border-bottom: none; margin-bottom: 0; }
+  .comment-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--green); color: #fff; font-weight: 700; font-size: .78rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .comments-scroll { max-height: 400px; overflow-y: auto; padding-right: 4px; }
+  .comments-scroll::-webkit-scrollbar { width: 4px; }
+  .comments-scroll::-webkit-scrollbar-thumb { background: var(--green); border-radius: 4px; }
+  .comment-input { background: rgba(255,255,255,.07) !important; border: 1px solid rgba(255,255,255,.12) !important; color: #fff !important; border-radius: var(--radius-sm) !important; font-size: .85rem; resize: none; }
+  .comment-input::placeholder { color: rgba(255,255,255,.3) !important; }
+  .comment-input:focus { box-shadow: 0 0 0 2px rgba(0,104,55,.4) !important; }
+
+  /* Live dot */
+  .live-indicator { display: inline-flex; align-items: center; gap: 6px; font-size: .72rem; color: rgba(255,255,255,.45); }
+  .live-indicator::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: livePulse 1.5s ease-in-out infinite; }
+
+  /* Sidebar */
+  .sidebar-panel { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: var(--radius); padding: 1rem; }
+  .sidebar-scroll { max-height: 80vh; overflow-y: auto; }
+  .sidebar-scroll::-webkit-scrollbar { width: 3px; }
+  .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--green); border-radius: 4px; }
+  .vid-thumb-item { display: flex; gap: 10px; border-radius: var(--radius-sm); padding: 7px; transition: background .2s; text-decoration: none; border: 1.5px solid transparent; }
+  .vid-thumb-item:hover { background: rgba(255,255,255,.07); }
+  .vid-thumb-item.active-vid { background: rgba(0,104,55,.12); border-color: rgba(0,104,55,.35); }
+  .vid-thumb-img { width: 108px; height: 60px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: #1a1a2e; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="background:#0d1117;min-height:100vh;">
+<div class="container-fluid px-lg-4 py-4">
+<div class="row g-4">
+
+  <!-- ═══ PLAYER + INFOS ═══ -->
+  <div class="col-xl-8 col-lg-7">
+
+    <!-- Player -->
+    <div class="player-wrap mb-3">
+      <div class="ratio ratio-16x9" style="position:relative;">
+        {% if video.is_youtube %}
+        <!-- Overlay : erreur lecteur -->
+        <div id="ytErrorOverlay" style="display:none;position:absolute;inset:0;z-index:20;
+             background:#0d0d0d;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
+          <i class="fab fa-youtube" style="font-size:2.8rem;color:#cc0000;"></i>
+          <p id="ytErrorMsg" class="text-white fw-600 mb-0 text-center px-4" style="font-size:.9rem;max-width:340px;line-height:1.5;"></p>
+          <a href="https://www.youtube.com/watch?v={{ video.get_youtube_id }}"
+             target="_blank" rel="noopener"
+             class="btn btn-sm rounded-pill px-4 mt-1"
+             style="background:#cc0000;color:#fff;font-size:.8rem;font-weight:600;">
+            <i class="fab fa-youtube me-1"></i>Regarder sur YouTube
+          </a>
+        </div>
+        <!-- Overlay : autoplay bloqué par le navigateur -->
+        <div id="ytAutoplayOverlay" style="display:none;position:absolute;inset:0;z-index:15;
+             background:rgba(0,0,0,.65);align-items:center;justify-content:center;flex-direction:column;gap:10px;">
+          <button id="ytManualPlayBtn"
+                  style="width:74px;height:74px;border-radius:50%;background:#cc0000;border:none;cursor:pointer;
+                         display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(204,0,0,.5);">
+            <i class="fas fa-play" style="font-size:1.7rem;color:#fff;margin-left:5px;"></i>
+          </button>
+          <p class="text-white mb-0" style="font-size:.8rem;opacity:.75;">Cliquez pour lire</p>
+        </div>
+        <!-- Conteneur IFrame Player API (div remplacé par iframe via l'API) -->
+        <div id="ytPlayer" style="width:100%;height:100%;"></div>
+        {% elif video.is_file_video %}
+        <video id="localPlayer" controls autoplay preload="metadata"
+               style="width:100%;height:100%;background:#000;border-radius:0;">
+          <source src="{{ video.video_file.url }}" type="video/mp4">
+          <source src="{{ video.video_file.url }}" type="video/webm">
+          <source src="{{ video.video_file.url }}" type="video/ogg">
+          Votre navigateur ne supporte pas la lecture vidéo.
+        </video>
+        {% else %}
+        <div class="d-flex align-items-center justify-content-center h-100"
+             style="background:#111;color:rgba(255,255,255,.4);">
+          <div class="text-center">
+            <i class="fas fa-film fa-3x mb-3"></i>
+            <p class="mb-0">Aucune source vidéo disponible.</p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Barre d'actions -->
+    <div class="actions-bar d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="badge rounded-pill px-3 py-2" style="background:var(--green);font-size:.75rem;">
+          {{ video.get_category_display }}
+        </span>
+        <small class="text-muted" style="font-size:.75rem;">
+          <i class="far fa-calendar me-1"></i>{{ video.created_at|date:"d F Y" }}
+        </small>
+        <small class="text-muted" style="font-size:.75rem;">
+          <i class="fas fa-heart me-1" style="color:#e53935;"></i><span id="likeCount">{{ video.likes.count }}</span> j'aime
+        </small>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        {% if user.is_authenticated %}
+        <button id="likeBtn" class="btn btn-sm btn-like btn-outline-danger {% if user_liked %}liked{% endif %}"
+                data-vid="{{ video.pk }}">
+          <i class="fas fa-heart me-1"></i>J'aime
+        </button>
+        {% endif %}
+        {% if video.get_youtube_id %}
+        <a href="https://www.youtube.com/watch?v={{ video.get_youtube_id }}" target="_blank" rel="noopener"
+           class="btn btn-sm rounded-pill px-3"
+           style="background:#ff0000;color:#fff;font-size:.78rem;font-weight:600;">
+          <i class="fab fa-youtube me-1"></i>YouTube
+        </a>
+        {% endif %}
+        <button class="btn btn-donate btn-sm" data-bs-toggle="modal" data-bs-target="#donationModal">
+          <i class="fas fa-heart me-1"></i>Don
+        </button>
+      </div>
+    </div>
+
+    <!-- Titre + description -->
+    <h1 class="fw-700 text-white mb-2" style="font-size:clamp(1.1rem,2.5vw,1.65rem);">{{ video.title }}</h1>
+    {% if video.description %}
+    <p class="text-muted mb-3" style="font-size:.88rem;line-height:1.7;">{{ video.description }}</p>
+    {% endif %}
+    <a href="{% url 'video_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill mb-4"
+       style="font-size:.78rem;color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.2);">
+      <i class="fas fa-arrow-left me-1"></i>Retour WebTV
+    </a>
+
+    <!-- ═══ COMMENTAIRES ═══ -->
+    <div class="comments-panel">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="text-white fw-700 mb-0">
+          <i class="fas fa-comments me-2" style="color:var(--orange);"></i>Commentaires
+        </h6>
+        <span class="live-indicator">En direct</span>
+      </div>
+
+      {% if user.is_authenticated %}
+      <form id="commentForm" class="mb-3">
+        {% csrf_token %}
+        <div class="d-flex gap-2">
+          <div class="comment-avatar">{{ user.username|slice:":1"|upper }}</div>
+          <div class="flex-grow-1">
+            <textarea id="commentText" class="form-control comment-input" rows="2"
+                      placeholder="Partagez votre avis…" maxlength="1000"></textarea>
+            <div class="text-end mt-2">
+              <button type="submit" class="btn btn-sm px-4 rounded-pill fw-600"
+                      style="background:var(--green);color:#fff;font-size:.8rem;">
+                <i class="fas fa-paper-plane me-1"></i>Publier
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+      {% else %}
+      <div class="text-center py-2 mb-3" style="font-size:.85rem;color:rgba(255,255,255,.45);">
+        <a href="{% url 'login' %}" style="color:var(--orange);font-weight:600;">Connectez-vous</a> pour commenter.
+      </div>
+      {% endif %}
+
+      <div class="comments-scroll" id="commentsList">
+        <div class="text-center py-3" id="commentsLoader">
+          <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <div class="col-xl-4 col-lg-5">
+    <div class="sidebar-panel sticky-top" style="top:80px;">
+      <h6 class="text-white fw-700 mb-3" style="font-size:.85rem;">
+        <i class="fas fa-play-circle me-2" style="color:var(--orange);"></i>
+        Toutes les vidéos
+        <span class="badge ms-1 rounded-pill" style="background:rgba(247,148,29,.15);color:var(--orange);font-size:.65rem;">
+          {{ all_videos|length }}
+        </span>
+      </h6>
+      <div class="sidebar-scroll">
+        {% for rv in all_videos %}
+        <a href="{% url 'video_detail' rv.pk %}"
+           class="vid-thumb-item mb-1 {% if rv.pk == video.pk %}active-vid{% endif %}">
+          <div class="position-relative" style="flex-shrink:0;">
+            {% if rv.thumbnail %}
+              <img class="vid-thumb-img" src="{{ rv.thumbnail.url }}" alt="{{ rv.title }}">
+            {% elif rv.is_youtube %}
+              <img class="vid-thumb-img"
+                   src="https://img.youtube.com/vi/{{ rv.get_youtube_id }}/mqdefault.jpg"
+                   alt="{{ rv.title }}" loading="lazy">
+            {% else %}
+              <div class="vid-thumb-img d-flex align-items-center justify-content-center"
+                   style="background:#1a1a2e;">
+                <i class="fas fa-film text-white opacity-50"></i>
+              </div>
+            {% endif %}
+            {% if rv.pk == video.pk %}
+            <div class="position-absolute inset-0 d-flex align-items-center justify-content-center"
+                 style="inset:0;border-radius:6px;background:rgba(0,104,55,.5);">
+              <i class="fas fa-play text-white" style="font-size:.85rem;"></i>
+            </div>
+            {% endif %}
+          </div>
+          <div class="overflow-hidden">
+            <div class="text-white" style="font-size:.76rem;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;">
+              {{ rv.title }}
+            </div>
+            <small class="text-muted" style="font-size:.68rem;">{{ rv.created_at|date:"d/m/Y" }}</small>
+            <div class="mt-1">
+              <span class="badge rounded-pill" style="background:rgba(247,148,29,.12);color:var(--orange);font-size:.6rem;">
+                {{ rv.get_category_display }}
+              </span>
+            </div>
+          </div>
+        </a>
+        {% empty %}
+        <p class="text-muted small text-center py-3">Aucune vidéo disponible.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const VIDEO_ID   = {{ video.pk }};
+const CSRF_TOKEN = '{{ csrf_token }}';
+let lastId       = 0;
+
+/* ══════════════════════════════════════════════════════
+   YOUTUBE IFRAME PLAYER API  (spec officielle)
+   https://developers.google.com/youtube/iframe_api_reference
+   ══════════════════════════════════════════════════════ */
+{% if video.is_youtube %}
+const YT_VIDEO_ID = '{{ video.get_youtube_id }}';
+
+/* Codes d'erreur officiels (doc §onError) */
+const YT_ERRORS = {
+  2:   "L'identifiant de la vidéo est invalide (caractères non autorisés).",
+  5:   "Cette vidéo ne peut pas être lue dans le lecteur HTML5.",
+  100: "La vidéo demandée est introuvable (supprimée ou privée).",
+  101: "L'intégration de cette vidéo est désactivée par son propriétaire.",
+  150: "L'intégration de cette vidéo est désactivée par son propriétaire.",
+  153: "Erreur de configuration du lecteur (origine non autorisée).",
+};
+
+let ytPlayer;
+
+function _ytShowError(code) {
+  document.getElementById('ytErrorMsg').textContent =
+    YT_ERRORS[code] || ('Erreur de lecture YouTube (code ' + code + ').');
+  document.getElementById('ytErrorOverlay').style.display = 'flex';
+}
+
+function _ytHideAutoplayOverlay() {
+  const el = document.getElementById('ytAutoplayOverlay');
+  if (el) el.style.display = 'none';
+}
+
+/* Bouton lecture manuelle (si autoplay bloqué) */
+document.getElementById('ytManualPlayBtn').addEventListener('click', function() {
+  if (ytPlayer && ytPlayer.playVideo) {
+    ytPlayer.playVideo();
+    _ytHideAutoplayOverlay();
+  }
+});
+
+/*
+ * Chargement asynchrone de l'API via insertion DOM
+ * (approche recommandée par la documentation officielle §Getting started)
+ */
+(function() {
+  var tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  var firstScript = document.getElementsByTagName('script')[0];
+  firstScript.parentNode.insertBefore(tag, firstScript);
+})();
+
+/*
+ * onYouTubeIframeAPIReady — fonction globale appelée automatiquement
+ * par l'API dès que son code JavaScript est chargé.
+ * Construit le lecteur YT.Player dans le <div id="ytPlayer">.
+ */
+function onYouTubeIframeAPIReady() {
+  ytPlayer = new YT.Player('ytPlayer', {
+    videoId: YT_VIDEO_ID,
+    host: 'https://www.youtube.com',   // domaine standard (pas nocookie) pour fiabilité max
+    playerVars: {
+      autoplay:    1,   // lecture automatique (peut être bloquée par le navigateur)
+      playsinline: 1,   // lecture inline sur iOS
+      rel:         0,   // pas de vidéos suggérées d'autres chaînes
+      enablejsapi: 1,   // contrôle JavaScript activé
+    },
+    events: {
+      onReady: function(event) {
+        event.target.setVolume(100);
+        event.target.playVideo();
+      },
+      onStateChange: function(event) {
+        if (event.data === YT.PlayerState.PLAYING) {
+          _ytHideAutoplayOverlay();
+        }
+      },
+      onError: function(event) {
+        _ytShowError(event.data);
+      },
+      onAutoplayBlocked: function() {
+        document.getElementById('ytAutoplayOverlay').style.display = 'flex';
+      },
+    },
+  });
+}
+{% endif %}
+
+/* ── LIKE ── */
+const likeBtn = document.getElementById('likeBtn');
+likeBtn?.addEventListener('click', () => {
+  fetch(`/webtv/${VIDEO_ID}/like/`, {
+    method: 'POST', headers: {'X-CSRFToken': CSRF_TOKEN},
+  })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('likeCount').textContent = d.count;
+    likeBtn.classList.toggle('liked', d.liked);
+  });
+});
+
+/* ── COMMENTS ── */
+function commentHTML(c) {
+  const init = c.user[0].toUpperCase();
+  const txt  = c.text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `
+    <div class="comment-item d-flex gap-2" data-cid="${c.id}">
+      <div class="comment-avatar">${init}</div>
+      <div class="flex-grow-1 overflow-hidden">
+        <div class="d-flex align-items-baseline gap-2 flex-wrap">
+          <span class="text-white fw-600" style="font-size:.8rem;">${c.user}</span>
+          <small class="text-muted" style="font-size:.68rem;">${c.created_at}</small>
+        </div>
+        <p class="mb-0" style="font-size:.82rem;color:rgba(255,255,255,.7);word-break:break-word;">${txt}</p>
+      </div>
+    </div>`;
+}
+
+/* Initial load */
+fetch(`/webtv/${VIDEO_ID}/comments/`)
+  .then(r => r.json())
+  .then(d => {
+    const box = document.getElementById('commentsList');
+    document.getElementById('commentsLoader')?.remove();
+    if (d.comments.length === 0) {
+      box.innerHTML = '<p class="text-center text-muted small py-3">Soyez le premier à commenter !</p>';
+    } else {
+      d.comments.forEach(c => { if (c.id > lastId) lastId = c.id; box.insertAdjacentHTML('beforeend', commentHTML(c)); });
+    }
+  });
+
+/* Poll */
+setInterval(() => {
+  fetch(`/webtv/${VIDEO_ID}/comments/?after=${lastId}`)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.comments.length) return;
+      const box = document.getElementById('commentsList');
+      box.querySelector('p.text-center')?.remove();
+      d.comments.forEach(c => {
+        if (c.id > lastId) lastId = c.id;
+        box.insertAdjacentHTML('afterbegin', commentHTML(c));
+      });
+    });
+}, 5000);
+
+/* Submit */
+document.getElementById('commentForm')?.addEventListener('submit', e => {
+  e.preventDefault();
+  const ta  = document.getElementById('commentText');
+  const txt = ta.value.trim();
+  if (!txt) return;
+  const btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true;
+  fetch(`/webtv/${VIDEO_ID}/comments/`, {
+    method: 'POST', headers: {'X-CSRFToken': CSRF_TOKEN},
+    body: new URLSearchParams({text: txt}),
+  })
+  .then(r => r.json())
+  .then(c => {
+    if (c.error) { alert(c.error); return; }
+    const box = document.getElementById('commentsList');
+    box.querySelector('p.text-center')?.remove();
+    if (c.id > lastId) lastId = c.id;
+    box.insertAdjacentHTML('afterbegin', commentHTML(c));
+    ta.value = '';
+  })
+  .finally(() => btn.disabled = false);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,268 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Children's Fruit — WebTV & Charité{% endblock %}</title>
+  <meta name="description" content="{% block meta_desc %}Children's Fruit — plateforme combinant WebTV inspirante et actions caritatives. Porte ta croix et suis moi.{% endblock %}">
+
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="{% static 'core/css/main.css' %}" rel="stylesheet">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ══════════════ NAVBAR ══════════════ -->
+<nav class="navbar navbar-expand-lg sticky-top" id="mainNav">
+  <div class="container">
+
+    <a class="navbar-brand" href="{% url 'home' %}">
+      <img src="{% static 'core/img/logo.jpg' %}" alt="Children's Fruit" class="navbar-logo">
+    </a>
+
+    <button class="navbar-toggler border-0" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navbarMain">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarMain">
+      <ul class="navbar-nav mx-auto gap-1">
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'home' %}">
+            <i class="fas fa-home me-1"></i>Accueil
+          </a>
+        </li>
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="{% url 'video_list' %}"
+             role="button" data-bs-toggle="dropdown">
+            <i class="fas fa-tv me-1"></i>Web TV
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark">
+            <li><a class="dropdown-item" href="{% url 'video_list' %}"><i class="fas fa-border-all me-2"></i>Tout voir</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'video_list' %}?category=film"><i class="fas fa-film me-2"></i>Films</a></li>
+            <li><a class="dropdown-item" href="{% url 'video_list' %}?category=blog"><i class="fas fa-pen-nib me-2"></i>Blog</a></li>
+            <li><a class="dropdown-item" href="{% url 'video_list' %}?category=show"><i class="fas fa-star me-2"></i>Shows</a></li>
+            <li><a class="dropdown-item" href="{% url 'video_list' %}?category=news"><i class="fas fa-newspaper me-2"></i>Actualités</a></li>
+            <li><a class="dropdown-item" href="{% url 'video_list' %}?category=upcoming"><i class="fas fa-calendar-alt me-2"></i>À venir</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'community' %}">
+            <i class="fas fa-users me-1"></i>Communauté
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'home' %}#testimonials">
+            <i class="fas fa-quote-left me-1"></i>Témoignages
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'partnership_request' %}">
+            <i class="fas fa-envelope me-1"></i>Contact
+          </a>
+        </li>
+
+      </ul>
+
+      <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+        <button class="btn btn-donate btn-sm" data-bs-toggle="modal" data-bs-target="#donationModal">
+          <i class="fas fa-heart me-1"></i>Faire un Don
+        </button>
+
+        {% if user.is_authenticated %}
+          <div class="dropdown">
+            <button class="btn btn-outline-light btn-sm dropdown-toggle rounded-pill px-3"
+                    data-bs-toggle="dropdown">
+              <i class="fas fa-user-circle me-1"></i>{{ user.username }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+              <li class="px-3 py-2 border-bottom" style="border-color:rgba(255,255,255,.1)!important">
+                <small class="text-muted d-block" style="font-size:.7rem;">Connecté en tant que</small>
+                <span class="text-white fw-semibold" style="font-size:.85rem;">{{ user.username }}</span>
+                <br><span class="badge rounded-pill" style="background:rgba(247,148,29,.2);color:var(--orange);font-size:.65rem;">{{ user.get_role_display }}</span>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'dashboard_redirect' %}">
+                  <i class="fas fa-tachometer-alt me-2"></i>Mon Dashboard
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'community' %}">
+                  <i class="fas fa-users me-2"></i>Communauté
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="post" action="{% url 'logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item text-danger">
+                    <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+                  </button>
+                </form>
+              </li>
+            </ul>
+          </div>
+        {% else %}
+          <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm rounded-pill px-3">
+            <i class="fas fa-sign-in-alt me-1"></i>Connexion
+          </a>
+          <a href="{% url 'register' %}" class="btn btn-sm rounded-pill px-3"
+             style="background:rgba(255,255,255,.15);color:#fff;font-size:.82rem;">
+            <i class="fas fa-user-plus me-1"></i>S'inscrire
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+<!-- ══════════════ FLASH MESSAGES ══════════════ -->
+{% if messages %}
+<div class="position-fixed end-0 p-3" style="z-index:9999;top:75px;max-width:420px;">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-card auto-dismiss" role="alert">
+    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ══════════════ MAIN CONTENT ══════════════ -->
+<main>{% block content %}{% endblock %}</main>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer class="footer-section pt-1">
+  <div class="container">
+    <div class="row g-4 py-5">
+
+      <div class="col-lg-4">
+        <div class="footer-brand mb-2">
+          <img src="{% static 'core/img/logo.jpg' %}" alt="Children's Fruit">
+        </div>
+        <p class="footer-tagline mb-3">"Porte ta croix et suis moi"</p>
+        <p class="small lh-lg" style="color:rgba(255,255,255,.5);">
+          Une plateforme unique combinant contenu multimédia inspirant et actions
+          caritatives pour transformer des vies et bâtir un avenir meilleur.
+        </p>
+        <div class="d-flex gap-2 mt-3">
+          <a href="https://www.facebook.com/profile.php?id=100083583445615" target="_blank" rel="noopener" class="social-link" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://www.youtube.com/@CFRUIT24" target="_blank" rel="noopener" class="social-link" title="YouTube"><i class="fab fa-youtube"></i></a>
+          <a href="https://www.tiktok.com/@cfruit225" target="_blank" rel="noopener" class="social-link" title="TikTok"><i class="fab fa-tiktok"></i></a>
+          <a href="https://wa.me/2250101928013" target="_blank" rel="noopener" class="social-link" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <h6 class="text-white fw-semibold mb-3" style="font-size:.82rem;letter-spacing:.5px;text-transform:uppercase;">Navigation</h6>
+        <ul class="footer-links">
+          <li><a href="{% url 'home' %}">Accueil</a></li>
+          <li><a href="{% url 'video_list' %}">Web TV</a></li>
+          <li><a href="{% url 'community' %}">Communauté</a></li>
+          <li><a href="{% url 'donation' %}">Faire un Don</a></li>
+          <li><a href="{% url 'partnership_request' %}">Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <h6 class="text-white fw-semibold mb-3" style="font-size:.82rem;letter-spacing:.5px;text-transform:uppercase;">WebTV</h6>
+        <ul class="footer-links">
+          <li><a href="{% url 'video_list' %}?category=film">Films</a></li>
+          <li><a href="{% url 'video_list' %}?category=blog">Blog</a></li>
+          <li><a href="{% url 'video_list' %}?category=show">Shows</a></li>
+          <li><a href="{% url 'video_list' %}?category=news">Actualités</a></li>
+          <li><a href="{% url 'video_list' %}?category=upcoming">À venir</a></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-4">
+        <h6 class="text-white fw-semibold mb-3" style="font-size:.82rem;letter-spacing:.5px;text-transform:uppercase;">Newsletter</h6>
+        <p class="small mb-3" style="color:rgba(255,255,255,.5);">Restez informé des dernières actualités et vidéos.</p>
+        <div class="footer-newsletter d-flex">
+          <input type="email" class="form-control" placeholder="votre@email.com">
+          <button class="btn btn-orange px-3" style="border-radius:0 var(--radius-pill) var(--radius-pill) 0;">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+        <div class="mt-3">
+          <small style="color:rgba(255,255,255,.4);font-size:.72rem;">
+            <i class="fas fa-phone me-1" style="color:var(--orange);"></i>+225 01 01 92 80 13
+          </small>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom border-top py-3 text-center" style="border-color:rgba(255,255,255,.08)!important">
+      <small style="color:rgba(255,255,255,.35);font-size:.75rem;">
+        © {% now "Y" %} Children's Fruit. Tous droits réservés.
+      </small>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════ MODALE DE DON (globale) ══════════════ -->
+<div class="modal fade" id="donationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:500px;">
+    <div class="modal-content" style="background:#14142a;border:1px solid rgba(255,255,255,.1);border-radius:18px;">
+      <div class="modal-header border-0 pb-1">
+        <div>
+          <h5 class="modal-title text-white fw-bold">
+            <i class="fas fa-hand-holding-heart me-2" style="color:var(--orange);"></i>Faire un Don
+          </h5>
+          <small style="color:#fff;opacity:.85;">Soutenez Children's Fruit — chaque franc compte !</small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="small mb-3" style="font-size:.8rem;color:#fff;opacity:.75;">Choisissez votre moyen de paiement et envoyez votre don directement.</p>
+
+        {% include 'core/partials/payment_methods.html' %}
+
+        <div class="rounded-3 p-3 mt-2" style="background:rgba(0,104,55,.12);border:1px solid rgba(0,104,55,.3);">
+          <p class="text-white mb-0" style="font-size:.78rem;">
+            <i class="fas fa-shield-halved me-2" style="color:var(--green);"></i>
+            Précisez <strong>"Don Children's Fruit"</strong> en objet et envoyez une capture d'écran via
+            <a href="{% url 'partnership_request' %}" style="color:var(--orange);">notre contact</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'core/js/main.js' %}"></script>
+<script>
+function donSel(v,b){
+  document.querySelectorAll('.don-amount-btn').forEach(x=>x.classList.remove('selected'));
+  b.classList.add('selected');
+  document.getElementById('donAmt').value=v;
+}
+function donCopy(n,b){
+  navigator.clipboard.writeText(n).then(()=>{
+    const o=b.innerHTML; b.innerHTML='<i class="fas fa-check"></i>';
+    setTimeout(()=>b.innerHTML=o,2000);
+  });
+}
+</script>
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

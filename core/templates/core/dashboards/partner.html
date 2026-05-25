@@ -1,0 +1,130 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Partenaire — Children's Fruit{% endblock %}
+{% block extra_css %}<style>body{background:#f4f6f9;}</style>{% endblock %}
+
+{% block content %}
+<div class="dash-wrap">
+  <aside class="dash-sidebar">
+    <div class="sidebar-brand">
+      <img src="{% static 'core/img/logo.jpg' %}" alt="Children's Fruit" style="height:36px;object-fit:contain;">
+    </div>
+    <div class="px-3 mb-3">
+      <div class="d-flex align-items-center gap-2 p-2 rounded-xl" style="background:rgba(247,148,29,.1);">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0;">{{ user.username|slice:":1"|upper }}</div>
+        <div><div class="text-white fw-600" style="font-size:.8rem;">{{ user.username }}</div><span class="badge rounded-pill" style="background:rgba(247,148,29,.2);color:var(--orange);font-size:.6rem;">Partenaire</span></div>
+      </div>
+    </div>
+    <a class="dash-nav-link active" href="{% url 'partner_dashboard' %}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span>Tableau de bord</a>
+    <a class="dash-nav-link" href="{% url 'video_list' %}"><span class="icon"><i class="fas fa-tv"></i></span>Web TV</a>
+    <a class="dash-nav-link" href="{% url 'community' %}"><span class="icon"><i class="fas fa-users"></i></span>Communauté</a>
+    <a class="dash-nav-link" href="{% url 'bible' %}"><span class="icon"><i class="fas fa-book-open"></i></span>Bible</a>
+    <a class="dash-nav-link" href="{% url 'donation' %}"><span class="icon"><i class="fas fa-hand-holding-heart"></i></span>Faire un Don</a>
+    <a class="dash-nav-link" href="{% url 'partnership_request' %}"><span class="icon"><i class="fas fa-handshake"></i></span>Partenariat</a>
+    <div class="px-3 pt-4">
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+        <button type="submit" class="btn btn-sm w-100 rounded-pill" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);font-size:.78rem;"><i class="fas fa-sign-out-alt me-1"></i>Déconnexion</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+      <div><h4 class="fw-700 mb-1">Bonjour, {{ user.get_full_name|default:user.username }} 👋</h4><small class="text-muted">Dashboard Partenaire</small></div>
+      <a href="{% url 'donation' %}" class="btn btn-orange px-4"><i class="fas fa-heart me-2"></i>Faire un Don</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-xl-3"><div class="stat-card"><div class="stat-icon" style="background:rgba(0,104,55,.1);color:var(--green);"><i class="fas fa-film"></i></div><div><div class="fw-800 fs-4">{{ recent_videos|length }}</div><small class="text-muted">Vidéos</small></div></div></div>
+      <div class="col-6 col-xl-3"><div class="stat-card"><div class="stat-icon" style="background:rgba(247,148,29,.1);color:var(--orange);"><i class="fas fa-bullhorn"></i></div><div><div class="fw-800 fs-4">{{ funding_projects|length }}</div><small class="text-muted">Projets</small></div></div></div>
+      <div class="col-6 col-xl-3"><div class="stat-card"><div class="stat-icon" style="background:rgba(21,101,192,.1);color:#1565c0;"><i class="fas fa-file-alt"></i></div><div><div class="fw-800 fs-4">{{ activity_reports|length }}</div><small class="text-muted">Rapports</small></div></div></div>
+      <div class="col-6 col-xl-3"><div class="stat-card"><div class="stat-icon" style="background:rgba(34,197,94,.1);color:#16a34a;"><i class="fas fa-tasks"></i></div><div><div class="fw-800 fs-4">{{ open_tasks|length }}</div><small class="text-muted">Tâches</small></div></div></div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+
+        <!-- Vidéos -->
+        <div class="bg-white rounded-xl shadow-card p-3 mb-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-700 mb-0"><i class="fas fa-film me-2 text-green"></i>Vidéos récentes</h6>
+            <a href="{% url 'video_list' %}" class="btn btn-sm btn-outline-green px-3">Tout voir</a>
+          </div>
+          <div class="row g-2">
+            {% for v in recent_videos %}
+            <div class="col-6 col-md-4">
+              <a href="{% url 'video_detail' v.pk %}" class="d-block text-decoration-none">
+                <div class="video-card">
+                  <div class="video-thumb-wrapper" style="aspect-ratio:16/9;">
+                    {% if v.thumbnail %}<img src="{{ v.thumbnail.url }}" alt="{{ v.title }}" loading="lazy">
+                    {% else %}<img src="https://img.youtube.com/vi/{{ v.get_youtube_id }}/mqdefault.jpg" alt="{{ v.title }}" loading="lazy">{% endif %}
+                    <div class="video-play-overlay"><div class="play-btn" style="width:36px;height:36px;font-size:.8rem;"><i class="fas fa-play"></i></div></div>
+                    <span class="category-badge" style="font-size:.6rem;">{{ v.get_category_display }}</span>
+                  </div>
+                  <div class="p-2"><div class="fw-600 text-dark" style="font-size:.75rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ v.title }}</div></div>
+                </div>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Projets -->
+        {% if funding_projects %}
+        <div class="bg-white rounded-xl shadow-card p-3">
+          <h6 class="fw-700 mb-3"><i class="fas fa-bullhorn me-2 text-orange"></i>Projets de financement</h6>
+          {% for p in funding_projects %}
+          <div class="d-flex gap-3 mb-3 pb-3 border-bottom align-items-center">
+            <div style="flex-shrink:0;">{% if p.thumbnail %}<img src="{{ p.thumbnail.url }}" style="width:56px;height:38px;border-radius:8px;object-fit:cover;">{% else %}<div style="width:56px;height:38px;border-radius:8px;background:var(--green-pale);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:.9rem;"><i class="fas fa-seedling"></i></div>{% endif %}</div>
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="fw-600" style="font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.title }}</div>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <div class="progress flex-grow-1" style="height:5px;"><div class="progress-bar bg-green" style="width:{{ p.progress_percentage }}%;"></div></div>
+                <small class="text-muted fw-600" style="font-size:.7rem;flex-shrink:0;">{{ p.progress_percentage }}%</small>
+              </div>
+              <small class="text-muted" style="font-size:.7rem;">{{ p.raised_amount|floatformat:0 }} / {{ p.goal_amount|floatformat:0 }} FCFA</small>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="col-lg-4">
+        <!-- Rapports -->
+        <div class="bg-white rounded-xl shadow-card p-3 mb-3">
+          <h6 class="fw-700 mb-3"><i class="fas fa-file-pdf me-2" style="color:#1565c0;"></i>Rapports d'activité</h6>
+          {% if activity_reports %}
+          {% for r in activity_reports %}
+          <a href="{{ r.report_file.url }}" target="_blank"
+             class="d-flex align-items-center gap-2 p-2 rounded-xl text-decoration-none mb-2"
+             style="border:1px solid var(--border);transition:background .15s;"
+             onmouseover="this.style.background='var(--green-pale)'" onmouseout="this.style.background=''">
+            <div style="width:34px;height:34px;border-radius:9px;background:rgba(21,101,192,.08);color:#1565c0;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-file-pdf"></i></div>
+            <div class="flex-grow-1 overflow-hidden"><div class="fw-600 text-dark" style="font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.title }}</div><small class="text-muted" style="font-size:.67rem;">{{ r.created_at|date:"d/m/Y" }}</small></div>
+            <i class="fas fa-download text-muted" style="font-size:.72rem;"></i>
+          </a>
+          {% endfor %}
+          {% else %}<p class="text-muted small text-center">Aucun rapport.</p>{% endif %}
+        </div>
+
+        <!-- Communauté -->
+        <div class="bg-white rounded-xl shadow-card p-3">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-700 mb-0"><i class="fas fa-comments me-2 text-green"></i>Communauté</h6>
+            <a href="{% url 'community' %}" class="btn btn-sm btn-outline-green px-2" style="font-size:.72rem;">Rejoindre</a>
+          </div>
+          {% for msg in community_messages %}
+          <div class="d-flex gap-2 mb-2 pb-2 border-bottom">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;font-weight:700;font-size:.62rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">{{ msg.user.username|slice:":1"|upper }}</div>
+            <div><div class="fw-600 text-dark" style="font-size:.76rem;">{{ msg.user.username }}</div><p class="text-muted mb-0" style="font-size:.73rem;">{{ msg.text|truncatewords:8 }}</p></div>
+          </div>
+          {% empty %}<p class="text-muted small text-center">Pas de messages récents.</p>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
