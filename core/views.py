@@ -146,11 +146,15 @@ class CommunityView(LoginRequiredMixin, UpdateLastSeenMixin, TemplateView):
         User = get_user_model()
         cutoff = timezone.now() - timezone.timedelta(minutes=5)
         context['online_users'] = User.objects.filter(last_seen__gte=cutoff).exclude(pk=self.request.user.pk)
-        context['recent_messages'] = CommunityMessage.objects.select_related('user').order_by('-created_at')[:50]
+        context['recent_messages'] = CommunityMessage.objects.select_related('user').order_by('-created_at')[:60]
         context['open_tasks'] = VolunteerTask.objects.filter(status='open').order_by('deadline')[:10]
         context['castings'] = Casting.objects.filter(is_open=True).order_by('deadline')[:5]
         if self.request.user.role in ('partner', 'volunteer'):
             context['activity_reports'] = ActivityReport.objects.order_by('-created_at')[:10]
+        today = timezone.localdate()
+        context['today'] = today
+        context['today_msg_count'] = CommunityMessage.objects.filter(created_at__date=today, is_deleted=False).count()
+        context['total_members'] = User.objects.filter(is_active=True).count()
         return context
 
 
