@@ -54,6 +54,13 @@
             <li><a class="dropdown-item" href="{% url 'video_list' %}?category=show"><i class="fas fa-star me-2"></i>Shows</a></li>
             <li><a class="dropdown-item" href="{% url 'video_list' %}?category=news"><i class="fas fa-newspaper me-2"></i>Actualités</a></li>
             <li><a class="dropdown-item" href="{% url 'video_list' %}?category=upcoming"><i class="fas fa-calendar-alt me-2"></i>À venir</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'live' %}">
+                <span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;animation:livePulse 1.5s infinite;flex-shrink:0;"></span>
+                <span>Live &amp; Grille 24h</span>
+              </a>
+            </li>
           </ul>
         </li>
 

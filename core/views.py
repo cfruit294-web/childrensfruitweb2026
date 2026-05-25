@@ -723,22 +723,22 @@ class LiveView(TemplateView):
 
         today_slots = list(EmissionSlot.objects.filter(date=today).order_by('start_time'))
 
-        # Grille 24h : pour chaque heure, les créneaux qui y sont actifs
+        # Grille 24h : chaque slot apparaît dans toutes les heures qu'il couvre
         grid = []
         for h in range(24):
-            active = [
-                s for s in today_slots
-                if s.start_time.hour <= h < (s.end_time.hour if s.end_time > s.start_time else 24)
-                or s.start_time.hour == h
-            ]
-            # Dédoublonner
-            seen = set()
-            unique = []
-            for s in active:
-                if s.pk not in seen:
-                    seen.add(s.pk)
-                    unique.append(s)
-            grid.append({'hour': h, 'slots': unique, 'is_now': now_local.hour == h})
+            active = []
+            for s in today_slots:
+                sh = s.start_time.hour
+                eh = s.end_time.hour
+                # Slot couvre cette heure si :
+                # - il commence à cette heure
+                # - ou il commence avant et se termine après (ou à minuit = 0 = fin de journée)
+                if sh == h:
+                    active.append(s)
+                elif sh < h:
+                    if eh == 0 or eh > h:   # se termine après h, ou minuit (couvre jusqu'à fin)
+                        active.append(s)
+            grid.append({'hour': h, 'slots': active, 'is_now': now_local.hour == h})
 
         ctx['grid_24h'] = grid
 
