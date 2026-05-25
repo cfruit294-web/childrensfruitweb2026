@@ -468,6 +468,9 @@ class LiveStream(models.Model):
         verbose_name = 'Diffusion Live'
         verbose_name_plural = 'Diffusions Live'
         ordering = ['-started_at']
+        permissions = [
+            ('can_manage_live', 'Peut gérer le live (contrôle & planning)'),
+        ]
 
     def __str__(self):
         status = '🔴 EN DIRECT' if self.is_live else '⚫ Hors ligne'

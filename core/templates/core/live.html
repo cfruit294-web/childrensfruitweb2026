@@ -367,8 +367,8 @@
           <!-- Vide si aucun programme -->
           <div id="noSlots" style="display:none;text-align:center;padding:2rem 1rem;color:rgba(255,255,255,.3);">
             <i class="fas fa-calendar-plus fa-2x d-block mb-2 opacity-25"></i>
-            <p style="font-size:.8rem;">Aucune émission aujourd'hui.<br>
-              <a href="{% url 'live_control' %}" style="color:var(--green);">Ajouter</a>
+            <p style="font-size:.8rem;">Aucune émission aujourd'hui.{% if user.is_staff or user.has_perm('core.can_manage_live') %}<br>
+              <a href="{% url 'live_control' %}" style="color:var(--green);">Ajouter</a>{% endif %}
             </p>
           </div>
         </div>
@@ -380,10 +380,12 @@
                   style="background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.25);font-size:.75rem;">
             <i class="fas fa-crosshairs me-1"></i>Maintenant
           </button>
+          {% if user.is_staff or user.has_perm('core.can_manage_live') %}
           <a href="{% url 'live_control' %}" class="btn btn-sm rounded-pill flex-grow-1"
              style="background:rgba(0,104,55,.12);color:var(--green);border:1px solid rgba(0,104,55,.25);font-size:.75rem;">
             <i class="fas fa-sliders me-1"></i>Gérer
           </a>
+          {% endif %}
         </div>
       </div>
     </div>
