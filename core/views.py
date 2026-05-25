@@ -845,6 +845,11 @@ class LiveView(TemplateView):
         ctx['schedule_week'] = (EmissionSlot.objects
                                 .filter(date__gt=today)
                                 .order_by('date', 'start_time')[:40])
+
+        u = self.request.user
+        ctx['can_manage_live'] = u.is_authenticated and (
+            u.is_staff or u.has_perm('core.can_manage_live')
+        )
         return ctx
 
 
