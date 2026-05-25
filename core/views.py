@@ -59,6 +59,9 @@ class HomeView(UpdateLastSeenMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # Live stream actif
+        context['live_stream'] = LiveStream.get_active()
+
         # Hero carousel : vidéos en vedette d'abord, complété par les plus récentes
         hero_qs = list(VideoContent.objects.filter(is_featured=True).order_by('-created_at')[:8])
         if len(hero_qs) < 5:
