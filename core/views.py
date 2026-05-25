@@ -68,9 +68,12 @@ class HomeView(UpdateLastSeenMixin, TemplateView):
             )
         context['hero_videos'] = hero_qs
 
-        # Section Web TV : vedettes sinon les plus récentes
-        featured = VideoContent.objects.filter(is_featured=True).order_by('-created_at')[:6]
-        context['featured_videos'] = featured if featured.exists() else VideoContent.objects.order_by('-created_at')[:6]
+        # Section Web TV : vedettes en priorité, complété par les plus récentes jusqu'à 6
+        featured = list(VideoContent.objects.filter(is_featured=True).order_by('-created_at')[:6])
+        if len(featured) < 6:
+            ids = [v.pk for v in featured]
+            featured += list(VideoContent.objects.exclude(pk__in=ids).order_by('-created_at')[:6 - len(featured)])
+        context['featured_videos'] = featured
 
         # Compteurs réels pour les stats
         context['video_count'] = VideoContent.objects.count()
