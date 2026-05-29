@@ -14,9 +14,12 @@
     font-size: 1.05rem;
     line-height: 1.9;
     color: var(--text);
-    white-space: pre-line;
   }
   .blog-content p { margin-bottom: 1.25rem; }
+  .blog-content h2 { margin-top: 2rem; }
+  .blog-content h3 { margin-top: 1.5rem; }
+  .blog-content blockquote { margin: 1.5rem 0; }
+  .blog-content .lead-text { margin-bottom: 2rem; }
   .article-sidebar { position: sticky; top: 90px; }
 </style>
 {% endblock %}
@@ -72,7 +75,7 @@
         {% endif %}
 
         <div class="bg-white p-4 p-lg-5 rounded-xl shadow-card">
-          <div class="blog-content">{{ post.content }}</div>
+          <div class="blog-content">{{ post.content|safe }}</div>
         </div>
 
         <!-- Navigation bas -->

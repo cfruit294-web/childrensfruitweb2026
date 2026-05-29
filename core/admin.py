@@ -10,6 +10,8 @@ from .models import (
     VideoComment, VideoLike, CommunityMessage,
     PhoneVerificationCode, BlogPost,
     LiveStream, EmissionSlot,
+    StudyCourse, CourseResource, CourseEnrollment, ResourceProgress,
+    Quiz, QuizQuestion, QuizChoice, QuizAttempt, QuizAnswer, Certificate,
 )
 
 
@@ -372,3 +374,151 @@ class EmissionSlotAdmin(admin.ModelAdmin):
         (None, {'fields': ('title', 'date', 'start_time', 'end_time', 'category')}),
         ('Détails', {'fields': ('presenter', 'description', 'thumbnail', 'is_highlighted'), 'classes': ('collapse',)}),
     )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# BIBLIOTHÈQUE D'ÉTUDE
+# ──────────────────────────────────────────────────────────────────────────────
+
+class QuizChoiceInline(admin.TabularInline):
+    model = QuizChoice
+    extra = 4
+    fields = ('text', 'is_correct', 'order')
+
+
+class QuizQuestionInline(admin.StackedInline):
+    model = QuizQuestion
+    extra = 1
+    fields = ('text', 'explanation', 'order', 'points')
+    show_change_link = True
+
+
+class CourseResourceInline(admin.TabularInline):
+    model = CourseResource
+    extra = 1
+    fields = ('title', 'resource_type', 'file', 'video_url', 'order')
+    show_change_link = True
+
+
+@admin.register(StudyCourse)
+class StudyCourseAdmin(admin.ModelAdmin):
+    list_display  = ('title', 'instructor', 'resource_count', 'enrolled_count', 'pass_score', 'is_published', 'created_at')
+    list_filter   = ('is_published',)
+    list_editable = ('is_published',)
+    search_fields = ('title', 'description', 'instructor')
+    inlines       = [CourseResourceInline]
+    fieldsets = (
+        (None, {'fields': ('title', 'instructor', 'thumbnail', 'is_published', 'pass_score')}),
+        ('Description', {'fields': ('description',)}),
+    )
+    actions = ['publish_courses', 'unpublish_courses']
+
+    @admin.display(description='Ressources')
+    def resource_count(self, obj):
+        return obj.resources.count()
+
+    @admin.display(description='Inscrits')
+    def enrolled_count(self, obj):
+        return obj.enrollments.count()
+
+    @admin.action(description='✅ Publier les formations sélectionnées')
+    def publish_courses(self, request, queryset):
+        updated = queryset.update(is_published=True)
+        self.message_user(request, f"{updated} formation(s) publiée(s).")
+
+    @admin.action(description='⏸ Dépublier les formations sélectionnées')
+    def unpublish_courses(self, request, queryset):
+        updated = queryset.update(is_published=False)
+        self.message_user(request, f"{updated} formation(s) dépubliée(s).")
+
+
+@admin.register(CourseResource)
+class CourseResourceAdmin(admin.ModelAdmin):
+    list_display  = ('title', 'course', 'resource_type', 'order', 'has_quiz')
+    list_filter   = ('resource_type', 'course')
+    search_fields = ('title', 'course__title')
+    list_select_related = ('course',)
+    ordering      = ('course', 'order')
+
+    @admin.display(description='Quiz', boolean=True)
+    def has_quiz(self, obj):
+        return hasattr(obj, 'quiz')
+
+
+class QuizAnswerInline(admin.TabularInline):
+    model = QuizAnswer
+    extra = 0
+    readonly_fields = ('question', 'selected_choice')
+    can_delete = False
+
+
+@admin.register(Quiz)
+class QuizAdmin(admin.ModelAdmin):
+    list_display  = ('title', 'resource', 'course', 'question_count', 'pass_score', 'time_limit_minutes')
+    list_filter   = ('pass_score',)
+    search_fields = ('title',)
+    inlines       = [QuizQuestionInline]
+
+    @admin.display(description='Questions')
+    def question_count(self, obj):
+        return obj.questions.count()
+
+
+@admin.register(QuizQuestion)
+class QuizQuestionAdmin(admin.ModelAdmin):
+    list_display = ('text_short', 'quiz', 'order', 'points')
+    list_filter  = ('quiz',)
+    inlines      = [QuizChoiceInline]
+    ordering     = ('quiz', 'order')
+
+    @admin.display(description='Question')
+    def text_short(self, obj):
+        return obj.text[:80] + '…' if len(obj.text) > 80 else obj.text
+
+
+@admin.register(QuizAttempt)
+class QuizAttemptAdmin(admin.ModelAdmin):
+    list_display    = ('user', 'quiz', 'score', 'passed', 'started_at', 'completed_at')
+    list_filter     = ('passed', 'quiz')
+    readonly_fields = ('user', 'quiz', 'score', 'passed', 'started_at', 'completed_at')
+    inlines         = [QuizAnswerInline]
+    search_fields   = ('user__username',)
+
+
+@admin.register(CourseEnrollment)
+class CourseEnrollmentAdmin(admin.ModelAdmin):
+    list_display  = ('user', 'course', 'progress_pct', 'is_completed', 'enrolled_at')
+    list_filter   = ('course',)
+    readonly_fields = ('enrolled_at', 'completed_at')
+    search_fields = ('user__username', 'course__title')
+
+    @admin.display(description='Progression')
+    def progress_pct(self, obj):
+        pct = obj.progress_pct
+        color = '#006837' if pct == 100 else '#F7941D'
+        return format_html(
+            '<div style="width:100px;background:#eee;border-radius:4px;">'
+            '<div style="width:{pct}%;background:{color};height:14px;border-radius:4px;'
+            'text-align:center;color:white;font-size:11px;line-height:14px;">{pct}%</div>'
+            '</div>',
+            pct=pct, color=color
+        )
+
+    @admin.display(description='Terminé', boolean=True)
+    def is_completed(self, obj):
+        return obj.is_completed
+
+
+@admin.register(Certificate)
+class CertificateAdmin(admin.ModelAdmin):
+    list_display  = ('certificate_number', 'user', 'course', 'score_display', 'issued_at')
+    list_filter   = ('course',)
+    readonly_fields = ('certificate_number', 'issued_at', 'attempt')
+    search_fields = ('user__username', 'course__title', 'certificate_number')
+    ordering      = ('-issued_at',)
+
+    @admin.display(description='Score')
+    def score_display(self, obj):
+        if obj.attempt:
+            return f"{obj.attempt.score}/100"
+        return '—'

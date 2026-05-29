@@ -1,0 +1,188 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Examen Final — {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .exam-header{background:linear-gradient(135deg,#1e1b4b,#312e81,#4c1d95);padding:3rem 0 2.5rem;color:#fff;}
+  .question-card{border:1px solid #e9ecef;border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;transition:.2s;}
+  .question-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);}
+  .choice-label{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 1rem;border-radius:10px;border:2px solid #e9ecef;cursor:pointer;transition:.2s;margin-bottom:.5rem;}
+  .choice-label:hover{border-color:#8b5cf6;background:rgba(139,92,246,.04);}
+  .choice-radio{display:none;}
+  .choice-circle{width:20px;height:20px;border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .submit-exam-btn{background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;color:#fff;border-radius:30px;padding:.8rem 3rem;font-size:1.1rem;font-weight:700;transition:.2s;}
+  .submit-exam-btn:hover{transform:scale(1.03);box-shadow:0 8px 30px rgba(124,58,237,.4);}
+  .locked-overlay{padding:3rem;text-align:center;}
+  .timer{font-size:1.3rem;font-weight:700;color:#8b5cf6;}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<section class="exam-header">
+  <div class="container text-center">
+    <a href="{% url 'study_course' course.pk %}" class="btn btn-sm mb-3" style="background:rgba(255,255,255,.15);color:#fff;border-radius:20px;">
+      <i class="fas fa-arrow-left me-1"></i>Retour à la formation
+    </a>
+    <div class="mb-2"><i class="fas fa-graduation-cap fa-2x" style="color:rgba(255,255,255,.6);"></i></div>
+    <h2 class="mb-1" style="font-size:1.8rem;font-weight:800;">Examen Final de Certification</h2>
+    <p style="opacity:.85;">{{ course.title }}</p>
+    <div class="d-flex justify-content-center gap-3 mt-3" style="font-size:.88rem;opacity:.9;">
+      <span><i class="fas fa-question-circle me-1"></i>{{ exam.question_count }} questions</span>
+      <span><i class="fas fa-check-double me-1"></i>Score requis : {{ exam.pass_score }}/100</span>
+      {% if exam.time_limit_minutes > 0 %}
+      <span><i class="fas fa-clock me-1"></i>{{ exam.time_limit_minutes }} min</span>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="py-4">
+  <div class="container" style="max-width:760px;">
+
+    {% if not all_resources_done %}
+    <!-- Locked -->
+    <div class="locked-overlay" style="border:2px dashed #e9ecef;border-radius:16px;">
+      <i class="fas fa-lock fa-3x mb-3" style="color:#ccc;"></i>
+      <h5 class="fw-700 mb-2">Examen verrouillé</h5>
+      <p class="text-muted mb-4">Terminez toutes les ressources de formation avant d'accéder à l'examen final.</p>
+      <a href="{% url 'study_course' course.pk %}" class="btn" style="background:#006837;color:#fff;border-radius:30px;padding:.6rem 2rem;font-weight:600;">
+        <i class="fas fa-book-open me-2"></i>Continuer la formation
+      </a>
+    </div>
+
+    {% elif certificate %}
+    <!-- Already certified -->
+    <div class="text-center py-5" style="border:2px solid #006837;border-radius:16px;background:rgba(0,104,55,.04);">
+      <i class="fas fa-certificate fa-3x mb-3" style="color:#006837;"></i>
+      <h5 class="fw-700 mb-2">Formation certifiée !</h5>
+      <p class="text-muted mb-4">Vous avez déjà obtenu votre certificat pour cette formation.</p>
+      <a href="{% url 'study_certificate' course.pk %}" class="btn" style="background:linear-gradient(135deg,#006837,#009450);color:#fff;border-radius:30px;padding:.6rem 2rem;font-weight:600;">
+        <i class="fas fa-certificate me-2"></i>Voir mon certificat
+      </a>
+    </div>
+
+    {% else %}
+
+    {% if best_attempt %}
+    <div class="alert mb-4 d-flex align-items-center gap-3" style="border-radius:12px;border:none;background:{% if best_attempt.passed %}rgba(0,104,55,.1){% else %}rgba(239,68,68,.08){% endif %};">
+      <i class="fas {% if best_attempt.passed %}fa-check-circle{% else %}fa-times-circle{% endif %} fa-lg" style="color:{% if best_attempt.passed %}#006837{% else %}#ef4444{% endif %};"></i>
+      <div>
+        <div class="fw-700">Dernier score : {{ best_attempt.score }}/100 — {% if best_attempt.passed %}Réussi{% else %}Échoué{% endif %}</div>
+        <div class="text-muted" style="font-size:.82rem;">Vous pouvez repasser l'examen.</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if exam.time_limit_minutes > 0 %}
+    <div class="text-center mb-4">
+      <div class="timer"><i class="fas fa-clock me-2"></i><span id="timerDisplay">{{ exam.time_limit_minutes }}:00</span></div>
+    </div>
+    {% endif %}
+
+    <form method="post" id="examForm">
+      {% csrf_token %}
+
+      {% for q in questions %}
+      <div class="question-card">
+        <div class="fw-700 mb-3" style="font-size:1rem;line-height:1.5;">
+          <span style="color:#8b5cf6;font-weight:800;">{{ forloop.counter }}.</span> {{ q.text }}
+          {% if q.points > 1 %}<span class="badge ms-2" style="background:rgba(139,92,246,.15);color:#7c3aed;font-size:.7rem;">{{ q.points }} pts</span>{% endif %}
+        </div>
+        <div>
+          {% for choice in q.choices.all %}
+          <div>
+            <input type="radio" name="q_{{ q.pk }}" value="{{ choice.pk }}" id="ec_{{ choice.pk }}" class="choice-radio">
+            <label for="ec_{{ choice.pk }}" class="choice-label">
+              <div class="choice-circle"></div>
+              <span style="line-height:1.5;">{{ choice.text }}</span>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- Progress indicator -->
+      <div id="progressBar" class="mb-3 p-3" style="background:#f8f9fa;border-radius:12px;display:flex;align-items:center;gap:1rem;position:sticky;bottom:1rem;z-index:10;box-shadow:0 4px 20px rgba(0,0,0,.1);">
+        <div style="flex-grow:1;">
+          <div class="d-flex justify-content-between mb-1" style="font-size:.78rem;color:#666;">
+            <span>Questions répondues</span>
+            <span id="answeredCount">0</span> / {{ exam.question_count }}
+          </div>
+          <div style="height:6px;background:#e9ecef;border-radius:10px;overflow:hidden;">
+            <div id="answeredBar" style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#006837);border-radius:10px;transition:.3s;"></div>
+          </div>
+        </div>
+        <button type="submit" class="submit-exam-btn" id="submitBtn" disabled style="opacity:.5;white-space:nowrap;">
+          <i class="fas fa-paper-plane me-2"></i>Soumettre
+        </button>
+      </div>
+    </form>
+
+    {% endif %}
+  </div>
+</section>
+
+<script>
+// ── Radio highlight ──────────────────────────────────────────────────────────
+var totalQ = {{ exam.question_count }};
+var answered = {};
+
+document.querySelectorAll('input[type=radio]').forEach(function(radio){
+  radio.addEventListener('change', function(){
+    answered[this.name] = true;
+    updateProgress();
+    // Highlight selected
+    document.querySelectorAll('label[for]').forEach(function(l){
+      var inp = document.getElementById(l.getAttribute('for'));
+      if(inp && inp.name === radio.name){
+        l.style.borderColor = inp.checked ? '#8b5cf6' : '#e9ecef';
+        l.style.background  = inp.checked ? 'rgba(139,92,246,.08)' : '';
+      }
+    });
+  });
+});
+
+function updateProgress(){
+  var count = Object.keys(answered).length;
+  document.getElementById('answeredCount').textContent = count;
+  var pct = totalQ > 0 ? (count/totalQ*100) : 0;
+  document.getElementById('answeredBar').style.width = pct + '%';
+  var btn = document.getElementById('submitBtn');
+  if(count >= totalQ){
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '.5';
+  }
+}
+
+// ── Timer ────────────────────────────────────────────────────────────────────
+{% if exam.time_limit_minutes > 0 %}
+(function(){
+  var total = {{ exam.time_limit_minutes }} * 60;
+  var disp = document.getElementById('timerDisplay');
+  var form = document.getElementById('examForm');
+  if(!disp||!form) return;
+  var iv = setInterval(function(){
+    total--;
+    var m = Math.floor(total/60), s = total%60;
+    disp.textContent = m+':'+(s<10?'0':'')+s;
+    if(total<=120) disp.parentElement.style.color='#ef4444';
+    if(total<=0){
+      clearInterval(iv);
+      // Force submit even without all answered when time runs out
+      document.getElementById('submitBtn').disabled = false;
+      form.submit();
+    }
+  },1000);
+})();
+{% endif %}
+</script>
+
+{% endblock %}

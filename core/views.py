@@ -22,6 +22,8 @@ from .models import (
     VideoComment, VideoLike, CommunityMessage, DonationRecord,
     PhoneVerificationCode, BlogPost,
     LiveStream, EmissionSlot,
+    StudyCourse, CourseResource, CourseEnrollment, ResourceProgress,
+    Quiz, QuizQuestion, QuizChoice, QuizAttempt, QuizAnswer, Certificate,
 )
 from .forms import (
     PartnershipRequestForm, VolunteerApplicationForm,
@@ -938,54 +940,72 @@ class LiveControlView(LoginRequiredMixin, View):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# BIBLE API PROXY
+# BIBLE API PROXY  (bolls.life — gratuit, fiable, LSG français inclus)
+# Clé BIBLE_API_KEY conservée dans .env pour API future si besoin
 # ──────────────────────────────────────────────────────────────────────────────
 
-_BIBLE_BASE   = 'https://bible.helloao.org/api'
-_PROXY_TIMEOUT = 10
+_BOLLS_BASE    = 'https://bolls.life'
+_PROXY_TIMEOUT = 12
 
-# Standard USFM book abbreviations used by bible.helloao.org (index 0 = book 1)
-_BOOK_ABBR = [
-    'GEN','EXO','LEV','NUM','DEU','JOS','JDG','RUT','1SA','2SA',
-    '1KI','2KI','1CH','2CH','EZR','NEH','EST','JOB','PSA','PRO',
-    'ECC','SNG','ISA','JER','LAM','EZK','DAN','HOS','JOL','AMO',
-    'OBA','JON','MIC','NAM','HAB','ZEP','HAG','ZEC','MAL',
-    'MAT','MRK','LUK','JHN','ACT','ROM','1CO','2CO','GAL','EPH',
-    'PHP','COL','1TH','2TH','1TI','2TI','TIT','PHM','HEB','JAS',
-    '1PE','2PE','1JN','2JN','3JN','JUD','REV',
-]
+# Noms français des 66 livres (index 1-66)
+_FR_BOOK_NAMES = {
+     1:'Genèse', 2:'Exode', 3:'Lévitique', 4:'Nombres', 5:'Deutéronome',
+     6:'Josué', 7:'Juges', 8:'Ruth', 9:'1 Samuel', 10:'2 Samuel',
+    11:'1 Rois', 12:'2 Rois', 13:'1 Chroniques', 14:'2 Chroniques',
+    15:'Esdras', 16:'Néhémie', 17:'Esther', 18:'Job', 19:'Psaumes',
+    20:'Proverbes', 21:'Ecclésiaste', 22:'Cantique des Cantiques',
+    23:'Ésaïe', 24:'Jérémie', 25:'Lamentations', 26:'Ézéchiel',
+    27:'Daniel', 28:'Osée', 29:'Joël', 30:'Amos', 31:'Abdias',
+    32:'Jonas', 33:'Michée', 34:'Nahum', 35:'Habacuc', 36:'Sophonie',
+    37:'Aggée', 38:'Zacharie', 39:'Malachie', 40:'Matthieu', 41:'Marc',
+    42:'Luc', 43:'Jean', 44:'Actes', 45:'Romains', 46:'1 Corinthiens',
+    47:'2 Corinthiens', 48:'Galates', 49:'Éphésiens', 50:'Philippiens',
+    51:'Colossiens', 52:'1 Thessaloniciens', 53:'2 Thessaloniciens',
+    54:'1 Timothée', 55:'2 Timothée', 56:'Tite', 57:'Philémon',
+    58:'Hébreux', 59:'Jacques', 60:'1 Pierre', 61:'2 Pierre',
+    62:'1 Jean', 63:'2 Jean', 64:'3 Jean', 65:'Jude', 66:'Apocalypse',
+}
 
-# ISO 639-3 → 639-1 for the front-end language labels
-_LANG_3_TO_2 = {
-    'eng':'en','fra':'fr','deu':'de','spa':'es','por':'pt','ita':'it',
-    'rus':'ru','ara':'ar','zho':'zh','kor':'ko','jpn':'ja','nld':'nl',
-    'pol':'pl','ron':'ro','swa':'sw','hau':'ha','yor':'yo','afr':'af',
-    'hin':'hi','ben':'bn','tur':'tr','vie':'vi','ind':'id','msa':'ms',
+# Langue native → code ISO 639-1
+_LANG_NAME_TO_2 = {
+    'french':'fr', 'english':'en', 'spanish':'es', 'portuguese':'pt',
+    'german':'de', 'italian':'it', 'russian':'ru', 'arabic':'ar',
+    'chinese':'zh', 'korean':'ko', 'japanese':'ja', 'dutch':'nl',
+    'polish':'pl', 'romanian':'ro', 'swahili':'sw', 'hausa':'ha',
+    'yoruba':'yo', 'afrikaans':'af', 'hindi':'hi', 'turkish':'tr',
+    'indonesian':'id', 'malay':'ms', 'vietnamese':'vi',
+    # also accept native names
+    'français':'fr', 'español':'es', 'português':'pt',
+    'deutsch':'de', 'italiano':'it',
 }
 
 
-def _fetch_json(url):
-    req = urllib.request.Request(url, headers={'User-Agent': 'ChildrensFruitApp/1.0'})
+def _fetch_json(url, headers=None):
+    h = {'User-Agent': 'ChildrensFruitApp/1.0'}
+    if headers:
+        h.update(headers)
+    req = urllib.request.Request(url, headers=h)
     with urllib.request.urlopen(req, timeout=_PROXY_TIMEOUT) as r:
         return json.loads(r.read().decode('utf-8'))
 
 
-@method_decorator(cache_page(60 * 60 * 6), name='dispatch')  # cache 6 h
+@method_decorator(cache_page(60 * 60 * 12), name='dispatch')  # cache 12 h
 class BibleTranslationsProxyView(View):
     def get(self, request):
         try:
-            data = _fetch_json(f'{_BIBLE_BASE}/available_translations.json')
-            # Normalize to {ABBR: {language, translation, abbreviation}}
+            data = _fetch_json(f'{_BOLLS_BASE}/get-translations/')
             result = {}
-            for t in data.get('translations', []):
-                abbr = t.get('id', '').upper()
+            for t in data:
+                abbr = (t.get('short_name') or '').strip()
                 if not abbr:
                     continue
-                lang3 = t.get('languageCode', '')[:3].lower()
+                lang_raw = (t.get('language') or '').lower().strip()
+                lang2 = _LANG_NAME_TO_2.get(lang_raw, lang_raw[:2] if len(lang_raw) >= 2 else 'xx')
                 result[abbr] = {
-                    'language':     _LANG_3_TO_2.get(lang3, lang3[:2]),
+                    'language':     lang2,
                     'translation':  t.get('name', abbr),
                     'abbreviation': abbr,
+                    'books':        t.get('books_number', 66),
                 }
             return JsonResponse(result)
         except Exception as e:
@@ -998,27 +1018,327 @@ class BibleChapterProxyView(LoginRequiredMixin, View):
     def get(self, request, translation, book_nr, chapter_nr):
         import re as _re
         translation = translation.upper()
-        if not _re.match(r'^[A-Z0-9]{2,12}$', translation):
+        if not _re.match(r'^[A-Z0-9]{2,15}$', translation):
             return JsonResponse({'error': 'Invalid translation'}, status=400)
         if not (1 <= book_nr <= 66) or not (1 <= chapter_nr <= 150):
             return JsonResponse({'error': 'Invalid reference'}, status=400)
 
-        book_abbr = _BOOK_ABBR[book_nr - 1]
         try:
-            data = _fetch_json(f'{_BIBLE_BASE}/{translation}/{book_abbr}/{chapter_nr}.json')
-            # Normalize to the format the front-end already expects
+            # bolls.life takes book number directly (1-66) — no abbreviation lookup needed
+            data = _fetch_json(f'{_BOLLS_BASE}/get-chapter/{translation}/{book_nr}/{chapter_nr}/')
             verses = {}
-            for v in data.get('verses', []):
-                num = v.get('number') or v.get('verse', 0)
-                verses[str(num)] = {'text': v.get('text', '')}
-            normalized = {
+            for v in data:
+                num = str(v.get('verse') or v.get('number') or 0)
+                text = (v.get('text') or '').strip()
+                if num and num != '0' and text:
+                    verses[num] = {'text': text}
+            return JsonResponse({
                 'translation': translation,
-                'book_name':   data.get('book', {}).get('name', ''),
+                'book_name':   _FR_BOOK_NAMES.get(book_nr, ''),
                 'chapter':     chapter_nr,
                 'verses':      verses,
-            }
-            return JsonResponse(normalized)
+            })
         except urllib.error.HTTPError as e:
-            return JsonResponse({'error': f'Not found ({e.code})'}, status=404)
+            return JsonResponse({'error': f'Passage introuvable ({e.code})'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=502)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# BIBLIOTHÈQUE D'ÉTUDE
+# ──────────────────────────────────────────────────────────────────────────────
+
+class StudyLibraryView(LoginRequiredMixin, UpdateLastSeenMixin, TemplateView):
+    login_url = '/accounts/login/'
+    template_name = 'core/study_library.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        courses = StudyCourse.objects.filter(is_published=True).prefetch_related('resources')
+        user = self.request.user
+        enrollments = {e.course_id: e for e in CourseEnrollment.objects.filter(user=user)}
+        course_list = []
+        for c in courses:
+            enroll = enrollments.get(c.pk)
+            course_list.append({
+                'course': c,
+                'enrollment': enroll,
+                'progress': enroll.progress_pct if enroll else 0,
+                'has_cert': Certificate.objects.filter(user=user, course=c).exists(),
+            })
+        ctx['course_list'] = course_list
+        return ctx
+
+
+class CourseDetailView(LoginRequiredMixin, UpdateLastSeenMixin, View):
+    login_url = '/accounts/login/'
+    template_name = 'core/study_course.html'
+
+    def get(self, request, pk):
+        course = StudyCourse.objects.filter(pk=pk, is_published=True).prefetch_related('resources').first()
+        if not course:
+            from django.http import Http404
+            raise Http404
+
+        enrollment, _ = CourseEnrollment.objects.get_or_create(user=request.user, course=course)
+        resources = list(course.resources.all())
+        completed_ids = set(
+            ResourceProgress.objects.filter(
+                user=request.user, resource__in=resources, completed=True
+            ).values_list('resource_id', flat=True)
+        )
+        resource_list = []
+        for r in resources:
+            has_quiz = hasattr(r, 'quiz')
+            resource_list.append({
+                'resource': r,
+                'completed': r.pk in completed_ids,
+                'has_quiz': has_quiz,
+            })
+
+        all_done = len(completed_ids) == len(resources) and len(resources) > 0
+        has_exam = hasattr(course, 'final_exam')
+        cert = Certificate.objects.filter(user=request.user, course=course).first()
+        best_exam = None
+        if has_exam:
+            best_exam = (
+                QuizAttempt.objects.filter(user=request.user, quiz=course.final_exam)
+                .order_by('-score').first()
+            )
+
+        return render(request, self.template_name, {
+            'course': course,
+            'enrollment': enrollment,
+            'resource_list': resource_list,
+            'all_resources_done': all_done,
+            'has_exam': has_exam,
+            'best_exam': best_exam,
+            'certificate': cert,
+        })
+
+
+class ResourceViewerView(LoginRequiredMixin, UpdateLastSeenMixin, View):
+    login_url = '/accounts/login/'
+    template_name = 'core/study_resource.html'
+
+    def _get_objects(self, request, course_pk, pk):
+        course = StudyCourse.objects.filter(pk=course_pk, is_published=True).first()
+        resource = CourseResource.objects.filter(pk=pk, course=course).first() if course else None
+        if not course or not resource:
+            from django.http import Http404
+            raise Http404
+        enrollment, _ = CourseEnrollment.objects.get_or_create(user=request.user, course=course)
+        progress, _ = ResourceProgress.objects.get_or_create(user=request.user, resource=resource)
+        return course, resource, enrollment, progress
+
+    def get(self, request, course_pk, pk):
+        course, resource, enrollment, progress = self._get_objects(request, course_pk, pk)
+        resources = list(course.resources.all())
+        idx = next((i for i, r in enumerate(resources) if r.pk == resource.pk), 0)
+        prev_resource = resources[idx - 1] if idx > 0 else None
+        next_resource = resources[idx + 1] if idx < len(resources) - 1 else None
+        has_quiz = hasattr(resource, 'quiz')
+        return render(request, self.template_name, {
+            'course': course,
+            'resource': resource,
+            'progress': progress,
+            'prev_resource': prev_resource,
+            'next_resource': next_resource,
+            'has_quiz': has_quiz,
+            'is_youtube': resource.is_youtube_video(),
+            'embed_url': resource.get_embed_url() if resource.resource_type == 'video' else '',
+        })
+
+    def post(self, request, course_pk, pk):
+        course, resource, enrollment, progress = self._get_objects(request, course_pk, pk)
+        if not progress.completed:
+            progress.completed = True
+            progress.completed_at = timezone.now()
+            progress.save()
+            total = course.resources.count()
+            done = ResourceProgress.objects.filter(
+                user=request.user, resource__course=course, completed=True
+            ).count()
+            if total > 0 and done >= total and not enrollment.completed_at:
+                enrollment.completed_at = timezone.now()
+                enrollment.save()
+        if hasattr(resource, 'quiz'):
+            return redirect('study_quiz', course_pk=course_pk, pk=pk)
+        return redirect('study_course', pk=course_pk)
+
+
+class QuizView(LoginRequiredMixin, UpdateLastSeenMixin, View):
+    login_url = '/accounts/login/'
+    template_name = 'core/study_quiz.html'
+
+    def _get_objects(self, request, course_pk, pk):
+        course = StudyCourse.objects.filter(pk=course_pk, is_published=True).first()
+        resource = CourseResource.objects.filter(pk=pk, course=course).select_related('quiz').first() if course else None
+        if not course or not resource or not hasattr(resource, 'quiz'):
+            from django.http import Http404
+            raise Http404
+        CourseEnrollment.objects.get_or_create(user=request.user, course=course)
+        return course, resource, resource.quiz
+
+    def get(self, request, course_pk, pk):
+        course, resource, quiz = self._get_objects(request, course_pk, pk)
+        questions = quiz.questions.prefetch_related('choices').all()
+        best = QuizAttempt.objects.filter(user=request.user, quiz=quiz).order_by('-score').first()
+        return render(request, self.template_name, {
+            'course': course,
+            'resource': resource,
+            'quiz': quiz,
+            'questions': questions,
+            'best_attempt': best,
+        })
+
+    def post(self, request, course_pk, pk):
+        course, resource, quiz = self._get_objects(request, course_pk, pk)
+        questions = list(quiz.questions.prefetch_related('choices').all())
+        attempt = QuizAttempt.objects.create(user=request.user, quiz=quiz)
+        for q in questions:
+            choice_id = request.POST.get(f'q_{q.pk}')
+            choice = None
+            if choice_id:
+                try:
+                    choice = QuizChoice.objects.get(pk=int(choice_id), question=q)
+                except (QuizChoice.DoesNotExist, ValueError):
+                    pass
+            QuizAnswer.objects.create(attempt=attempt, question=q, selected_choice=choice)
+        attempt.calculate_score()
+        attempt.completed_at = timezone.now()
+        attempt.save(update_fields=['score', 'passed', 'completed_at'])
+        if attempt.passed:
+            progress, _ = ResourceProgress.objects.get_or_create(user=request.user, resource=resource)
+            if not progress.completed:
+                progress.completed = True
+                progress.completed_at = timezone.now()
+                progress.save(update_fields=['completed', 'completed_at'])
+        return redirect('study_quiz_result', course_pk=course_pk, pk=pk, attempt_pk=attempt.pk)
+
+
+class QuizResultView(LoginRequiredMixin, UpdateLastSeenMixin, View):
+    login_url = '/accounts/login/'
+    template_name = 'core/study_quiz_result.html'
+
+    def get(self, request, course_pk, pk, attempt_pk):
+        from django.shortcuts import get_object_or_404
+        course = get_object_or_404(StudyCourse, pk=course_pk, is_published=True)
+        resource = get_object_or_404(CourseResource, pk=pk, course=course)
+        attempt = get_object_or_404(QuizAttempt, pk=attempt_pk, user=request.user, quiz=resource.quiz)
+        answers = attempt.answers.select_related('question', 'selected_choice').prefetch_related('question__choices').all()
+        return render(request, self.template_name, {
+            'course': course,
+            'resource': resource,
+            'attempt': attempt,
+            'answers': answers,
+        })
+
+
+class FinalExamView(LoginRequiredMixin, UpdateLastSeenMixin, View):
+    login_url = '/accounts/login/'
+    template_name = 'core/study_final_exam.html'
+
+    def _get_objects(self, request, course_pk):
+        course = StudyCourse.objects.filter(pk=course_pk, is_published=True).first()
+        if not course or not hasattr(course, 'final_exam'):
+            from django.http import Http404
+            raise Http404
+        enrollment, _ = CourseEnrollment.objects.get_or_create(user=request.user, course=course)
+        return course, course.final_exam, enrollment
+
+    def get(self, request, course_pk):
+        course, exam, enrollment = self._get_objects(request, course_pk)
+        total = course.resources.count()
+        done = ResourceProgress.objects.filter(
+            user=request.user, resource__course=course, completed=True
+        ).count()
+        all_done = total > 0 and done >= total
+        questions = exam.questions.prefetch_related('choices').all()
+        best = QuizAttempt.objects.filter(user=request.user, quiz=exam).order_by('-score').first()
+        cert = Certificate.objects.filter(user=request.user, course=course).first()
+        return render(request, self.template_name, {
+            'course': course,
+            'exam': exam,
+            'questions': questions,
+            'all_resources_done': all_done,
+            'best_attempt': best,
+            'certificate': cert,
+        })
+
+    def post(self, request, course_pk):
+        course, exam, enrollment = self._get_objects(request, course_pk)
+
+        # Guard: all resources must be completed before the exam
+        total = course.resources.count()
+        done = ResourceProgress.objects.filter(
+            user=request.user, resource__course=course, completed=True
+        ).count()
+        if total > 0 and done < total:
+            messages.error(request, "Vous devez d'abord terminer toutes les ressources avant de passer l'examen final.")
+            return redirect('study_final_exam', course_pk=course_pk)
+
+        questions = list(exam.questions.prefetch_related('choices').all())
+        attempt = QuizAttempt.objects.create(user=request.user, quiz=exam)
+        for q in questions:
+            choice_id = request.POST.get(f'q_{q.pk}')
+            choice = None
+            if choice_id:
+                try:
+                    choice = QuizChoice.objects.get(pk=int(choice_id), question=q)
+                except (QuizChoice.DoesNotExist, ValueError):
+                    pass
+            QuizAnswer.objects.create(attempt=attempt, question=q, selected_choice=choice)
+        attempt.calculate_score()
+        attempt.completed_at = timezone.now()
+        attempt.save(update_fields=['score', 'passed', 'completed_at'])
+        if attempt.passed:
+            if not enrollment.completed_at:
+                enrollment.completed_at = timezone.now()
+                enrollment.save(update_fields=['completed_at'])
+            Certificate.objects.get_or_create(
+                user=request.user,
+                course=course,
+                defaults={'attempt': attempt},
+            )
+        return redirect('study_exam_result', course_pk=course_pk, attempt_pk=attempt.pk)
+
+
+class ExamResultView(LoginRequiredMixin, UpdateLastSeenMixin, View):
+    login_url = '/accounts/login/'
+    template_name = 'core/study_exam_result.html'
+
+    def get(self, request, course_pk, attempt_pk):
+        from django.shortcuts import get_object_or_404
+        course = get_object_or_404(StudyCourse, pk=course_pk, is_published=True)
+        exam = getattr(course, 'final_exam', None)
+        if not exam:
+            from django.http import Http404
+            raise Http404
+        attempt = get_object_or_404(QuizAttempt, pk=attempt_pk, user=request.user, quiz=exam)
+        answers = attempt.answers.select_related('question', 'selected_choice').prefetch_related('question__choices').all()
+        cert = Certificate.objects.filter(user=request.user, course=course).first()
+        return render(request, self.template_name, {
+            'course': course,
+            'attempt': attempt,
+            'answers': answers,
+            'certificate': cert,
+        })
+
+
+class CertificateView(LoginRequiredMixin, UpdateLastSeenMixin, View):
+    login_url = '/accounts/login/'
+    template_name = 'core/study_certificate.html'
+
+    def get(self, request, course_pk):
+        from django.shortcuts import get_object_or_404
+        course = get_object_or_404(StudyCourse, pk=course_pk, is_published=True)
+        cert = Certificate.objects.filter(user=request.user, course=course).first()
+        if not cert:
+            from django.http import Http404
+            raise Http404
+        return render(request, self.template_name, {
+            'course': course,
+            'certificate': cert,
+            'user': request.user,
+        })

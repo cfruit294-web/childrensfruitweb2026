@@ -1,0 +1,129 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Quiz — {{ resource.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .quiz-header{background:linear-gradient(135deg,#F7941D,#e07b0d);padding:2.5rem 0 2rem;color:#fff;}
+  .question-card{border:1px solid #e9ecef;border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;transition:.2s;}
+  .question-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);}
+  .choice-label{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 1rem;border-radius:10px;border:2px solid #e9ecef;cursor:pointer;transition:.2s;margin-bottom:.5rem;}
+  .choice-label:hover{border-color:#006837;background:rgba(0,104,55,.04);}
+  input[type=radio]:checked + .choice-label,
+  .choice-wrap input[type=radio]:checked ~ .choice-label{border-color:#006837;background:rgba(0,104,55,.08);}
+  .choice-radio{display:none;}
+  .choice-circle{width:20px;height:20px;border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .submit-quiz-btn{background:linear-gradient(135deg,#006837,#009450);border:none;color:#fff;border-radius:30px;padding:.75rem 2.5rem;font-size:1rem;font-weight:700;transition:.2s;}
+  .submit-quiz-btn:hover{transform:scale(1.03);box-shadow:0 8px 25px rgba(0,104,55,.3);}
+  .best-badge{border-radius:30px;padding:.4rem 1.2rem;font-size:.85rem;font-weight:700;}
+  .timer{font-size:1.2rem;font-weight:700;color:#F7941D;}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<section class="quiz-header">
+  <div class="container">
+    <a href="{% url 'study_resource' course.pk resource.pk %}" class="btn btn-sm mb-2" style="background:rgba(255,255,255,.15);color:#fff;border-radius:20px;">
+      <i class="fas fa-arrow-left me-1"></i>Revenir à la ressource
+    </a>
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <i class="fas fa-question-circle"></i>
+      <span style="font-size:.8rem;opacity:.8;text-transform:uppercase;letter-spacing:.05em;">Quiz</span>
+    </div>
+    <h2 class="mb-1" style="font-size:1.6rem;font-weight:800;">{{ quiz.title }}</h2>
+    <p class="mb-0" style="opacity:.85;font-size:.9rem;">
+      {{ quiz.question_count }} question{{ quiz.question_count|pluralize }} — Score de passage : {{ quiz.pass_score }}/100
+    </p>
+  </div>
+</section>
+
+<section class="py-4">
+  <div class="container" style="max-width:760px;">
+
+    {% if best_attempt %}
+    <div class="alert mb-4 d-flex align-items-center gap-3" style="border-radius:12px;border:none;background:{% if best_attempt.passed %}rgba(0,104,55,.1){% else %}rgba(239,68,68,.08){% endif %};">
+      <i class="fas {% if best_attempt.passed %}fa-check-circle{% else %}fa-times-circle{% endif %} fa-lg" style="color:{% if best_attempt.passed %}#006837{% else %}#ef4444{% endif %};"></i>
+      <div>
+        <div class="fw-700">Meilleur score précédent : {{ best_attempt.score }}/100
+          — {% if best_attempt.passed %}Réussi{% else %}Échec{% endif %}
+        </div>
+        <div class="text-muted" style="font-size:.82rem;">Vous pouvez repasser le quiz autant de fois que nécessaire.</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if quiz.time_limit_minutes > 0 %}
+    <div class="text-center mb-4">
+      <div class="timer" id="quizTimer">
+        <i class="fas fa-clock me-2"></i><span id="timerDisplay">{{ quiz.time_limit_minutes }}:00</span>
+      </div>
+    </div>
+    {% endif %}
+
+    <form method="post" id="quizForm">
+      {% csrf_token %}
+
+      {% for q in questions %}
+      <div class="question-card">
+        <div class="fw-700 mb-3" style="font-size:1rem;line-height:1.5;">
+          <span style="color:#F7941D;font-weight:800;">{{ forloop.counter }}.</span> {{ q.text }}
+        </div>
+        <div>
+          {% for choice in q.choices.all %}
+          <div class="choice-wrap">
+            <input type="radio" name="q_{{ q.pk }}" value="{{ choice.pk }}" id="c_{{ choice.pk }}" class="choice-radio">
+            <label for="c_{{ choice.pk }}" class="choice-label">
+              <div class="choice-circle">
+                <i class="fas fa-circle" style="font-size:.5rem;color:#006837;display:none;" id="dot_{{ choice.pk }}"></i>
+              </div>
+              <span style="line-height:1.5;">{{ choice.text }}</span>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="text-center mt-4 mb-5">
+        <button type="submit" class="submit-quiz-btn">
+          <i class="fas fa-paper-plane me-2"></i>Soumettre mes réponses
+        </button>
+      </div>
+    </form>
+
+  </div>
+</section>
+
+{% if quiz.time_limit_minutes > 0 %}
+<script>
+(function(){
+  var total = {{ quiz.time_limit_minutes }} * 60;
+  var disp = document.getElementById('timerDisplay');
+  var form = document.getElementById('quizForm');
+  var iv = setInterval(function(){
+    total--;
+    var m = Math.floor(total/60), s = total%60;
+    disp.textContent = m+':'+(s<10?'0':'')+s;
+    if(total<=60) disp.parentElement.style.color='#ef4444';
+    if(total<=0){ clearInterval(iv); form.submit(); }
+  },1000);
+})();
+</script>
+{% endif %}
+
+<script>
+document.querySelectorAll('input[type=radio]').forEach(function(radio){
+  radio.addEventListener('change', function(){
+    var name = this.name;
+    document.querySelectorAll('input[name="'+name+'"]').forEach(function(r){
+      var dot = document.getElementById('dot_'+r.value);
+      if(dot) dot.style.display = r.checked ? 'inline' : 'none';
+    });
+  });
+});
+</script>
+
+{% endblock %}

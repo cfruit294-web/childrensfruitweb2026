@@ -163,9 +163,10 @@ body { background: var(--bible-bg); color: var(--bible-text); }
     <!-- Reader area (possibly split for compare) -->
     <div class="bible-reader-area">
       <div class="bible-content" id="bibleContent">
-        <div class="bible-loading">
-          <div class="spinner"></div>
-          <div>Chargement de la Bible…</div>
+        <div class="bible-loading" id="welcomeScreen" style="padding:5rem 2rem;">
+          <i class="fas fa-book-open" style="font-size:3rem;color:var(--green);margin-bottom:1.5rem;"></i>
+          <div style="font-size:1.1rem;font-weight:600;color:var(--bible-text);margin-bottom:.5rem;">Bienvenue dans la Bible</div>
+          <div style="font-size:.85rem;color:var(--bible-muted);max-width:360px;margin:0 auto;">Choisissez un livre dans la liste à gauche, puis sélectionnez un chapitre pour commencer votre lecture.</div>
         </div>
       </div>
       <div class="compare-pane" id="comparePane">
@@ -259,7 +260,7 @@ const BOOKS = [
   {nr:58,nameFr:'Hébreux',nameEn:'Hebrews',chapters:13,ot:false},
   {nr:59,nameFr:'Jacques',nameEn:'James',chapters:5,ot:false},
   {nr:60,nameFr:'1 Pierre',nameEn:'1 Peter',chapters:5,ot:false},
-  {nr:61,nameFr:'2 Pierre',nameEn:'2 Pierre',chapters:3,ot:false},
+  {nr:61,nameFr:'2 Pierre',nameEn:'2 Peter',chapters:3,ot:false},
   {nr:62,nameFr:'1 Jean',nameEn:'1 John',chapters:5,ot:false},
   {nr:63,nameFr:'2 Jean',nameEn:'2 John',chapters:1,ot:false},
   {nr:64,nameFr:'3 Jean',nameEn:'3 John',chapters:1,ot:false},
@@ -268,12 +269,12 @@ const BOOKS = [
 ];
 
 // Preferred translations shown first
-const PREFERRED = ['LSG','MARTIN','OSTERVALD','LSB','KJV','CEV','NIV','ESV','NLT','AMP','MSG','NASB','WEB','BSB'];
+const PREFERRED = ['LSG','NBS','MARTIN','OSTERVALD','KJV','NIV','ESV','NLT','BSB','WEB','NASB','AMP','MSG'];
 const LANG_LABELS = {
   fr:'🇫🇷 Français', en:'🇬🇧 English', de:'🇩🇪 Deutsch', es:'🇪🇸 Español',
   pt:'🇧🇷 Português', it:'🇮🇹 Italiano', ru:'🇷🇺 Русский', ar:'🇸🇦 العربية',
   zh:'🇨🇳 中文', ko:'🇰🇷 한국어', ja:'🇯🇵 日本語', nl:'🇳🇱 Nederlands',
-  pl:'🇵🇱 Polski', ro:'🇷🇴 Română', sw:'🇰🇪 Swahili', ha:'Hausa', yo:'Yoruba'
+  pl:'🇵🇱 Polski', ro:'🇷🇴 Română', sw:'🇰🇪 Swahili', ha:'🇳🇬 Hausa', yo:'🇳🇬 Yoruba'
 };
 
 // ── Init ──────────────────────────────────────────────────────
@@ -295,30 +296,28 @@ async function fetchTranslations() {
     state.translations = data;
     populateTranslationSel('translationSel', state.translation);
     populateTranslationSel('compareTransSel', '');
-    loadChapter();
   } catch(e) {
     console.error('Translations fetch failed', e);
-    // fallback: still try to load default
     populateFallbackTranslations();
-    loadChapter();
   }
 }
 
 function populateFallbackTranslations() {
   const fallback = [
-    {abbr:'LSG',name:'Louis Segond (1910)',lang:'fr'},
+    {abbr:'LSG',name:'Louis Segond 1910',lang:'fr'},
+    {abbr:'NBS',name:'Nouvelle Bible Segond',lang:'fr'},
     {abbr:'MARTIN',name:'Martin (1744)',lang:'fr'},
     {abbr:'OSTERVALD',name:'Ostervald (1744)',lang:'fr'},
-    {abbr:'BSB',name:'Berean Study Bible',lang:'en'},
     {abbr:'KJV',name:'King James Version',lang:'en'},
     {abbr:'NIV',name:'New International Version',lang:'en'},
     {abbr:'ESV',name:'English Standard Version',lang:'en'},
+    {abbr:'WEB',name:'World English Bible',lang:'en'},
   ];
   const sel = document.getElementById('translationSel');
   sel.innerHTML = '';
   fallback.forEach(t => {
     const o = document.createElement('option');
-    o.value = t.abbr; o.textContent = t.name;
+    o.value = t.abbr; o.textContent = `${t.name} (${t.abbr})`;
     if (t.abbr === state.translation) o.selected = true;
     sel.appendChild(o);
   });
@@ -329,15 +328,32 @@ function populateTranslationSel(selId, defaultVal) {
   if (!sel) return;
   sel.innerHTML = selId === 'compareTransSel' ? '<option value="">Choisir une version…</option>' : '';
 
-  // group by language
+  const allTrans = Object.values(state.translations);
+
+  // Preferred group (top of list)
+  const preferred = PREFERRED.map(p => allTrans.find(t => t.abbreviation === p)).filter(Boolean);
+  if (preferred.length) {
+    const grp = document.createElement('optgroup');
+    grp.label = '⭐ Versions populaires';
+    preferred.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t.abbreviation;
+      o.textContent = `${t.translation} (${t.abbreviation})`;
+      if (t.abbreviation === defaultVal) o.selected = true;
+      grp.appendChild(o);
+    });
+    sel.appendChild(grp);
+  }
+
+  // Group remaining by language
+  const prefSet = new Set(PREFERRED);
   const byLang = {};
-  Object.values(state.translations).forEach(t => {
-    const lang = t.language || 'other';
+  allTrans.filter(t => !prefSet.has(t.abbreviation)).forEach(t => {
+    const lang = t.language || 'xx';
     if (!byLang[lang]) byLang[lang] = [];
     byLang[lang].push(t);
   });
 
-  // sort: fr first, en second, rest alphabetically
   const sortedLangs = Object.keys(byLang).sort((a,b) => {
     if (a==='fr') return -1; if (b==='fr') return 1;
     if (a==='en') return -1; if (b==='en') return 1;
@@ -351,7 +367,7 @@ function populateTranslationSel(selId, defaultVal) {
     byLang[lang].sort((a,b)=>a.translation.localeCompare(b.translation)).forEach(t => {
       const o = document.createElement('option');
       o.value = t.abbreviation;
-      o.textContent = t.translation;
+      o.textContent = `${t.translation} (${t.abbreviation})`;
       if (t.abbreviation === defaultVal) o.selected = true;
       grp.appendChild(o);
     });
@@ -423,6 +439,7 @@ function populateChapterSel() {
 // ── Event handlers ────────────────────────────────────────────
 function onTranslationChange() {
   state.translation = document.getElementById('translationSel').value;
+  if (document.getElementById('welcomeScreen')) return; // wait for user to pick a book
   loadChapter();
   if (state.compareActive) loadCompare();
 }

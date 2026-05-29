@@ -1,0 +1,320 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ resource.title }} — {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .resource-header{background:linear-gradient(135deg,#004d28,#006837);padding:2rem 0 1.5rem;color:#fff;}
+
+  /* ── PDF VIEWER ── */
+  .pdf-container{position:relative;width:100%;background:#404040;border-radius:12px;overflow:hidden;}
+  .pdf-embed{width:100%;min-height:82vh;border:none;display:block;}
+  .pdf-fallback{padding:3rem;text-align:center;color:#fff;}
+
+  /* ── VIDEO PLAYER ── */
+  .video-wrap{position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000;}
+  .video-wrap iframe,.video-wrap video{position:absolute;inset:0;width:100%;height:100%;border:none;}
+
+  /* ── AUDIO PLAYER ── */
+  .audio-card{border-radius:16px;background:linear-gradient(135deg,#1e1b4b,#312e81);padding:3rem 2rem;text-align:center;color:#fff;}
+  .audio-player-wrap audio{width:100%;max-width:520px;margin:1.5rem auto 0;display:block;border-radius:40px;}
+  audio::-webkit-media-controls-panel{background:#4c1d95;}
+
+  /* ── WORD VIEWER ── */
+  .word-card{border:2px dashed #3b82f6;border-radius:16px;padding:3rem;text-align:center;}
+  .word-embed{width:100%;min-height:82vh;border:none;border-radius:12px;display:block;}
+
+  /* ── ACTIONS ── */
+  .complete-btn{background:linear-gradient(135deg,#006837,#009450);border:none;color:#fff;border-radius:30px;padding:.7rem 2rem;font-size:1rem;font-weight:700;transition:.2s;}
+  .complete-btn:hover{transform:scale(1.03);box-shadow:0 8px 25px rgba(0,104,55,.3);}
+  .nav-arrow{border-radius:30px;padding:.5rem 1.5rem;font-weight:600;font-size:.88rem;border:2px solid;transition:.2s;text-decoration:none;}
+  .no-file-card{border:2px dashed #e9ecef;border-radius:16px;padding:3rem;text-align:center;color:#9ca3af;}
+
+  /* ── PDF toolbar fix for Chrome ── */
+  .pdf-toolbar{display:flex;align-items:center;gap:.5rem;background:#323639;padding:.5rem 1rem;border-radius:12px 12px 0 0;}
+  .pdf-toolbar a{color:#ccc;font-size:.82rem;text-decoration:none;padding:.25rem .75rem;border-radius:20px;border:1px solid rgba(255,255,255,.2);}
+  .pdf-toolbar a:hover{background:rgba(255,255,255,.1);color:#fff;}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<section class="resource-header">
+  <div class="container">
+    <a href="{% url 'study_course' course.pk %}" class="btn btn-sm mb-2" style="background:rgba(255,255,255,.15);color:#fff;border-radius:20px;">
+      <i class="fas fa-arrow-left me-1"></i>{{ course.title }}
+    </a>
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <i class="fas {{ resource.icon }} fa-lg" style="color:{{ resource.icon_color }};"></i>
+      <span style="font-size:.8rem;opacity:.75;text-transform:uppercase;letter-spacing:.05em;">{{ resource.get_resource_type_display }}</span>
+    </div>
+    <h2 class="mb-0" style="font-size:1.6rem;font-weight:800;">{{ resource.title }}</h2>
+    {% if resource.description %}
+    <p class="mt-2 mb-0" style="opacity:.8;font-size:.9rem;">{{ resource.description }}</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="py-4">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-9">
+
+        <!-- ══════════ PDF ══════════ -->
+        {% if resource.resource_type == 'pdf' %}
+          {% if resource.file %}
+            <div class="pdf-container mb-3">
+              <div class="pdf-toolbar">
+                <i class="fas fa-file-pdf" style="color:#ef4444;"></i>
+                <span style="color:#ccc;font-size:.82rem;flex-grow:1;">{{ resource.title }}</span>
+                <a href="{{ resource.file.url }}" download title="Télécharger">
+                  <i class="fas fa-download me-1"></i>Télécharger
+                </a>
+                <a href="{{ resource.file.url }}" target="_blank" title="Ouvrir dans un nouvel onglet">
+                  <i class="fas fa-external-link-alt me-1"></i>Nouvel onglet
+                </a>
+              </div>
+              <object
+                data="{{ resource.file.url }}#toolbar=0&view=FitH"
+                type="application/pdf"
+                class="pdf-embed"
+                id="pdfObject">
+                <!-- Fallback si le navigateur ne peut pas afficher le PDF inline -->
+                <div class="pdf-fallback">
+                  <i class="fas fa-file-pdf fa-4x mb-3" style="color:#ef4444;opacity:.7;"></i>
+                  <h5>Affichage PDF non disponible</h5>
+                  <p style="opacity:.75;font-size:.9rem;">Votre navigateur ne prend pas en charge l'affichage PDF intégré.</p>
+                  <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
+                    <a href="{{ resource.file.url }}" download class="btn" style="background:#ef4444;color:#fff;border-radius:30px;padding:.5rem 1.5rem;font-weight:600;">
+                      <i class="fas fa-download me-2"></i>Télécharger le PDF
+                    </a>
+                    <a href="{{ resource.file.url }}" target="_blank" class="btn btn-outline-light" style="border-radius:30px;padding:.5rem 1.5rem;">
+                      <i class="fas fa-external-link-alt me-2"></i>Ouvrir dans un onglet
+                    </a>
+                  </div>
+                </div>
+              </object>
+            </div>
+            <!-- Boutons secondaires -->
+            <div class="d-flex flex-wrap gap-2 mb-4">
+              <a href="{{ resource.file.url }}" download class="btn btn-outline-danger btn-sm rounded-pill px-4">
+                <i class="fas fa-download me-1"></i>Télécharger
+              </a>
+              <a href="{{ resource.file.url }}" target="_blank" class="btn btn-outline-secondary btn-sm rounded-pill px-4">
+                <i class="fas fa-external-link-alt me-1"></i>Ouvrir dans un onglet
+              </a>
+            </div>
+          {% else %}
+            <div class="no-file-card mb-4">
+              <i class="fas fa-file-pdf fa-4x mb-3" style="color:#e9ecef;"></i>
+              <h5 style="color:#6b7280;">Fichier PDF non encore disponible</h5>
+              <p style="font-size:.88rem;">Le fichier sera disponible prochainement. Revenez bientôt !</p>
+            </div>
+          {% endif %}
+
+        <!-- ══════════ AUDIO ══════════ -->
+        {% elif resource.resource_type == 'audio' %}
+          {% if resource.file %}
+            <div class="audio-card mb-4">
+              <i class="fas fa-headphones fa-4x mb-3" style="opacity:.6;"></i>
+              <h4 class="fw-700 mb-1">{{ resource.title }}</h4>
+              {% if resource.description %}<p style="opacity:.75;font-size:.9rem;">{{ resource.description }}</p>{% endif %}
+              <div class="audio-player-wrap">
+                <audio controls preload="metadata">
+                  <source src="{{ resource.file.url }}" type="audio/{% if resource.file_extension == 'mp3' %}mpeg{% elif resource.file_extension == 'm4a' %}mp4{% else %}{{ resource.file_extension }}{% endif %}">
+                  Votre navigateur ne supporte pas la lecture audio.
+                </audio>
+              </div>
+              <div class="mt-3">
+                <a href="{{ resource.file.url }}" download class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border-radius:20px;">
+                  <i class="fas fa-download me-1"></i>Télécharger
+                </a>
+              </div>
+            </div>
+          {% else %}
+            <div class="no-file-card mb-4">
+              <i class="fas fa-headphones fa-4x mb-3" style="color:#e9ecef;"></i>
+              <h5 style="color:#6b7280;">Fichier audio non encore disponible</h5>
+            </div>
+          {% endif %}
+
+        <!-- ══════════ VIDEO (YouTube) ══════════ -->
+        {% elif resource.resource_type == 'video' and resource.video_url %}
+          {% if is_youtube %}
+            <div class="video-wrap mb-4">
+              <iframe src="{{ embed_url }}"
+                allowfullscreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                loading="lazy">
+              </iframe>
+            </div>
+          {% elif embed_url %}
+            <div class="video-wrap mb-4">
+              <video controls preload="metadata" style="background:#000;">
+                <source src="{{ embed_url }}">
+                Votre navigateur ne supporte pas la lecture vidéo.
+              </video>
+            </div>
+          {% else %}
+            <div class="no-file-card mb-4">
+              <i class="fas fa-film fa-4x mb-3" style="color:#e9ecef;"></i>
+              <h5 style="color:#6b7280;">Vidéo non encore disponible</h5>
+            </div>
+          {% endif %}
+
+        <!-- ══════════ VIDEO (fichier uploadé) ══════════ -->
+        {% elif resource.resource_type == 'video' and resource.file %}
+          <div class="video-wrap mb-4">
+            <video controls preload="metadata" style="background:#000;">
+              <source src="{{ resource.file.url }}">
+              Votre navigateur ne supporte pas la lecture vidéo.
+            </video>
+          </div>
+          <div class="mb-4">
+            <a href="{{ resource.file.url }}" download class="btn btn-outline-secondary btn-sm rounded-pill px-4">
+              <i class="fas fa-download me-1"></i>Télécharger la vidéo
+            </a>
+          </div>
+
+        <!-- ══════════ WORD ══════════ -->
+        {% elif resource.resource_type == 'word' %}
+          {% if resource.file %}
+            <div class="word-card mb-4">
+              <i class="fas fa-file-word fa-4x mb-3" style="color:#3b82f6;"></i>
+              <h5 class="fw-700 mb-2">{{ resource.title }}</h5>
+              <p class="text-muted mb-4" style="font-size:.88rem;">
+                Document Word disponible. Téléchargez-le pour l'ouvrir dans Microsoft Word, LibreOffice ou Google Docs.
+              </p>
+              <div class="d-flex flex-wrap justify-content-center gap-3">
+                <a href="{{ resource.file.url }}" download class="btn" style="background:#3b82f6;color:#fff;border-radius:30px;padding:.6rem 2rem;font-weight:600;">
+                  <i class="fas fa-download me-2"></i>Télécharger le document
+                </a>
+                <!-- Essai d'affichage via Google Docs (fonctionne uniquement pour URLs publiques) -->
+                <button class="btn btn-outline-primary rounded-pill px-4" onclick="tryGoogleDocs('{{ resource.file.url }}')">
+                  <i class="fab fa-google me-1"></i>Ouvrir dans Google Docs
+                </button>
+              </div>
+              <!-- Zone d'affichage Google Docs -->
+              <div id="gdocsWrap" class="mt-4" style="display:none;">
+                <iframe id="gdocsFrame" class="word-embed" style="min-height:75vh;border-radius:12px;border:1px solid #e9ecef;"></iframe>
+              </div>
+            </div>
+          {% else %}
+            <div class="no-file-card mb-4">
+              <i class="fas fa-file-word fa-4x mb-3" style="color:#e9ecef;"></i>
+              <h5 style="color:#6b7280;">Document non encore disponible</h5>
+            </div>
+          {% endif %}
+
+        <!-- ══════════ AUCUN CONTENU ══════════ -->
+        {% else %}
+          <div class="no-file-card mb-4">
+            <i class="fas fa-file-alt fa-4x mb-3"></i>
+            <h5>Contenu non encore disponible</h5>
+            <p style="font-size:.88rem;">Cette ressource sera disponible prochainement.</p>
+          </div>
+        {% endif %}
+
+        <!-- ── Déjà terminé ── -->
+        {% if progress.completed %}
+        <div class="alert border-0 mb-4" style="background:rgba(0,104,55,.08);border-radius:12px;border-left:4px solid #006837!important;">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-check-circle fa-lg" style="color:#006837;"></i>
+            <div>
+              <div class="fw-700" style="color:#006837;">Ressource terminée !</div>
+              {% if has_quiz %}<div class="text-muted" style="font-size:.85rem;">Vous pouvez repasser le quiz ci-dessous.</div>{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ── Bouton d'action principal ── -->
+        <div class="d-flex flex-column flex-sm-row align-items-center gap-3 p-4" style="background:#f8f9fa;border-radius:16px;">
+          {% if not progress.completed %}
+          <form method="post" class="flex-grow-1 text-center">
+            {% csrf_token %}
+            <button type="submit" class="complete-btn">
+              <i class="fas fa-check me-2"></i>
+              {% if has_quiz %}
+                J'ai terminé cette ressource — Passer le quiz
+              {% else %}
+                Marquer comme terminé
+              {% endif %}
+            </button>
+          </form>
+          {% elif has_quiz %}
+          <a href="{% url 'study_quiz' course.pk resource.pk %}" class="btn complete-btn">
+            <i class="fas fa-question-circle me-2"></i>Refaire le quiz
+          </a>
+          {% else %}
+          <div class="text-success fw-600"><i class="fas fa-check-circle me-2"></i>Terminé — passez à la ressource suivante</div>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <!-- ── Sidebar ── -->
+      <div class="col-lg-3">
+        <div class="sticky-top" style="top:90px;">
+          <div class="p-3 mb-3" style="background:#fff;border-radius:14px;border:1px solid #e9ecef;">
+            <div class="fw-700 mb-1" style="font-size:.85rem;color:#006837;">
+              <i class="fas fa-graduation-cap me-1"></i>{{ course.title }}
+            </div>
+            <div class="text-muted" style="font-size:.78rem;">{{ resource.get_resource_type_display }}</div>
+            {% if has_quiz %}
+            <div class="mt-2" style="font-size:.78rem;color:#F7941D;font-weight:600;">
+              <i class="fas fa-question-circle me-1"></i>Quiz à compléter
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="d-flex flex-column gap-2">
+            {% if prev_resource %}
+            <a href="{% url 'study_resource' course.pk prev_resource.pk %}"
+               class="nav-arrow" style="border-color:#e9ecef;color:#64748b;background:#fff;display:block;text-align:left;">
+              <i class="fas fa-chevron-left me-2"></i>{{ prev_resource.title|truncatechars:28 }}
+            </a>
+            {% endif %}
+
+            <a href="{% url 'study_course' course.pk %}"
+               class="nav-arrow" style="border-color:#006837;color:#006837;background:#fff;display:block;text-align:center;">
+              <i class="fas fa-th-list me-2"></i>Toutes les ressources
+            </a>
+
+            {% if next_resource %}
+            <a href="{% url 'study_resource' course.pk next_resource.pk %}"
+               class="nav-arrow" style="border-color:#006837;background:#006837;color:#fff;display:block;text-align:right;">
+              {{ next_resource.title|truncatechars:28 }}<i class="fas fa-chevron-right ms-2"></i>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+function tryGoogleDocs(fileUrl){
+  var wrap = document.getElementById('gdocsWrap');
+  var frame = document.getElementById('gdocsFrame');
+  // Construit l'URL absolue et ouvre dans Google Docs Viewer
+  var abs = new URL(fileUrl, window.location.href).href;
+  var gdUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(abs) + '&embedded=true';
+  frame.src = gdUrl;
+  wrap.style.display = 'block';
+  wrap.scrollIntoView({behavior:'smooth'});
+}
+
+// Détection si le PDF s'est bien chargé dans l'object tag
+(function(){
+  var obj = document.getElementById('pdfObject');
+  if(!obj) return;
+  // Si l'object n'affiche rien après 3s, on peut proposer le fallback
+})();
+</script>
+
+{% endblock %}

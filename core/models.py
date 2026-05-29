@@ -535,3 +535,278 @@ class EmissionSlot(models.Model):
         start = datetime.combine(self.date, self.start_time)
         end   = datetime.combine(self.date, self.end_time)
         return max(1, int((end - start).total_seconds() / 60))
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# BIBLIOTHÈQUE D'ÉTUDE
+# ──────────────────────────────────────────────────────────────────────────────
+
+class StudyCourse(models.Model):
+    title       = models.CharField(max_length=255, verbose_name='Titre')
+    description = models.TextField(verbose_name='Description')
+    thumbnail   = models.ImageField(upload_to='courses/', blank=True, null=True, verbose_name='Miniature')
+    instructor  = models.CharField(max_length=200, blank=True, verbose_name='Auteur / Formateur')
+    is_published = models.BooleanField(default=False, verbose_name='Publié')
+    pass_score  = models.PositiveIntegerField(default=80, verbose_name='Score de passage (/100)')
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Formation'
+        verbose_name_plural = 'Formations'
+
+    @property
+    def resource_count(self):
+        return self.resources.count()
+
+    @property
+    def enrolled_count(self):
+        return self.enrollments.count()
+
+    def __str__(self):
+        return self.title
+
+
+class CourseResource(models.Model):
+    TYPE_PDF   = 'pdf'
+    TYPE_WORD  = 'word'
+    TYPE_VIDEO = 'video'
+    TYPE_AUDIO = 'audio'
+    RESOURCE_TYPES = [
+        (TYPE_PDF,   'Document PDF'),
+        (TYPE_WORD,  'Document Word'),
+        (TYPE_VIDEO, 'Vidéo'),
+        (TYPE_AUDIO, 'Audio / Podcast'),
+    ]
+
+    _YT_PATTERNS = [
+        r'youtube\.com/watch\?(?:.*&)?v=([^&\s"]+)',
+        r'youtu\.be/([^?\s"]+)',
+        r'youtube(?:-nocookie)?\.com/embed/([^?\s"/]+)',
+    ]
+
+    course        = models.ForeignKey(StudyCourse, on_delete=models.CASCADE, related_name='resources')
+    title         = models.CharField(max_length=255, verbose_name='Titre')
+    resource_type = models.CharField(max_length=10, choices=RESOURCE_TYPES, verbose_name='Type')
+    file          = models.FileField(upload_to='course_resources/', blank=True, null=True, verbose_name='Fichier')
+    video_url     = models.TextField(blank=True, verbose_name='URL Vidéo (YouTube ou lien direct)')
+    description   = models.TextField(blank=True, verbose_name='Description')
+    order         = models.PositiveIntegerField(default=0, verbose_name='Ordre')
+    created_at    = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+        verbose_name = 'Ressource de formation'
+        verbose_name_plural = 'Ressources de formation'
+
+    @property
+    def icon(self):
+        icons = {
+            self.TYPE_PDF:   'fa-file-pdf',
+            self.TYPE_WORD:  'fa-file-word',
+            self.TYPE_VIDEO: 'fa-film',
+            self.TYPE_AUDIO: 'fa-headphones',
+        }
+        return icons.get(self.resource_type, 'fa-file')
+
+    @property
+    def icon_color(self):
+        colors = {
+            self.TYPE_PDF:   '#ef4444',
+            self.TYPE_WORD:  '#3b82f6',
+            self.TYPE_VIDEO: '#f7941d',
+            self.TYPE_AUDIO: '#8b5cf6',
+        }
+        return colors.get(self.resource_type, '#9ca3af')
+
+    def file_extension(self):
+        if self.file and self.file.name:
+            return self.file.name.rsplit('.', 1)[-1].lower() if '.' in self.file.name else ''
+        return ''
+
+    def is_youtube_video(self):
+        return self.resource_type == self.TYPE_VIDEO and bool(self.get_youtube_id())
+
+    def get_youtube_id(self):
+        if not self.video_url:
+            return None
+        for p in self._YT_PATTERNS:
+            m = re.search(p, self.video_url)
+            if m:
+                return m.group(1)
+        return None
+
+    def get_embed_url(self):
+        yt_id = self.get_youtube_id()
+        if yt_id:
+            return f'https://www.youtube-nocookie.com/embed/{yt_id}'
+        return self.video_url
+
+    def __str__(self):
+        return f"{self.course.title} — {self.title}"
+
+
+class CourseEnrollment(models.Model):
+    user         = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='enrollments')
+    course       = models.ForeignKey(StudyCourse, on_delete=models.CASCADE, related_name='enrollments')
+    enrolled_at  = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('user', 'course')
+        ordering = ['-enrolled_at']
+        verbose_name = "Inscription à une formation"
+        verbose_name_plural = "Inscriptions aux formations"
+
+    @property
+    def is_completed(self):
+        return self.completed_at is not None
+
+    @property
+    def progress_pct(self):
+        total = self.course.resources.count()
+        if total == 0:
+            return 0
+        done = ResourceProgress.objects.filter(
+            user=self.user, resource__course=self.course, completed=True
+        ).count()
+        return int((done / total) * 100)
+
+    def __str__(self):
+        return f"{self.user.username} → {self.course.title}"
+
+
+class ResourceProgress(models.Model):
+    user         = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='resource_progress')
+    resource     = models.ForeignKey(CourseResource, on_delete=models.CASCADE, related_name='progress')
+    completed    = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('user', 'resource')
+        verbose_name = 'Progression ressource'
+        verbose_name_plural = 'Progressions ressources'
+
+    def __str__(self):
+        return f"{self.user.username} — {self.resource.title}: {'✓' if self.completed else '○'}"
+
+
+class Quiz(models.Model):
+    resource           = models.OneToOneField(CourseResource, on_delete=models.CASCADE, related_name='quiz', null=True, blank=True)
+    course             = models.OneToOneField(StudyCourse, on_delete=models.CASCADE, related_name='final_exam', null=True, blank=True)
+    title              = models.CharField(max_length=255, verbose_name='Titre')
+    pass_score         = models.PositiveIntegerField(default=80, verbose_name='Score de passage (/100)')
+    time_limit_minutes = models.PositiveIntegerField(default=0, verbose_name='Limite de temps (0 = illimité)')
+
+    class Meta:
+        verbose_name = 'Quiz'
+        verbose_name_plural = 'Quiz'
+
+    @property
+    def question_count(self):
+        return self.questions.count()
+
+    def __str__(self):
+        if self.resource:
+            return f"Quiz: {self.resource.title}"
+        if self.course:
+            return f"Examen final: {self.course.title}"
+        return self.title
+
+
+class QuizQuestion(models.Model):
+    quiz        = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
+    text        = models.TextField(verbose_name='Question')
+    explanation = models.TextField(blank=True, verbose_name='Explication de la réponse correcte')
+    order       = models.PositiveIntegerField(default=0)
+    points      = models.PositiveIntegerField(default=1, verbose_name='Points')
+
+    class Meta:
+        ordering = ['order']
+        verbose_name = 'Question'
+        verbose_name_plural = 'Questions'
+
+    def __str__(self):
+        return f"Q{self.order}: {self.text[:80]}"
+
+
+class QuizChoice(models.Model):
+    question   = models.ForeignKey(QuizQuestion, on_delete=models.CASCADE, related_name='choices')
+    text       = models.CharField(max_length=500, verbose_name='Réponse')
+    is_correct = models.BooleanField(default=False, verbose_name='Correcte')
+    order      = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+        verbose_name = 'Choix de réponse'
+        verbose_name_plural = 'Choix de réponses'
+
+    def __str__(self):
+        return f"{'✓' if self.is_correct else '✗'} {self.text[:60]}"
+
+
+class QuizAttempt(models.Model):
+    user         = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='quiz_attempts')
+    quiz         = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='attempts')
+    score        = models.FloatField(default=0)
+    passed       = models.BooleanField(default=False)
+    started_at   = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-started_at']
+        verbose_name = 'Tentative de quiz'
+        verbose_name_plural = 'Tentatives de quiz'
+
+    def calculate_score(self):
+        total_points = sum(q.points for q in self.quiz.questions.all())
+        if total_points == 0:
+            return 0
+        earned = sum(
+            a.question.points
+            for a in self.answers.select_related('selected_choice', 'question').all()
+            if a.selected_choice and a.selected_choice.is_correct
+        )
+        self.score = round((earned / total_points) * 100, 1)
+        self.passed = self.score >= self.quiz.pass_score
+        return self.score
+
+    def __str__(self):
+        return f"{self.user.username} — {self.quiz.title}: {self.score}/100"
+
+
+class QuizAnswer(models.Model):
+    attempt         = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name='answers')
+    question        = models.ForeignKey(QuizQuestion, on_delete=models.CASCADE)
+    selected_choice = models.ForeignKey(QuizChoice, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('attempt', 'question')
+        verbose_name = 'Réponse'
+        verbose_name_plural = 'Réponses'
+
+    def __str__(self):
+        return f"Attempt {self.attempt_id} — Q{self.question.order}"
+
+
+class Certificate(models.Model):
+    user               = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='certificates')
+    course             = models.ForeignKey(StudyCourse, on_delete=models.CASCADE, related_name='certificates')
+    attempt            = models.ForeignKey(QuizAttempt, on_delete=models.SET_NULL, null=True, blank=True)
+    issued_at          = models.DateTimeField(auto_now_add=True)
+    certificate_number = models.CharField(max_length=20, unique=True, blank=True)
+
+    class Meta:
+        unique_together = ('user', 'course')
+        ordering = ['-issued_at']
+        verbose_name = 'Certificat'
+        verbose_name_plural = 'Certificats'
+
+    def save(self, *args, **kwargs):
+        if not self.certificate_number:
+            import uuid
+            self.certificate_number = f"CF-{uuid.uuid4().hex[:8].upper()}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Certificat {self.certificate_number} — {self.user.username} — {self.course.title}"

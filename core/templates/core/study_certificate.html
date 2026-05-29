@@ -1,0 +1,156 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Certificat — {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .cert-page{background:#f8f6f0;min-height:100vh;padding:2rem 0;}
+  .cert-wrap{max-width:860px;margin:auto;padding:0 1rem;}
+  .cert-container{
+    background:#fff;
+    border:12px solid #006837;
+    border-radius:4px;
+    padding:0;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,104,55,.15);
+  }
+  .cert-inner{
+    border:4px solid #F7941D;
+    margin:16px;
+    padding:3rem 3.5rem;
+    position:relative;
+  }
+  .cert-watermark{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    opacity:.04;font-size:18vw;color:#006837;pointer-events:none;
+    font-family:'Poppins',sans-serif;font-weight:900;
+  }
+  .cert-logo{width:90px;height:90px;object-fit:contain;border-radius:50%;border:3px solid #006837;}
+  .cert-org{font-size:.75rem;text-transform:uppercase;letter-spacing:.15em;color:#F7941D;font-weight:700;}
+  .cert-presents{font-size:.9rem;color:#666;font-style:italic;}
+  .cert-name{font-size:2.6rem;font-weight:800;color:#006837;line-height:1.1;font-family:'Poppins',sans-serif;}
+  .cert-title-text{font-size:1.05rem;color:#444;line-height:1.6;}
+  .cert-course{font-size:1.5rem;font-weight:800;color:#1a1a1a;line-height:1.2;}
+  .cert-divider{height:3px;background:linear-gradient(90deg,transparent,#006837,#F7941D,#006837,transparent);margin:1.5rem 0;}
+  .cert-score{
+    background:linear-gradient(135deg,#006837,#009450);color:#fff;
+    border-radius:50%;width:80px;height:80px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;font-weight:800;
+  }
+  .cert-score-num{font-size:1.6rem;line-height:1;}
+  .cert-score-lbl{font-size:.55rem;opacity:.85;text-transform:uppercase;}
+  .cert-num{font-size:.72rem;color:#999;font-family:monospace;letter-spacing:.05em;}
+  .cert-date{font-size:.82rem;color:#666;}
+  .cert-seal{width:90px;height:90px;border-radius:50%;border:4px solid #F7941D;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(135deg,rgba(247,148,29,.1),rgba(0,104,55,.1));}
+  .cert-seal-text{font-size:.52rem;font-weight:700;text-transform:uppercase;color:#006837;letter-spacing:.05em;line-height:1.2;}
+  .cert-seal i{font-size:1.2rem;color:#F7941D;margin-bottom:2px;}
+
+  @media print {
+    body > nav, body > footer, .no-print{display:none!important;}
+    .cert-page{background:white;padding:0;}
+    .cert-wrap{max-width:100%;padding:0;}
+    .cert-container{box-shadow:none;border-color:#006837;}
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cert-page">
+  <div class="cert-wrap">
+
+    <!-- Actions (no-print) -->
+    <div class="d-flex flex-wrap gap-2 mb-3 no-print">
+      <a href="{% url 'study_course' course.pk %}" class="btn btn-outline-secondary rounded-pill btn-sm px-4">
+        <i class="fas fa-arrow-left me-1"></i>Formation
+      </a>
+      <button onclick="window.print()" class="btn btn-sm rounded-pill px-4" style="background:#006837;color:#fff;border:none;font-weight:600;">
+        <i class="fas fa-print me-2"></i>Imprimer / Sauvegarder PDF
+      </button>
+      <a href="{% url 'study_library' %}" class="btn btn-outline-success btn-sm rounded-pill px-4">
+        <i class="fas fa-graduation-cap me-1"></i>Bibliothèque
+      </a>
+    </div>
+
+    <!-- Certificate -->
+    <div class="cert-container">
+      <div class="cert-inner">
+
+        <!-- Watermark -->
+        <div class="cert-watermark">CF</div>
+
+        <!-- Header -->
+        <div class="text-center mb-3">
+          <img src="{% static 'core/img/logo.jpg' %}" alt="Children's Fruit" class="cert-logo mb-2">
+          <div class="cert-org">Children's Fruit</div>
+          <div style="font-size:.7rem;color:#999;margin-top:2px;">"Porte ta croix et suis moi"</div>
+        </div>
+
+        <div class="cert-divider"></div>
+
+        <!-- Body -->
+        <div class="text-center mb-3">
+          <p class="cert-presents mb-2">Ceci certifie que</p>
+          <div class="cert-name mb-3">{{ user.get_full_name|default:user.username }}</div>
+          <p class="cert-title-text mb-3">
+            a suivi avec succès la formation
+          </p>
+          <div class="cert-course mb-3">{{ course.title }}</div>
+          {% if course.instructor %}
+          <p style="font-size:.82rem;color:#F7941D;font-weight:600;margin-bottom:0;">
+            <i class="fas fa-user me-1"></i>{{ course.instructor }}
+          </p>
+          {% endif %}
+        </div>
+
+        <div class="cert-divider"></div>
+
+        <!-- Footer -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mt-3">
+          <!-- Date & cert number -->
+          <div>
+            <div class="cert-date">
+              <i class="fas fa-calendar me-1" style="color:#006837;"></i>
+              Délivré le {{ certificate.issued_at|date:"j F Y" }}
+            </div>
+            <div class="cert-num mt-1">
+              N° {{ certificate.certificate_number }}
+            </div>
+          </div>
+
+          <!-- Score -->
+          {% if certificate.attempt %}
+          <div class="cert-score">
+            <div class="cert-score-num">{{ certificate.attempt.score|floatformat:0 }}</div>
+            <div class="cert-score-lbl">Score /100</div>
+          </div>
+          {% endif %}
+
+          <!-- Seal -->
+          <div class="cert-seal">
+            <i class="fas fa-certificate"></i>
+            <div class="cert-seal-text">Certifié<br>Children's Fruit<br>{{ certificate.issued_at|date:"Y" }}</div>
+          </div>
+        </div>
+
+        <!-- Signature line -->
+        <div class="text-center mt-4 pt-3" style="border-top:1px solid #e9ecef;">
+          <div style="display:inline-block;min-width:200px;border-bottom:2px solid #1a1a1a;margin-bottom:4px;"></div>
+          <div style="font-size:.78rem;color:#666;">Direction de Children's Fruit</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Back links -->
+    <div class="text-center mt-3 no-print">
+      <p class="text-muted" style="font-size:.82rem;">
+        <i class="fas fa-shield-alt me-1" style="color:#006837;"></i>
+        Certificat authentique — N° {{ certificate.certificate_number }}
+      </p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

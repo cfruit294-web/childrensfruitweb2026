@@ -64,10 +64,24 @@
           </ul>
         </li>
 
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'community' %}">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="{% url 'community' %}"
+             role="button" data-bs-toggle="dropdown">
             <i class="fas fa-users me-1"></i>Communauté
           </a>
+          <ul class="dropdown-menu dropdown-menu-dark">
+            <li>
+              <a class="dropdown-item" href="{% url 'community' %}">
+                <i class="fas fa-comments me-2"></i>Chat communautaire
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item" href="{% url 'study_library' %}">
+                <i class="fas fa-graduation-cap me-2"></i>Bibliothèque d'étude
+              </a>
+            </li>
+          </ul>
         </li>
 
         <li class="nav-item">

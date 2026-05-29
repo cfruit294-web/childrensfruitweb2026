@@ -1,0 +1,105 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Résultat du quiz — {{ resource.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .result-hero{padding:3rem 0 2.5rem;color:#fff;text-align:center;}
+  .result-hero.passed{background:linear-gradient(135deg,#006837,#009450);}
+  .result-hero.failed{background:linear-gradient(135deg,#dc2626,#b91c1c);}
+  .score-circle{width:130px;height:130px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.2rem;font-weight:800;border:5px solid rgba(255,255,255,.4);margin:0 auto 1rem;background:rgba(255,255,255,.15);}
+  .answer-card{border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1rem;}
+  .answer-card.correct{border:2px solid #006837;background:rgba(0,104,55,.06);}
+  .answer-card.wrong{border:2px solid #ef4444;background:rgba(239,68,68,.06);}
+  .answer-card.unanswered{border:2px solid #f59e0b;background:rgba(245,158,11,.06);}
+  .choice-tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.78rem;font-weight:600;}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="result-hero {% if attempt.passed %}passed{% else %}failed{% endif %}">
+  <div class="container">
+    <div class="score-circle">{{ attempt.score|floatformat:0 }}<span style="font-size:1rem;font-weight:400;">/100</span></div>
+    <h2 class="mb-1" style="font-size:1.8rem;font-weight:800;">
+      {% if attempt.passed %}
+        <i class="fas fa-check-circle me-2"></i>Quiz réussi !
+      {% else %}
+        <i class="fas fa-times-circle me-2"></i>Quiz non réussi
+      {% endif %}
+    </h2>
+    <p style="opacity:.85;">
+      {% if attempt.passed %}
+        Félicitations ! Vous avez obtenu {{ attempt.score|floatformat:0 }}/100. La ressource est marquée comme terminée.
+      {% else %}
+        Score obtenu : {{ attempt.score|floatformat:0 }}/100. Score requis : {{ attempt.quiz.pass_score }}/100. Relisez la ressource et réessayez.
+      {% endif %}
+    </p>
+  </div>
+</section>
+
+<section class="py-4">
+  <div class="container" style="max-width:760px;">
+
+    <!-- Actions -->
+    <div class="d-flex flex-wrap gap-2 justify-content-center mb-4">
+      <a href="{% url 'study_resource' course.pk resource.pk %}" class="btn btn-outline-secondary rounded-pill px-4">
+        <i class="fas fa-book-open me-2"></i>Revoir la ressource
+      </a>
+      {% if not attempt.passed %}
+      <a href="{% url 'study_quiz' course.pk resource.pk %}" class="btn rounded-pill px-4" style="background:#F7941D;color:#fff;border:none;font-weight:600;">
+        <i class="fas fa-redo me-2"></i>Repasser le quiz
+      </a>
+      {% endif %}
+      <a href="{% url 'study_course' course.pk %}" class="btn rounded-pill px-4" style="background:#006837;color:#fff;border:none;font-weight:600;">
+        <i class="fas fa-th-list me-2"></i>Formation
+      </a>
+    </div>
+
+    <!-- Review answers -->
+    <h5 class="fw-700 mb-3">Correction détaillée</h5>
+
+    {% for answer in answers %}
+    {% with q=answer.question correct=answer.selected_choice.is_correct %}
+    <div class="answer-card {% if not answer.selected_choice %}unanswered{% elif correct %}correct{% else %}wrong{% endif %}">
+      <div class="d-flex align-items-start gap-2 mb-2">
+        <span style="font-weight:800;color:{% if not answer.selected_choice %}#f59e0b{% elif correct %}#006837{% else %}#ef4444{% endif %};">
+          {% if not answer.selected_choice %}<i class="fas fa-minus-circle"></i>
+          {% elif correct %}<i class="fas fa-check-circle"></i>
+          {% else %}<i class="fas fa-times-circle"></i>{% endif %}
+        </span>
+        <div class="fw-600" style="font-size:.95rem;line-height:1.4;">{{ q.text }}</div>
+      </div>
+
+      <div class="mb-2" style="font-size:.85rem;">
+        {% if answer.selected_choice %}
+          <span class="choice-tag {% if correct %}text-success" style="background:rgba(0,104,55,.12);{% else %}text-danger" style="background:rgba(239,68,68,.1);{% endif %}">
+            Votre réponse : {{ answer.selected_choice.text }}
+          </span>
+        {% else %}
+          <span class="choice-tag" style="background:rgba(245,158,11,.12);color:#b45309;">Sans réponse</span>
+        {% endif %}
+      </div>
+
+      {% if not correct %}
+      {% for choice in q.choices.all %}{% if choice.is_correct %}
+      <div style="font-size:.82rem;color:#006837;">
+        <i class="fas fa-check me-1"></i><strong>Bonne réponse :</strong> {{ choice.text }}
+      </div>
+      {% endif %}{% endfor %}
+      {% endif %}
+
+      {% if q.explanation %}
+      <div class="mt-2 p-2" style="background:rgba(0,0,0,.04);border-radius:8px;font-size:.82rem;color:#666;line-height:1.5;">
+        <i class="fas fa-lightbulb me-1" style="color:#F7941D;"></i>{{ q.explanation }}
+      </div>
+      {% endif %}
+    </div>
+    {% endwith %}
+    {% endfor %}
+
+  </div>
+</section>
+
+{% endblock %}

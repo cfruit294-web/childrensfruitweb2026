@@ -52,4 +52,14 @@ urlpatterns = [
     # Bible API proxy
     path('api/bible/translations/', views.BibleTranslationsProxyView.as_view(), name='bible_translations'),
     path('api/bible/<str:translation>/<int:book_nr>/<int:chapter_nr>/', views.BibleChapterProxyView.as_view(), name='bible_chapter'),
+
+    # Bibliothèque d'étude
+    path('bibliotheque/', views.StudyLibraryView.as_view(), name='study_library'),
+    path('bibliotheque/<int:pk>/', views.CourseDetailView.as_view(), name='study_course'),
+    path('bibliotheque/<int:course_pk>/ressource/<int:pk>/', views.ResourceViewerView.as_view(), name='study_resource'),
+    path('bibliotheque/<int:course_pk>/ressource/<int:pk>/quiz/', views.QuizView.as_view(), name='study_quiz'),
+    path('bibliotheque/<int:course_pk>/ressource/<int:pk>/quiz/<int:attempt_pk>/resultat/', views.QuizResultView.as_view(), name='study_quiz_result'),
+    path('bibliotheque/<int:course_pk>/examen/', views.FinalExamView.as_view(), name='study_final_exam'),
+    path('bibliotheque/<int:course_pk>/examen/<int:attempt_pk>/resultat/', views.ExamResultView.as_view(), name='study_exam_result'),
+    path('bibliotheque/<int:course_pk>/certificat/', views.CertificateView.as_view(), name='study_certificate'),
 ]

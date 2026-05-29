@@ -1,0 +1,116 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Résultat de l'examen — {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .result-hero{padding:3.5rem 0 3rem;color:#fff;text-align:center;}
+  .result-hero.passed{background:linear-gradient(135deg,#006837,#009450);}
+  .result-hero.failed{background:linear-gradient(135deg,#dc2626,#b91c1c);}
+  .score-circle{width:150px;height:150px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;border:5px solid rgba(255,255,255,.4);margin:0 auto 1.5rem;background:rgba(255,255,255,.15);}
+  .score-num{font-size:2.8rem;font-weight:900;line-height:1;}
+  .score-den{font-size:1rem;font-weight:400;opacity:.8;}
+  .answer-card{border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1rem;}
+  .answer-card.correct{border:2px solid #006837;background:rgba(0,104,55,.06);}
+  .answer-card.wrong{border:2px solid #ef4444;background:rgba(239,68,68,.06);}
+  .answer-card.unanswered{border:2px solid #f59e0b;background:rgba(245,158,11,.06);}
+  .cert-cta{border:3px solid #F7941D;border-radius:20px;padding:2.5rem;text-align:center;background:linear-gradient(135deg,rgba(247,148,29,.05),rgba(247,148,29,.02));}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="result-hero {% if attempt.passed %}passed{% else %}failed{% endif %}">
+  <div class="container">
+    <div class="score-circle">
+      <div class="score-num">{{ attempt.score|floatformat:0 }}</div>
+      <div class="score-den">/100</div>
+    </div>
+    <h2 style="font-size:2rem;font-weight:800;margin-bottom:.5rem;">
+      {% if attempt.passed %}
+        <i class="fas fa-trophy me-2"></i>Examen réussi !
+      {% else %}
+        <i class="fas fa-times-circle me-2"></i>Examen non réussi
+      {% endif %}
+    </h2>
+    <p style="opacity:.85;font-size:1.05rem;">
+      {% if attempt.passed %}
+        Félicitations ! Vous avez validé votre formation avec {{ attempt.score|floatformat:0 }}/100.
+      {% else %}
+        Score obtenu : {{ attempt.score|floatformat:0 }}/100. Score requis : {{ attempt.quiz.pass_score }}/100. Révisez et réessayez !
+      {% endif %}
+    </p>
+  </div>
+</section>
+
+<section class="py-4">
+  <div class="container" style="max-width:760px;">
+
+    <!-- Certificate CTA -->
+    {% if attempt.passed and certificate %}
+    <div class="cert-cta mb-4">
+      <i class="fas fa-certificate fa-3x mb-3" style="color:#F7941D;"></i>
+      <h4 class="fw-800 mb-2">Votre certificat est prêt !</h4>
+      <p class="text-muted mb-4">Téléchargez ou imprimez votre certificat officiel Children's Fruit.</p>
+      <a href="{% url 'study_certificate' course.pk %}" class="btn" style="background:linear-gradient(135deg,#006837,#009450);color:#fff;border-radius:30px;padding:.75rem 2.5rem;font-size:1rem;font-weight:700;">
+        <i class="fas fa-certificate me-2"></i>Voir mon certificat
+      </a>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="d-flex flex-wrap gap-2 justify-content-center mb-4">
+      <a href="{% url 'study_course' course.pk %}" class="btn btn-outline-secondary rounded-pill px-4">
+        <i class="fas fa-book-open me-2"></i>Retour à la formation
+      </a>
+      {% if not attempt.passed %}
+      <a href="{% url 'study_final_exam' course.pk %}" class="btn rounded-pill px-4" style="background:#8b5cf6;color:#fff;border:none;font-weight:600;">
+        <i class="fas fa-redo me-2"></i>Repasser l'examen
+      </a>
+      {% endif %}
+      <a href="{% url 'study_library' %}" class="btn rounded-pill px-4" style="background:#006837;color:#fff;border:none;font-weight:600;">
+        <i class="fas fa-graduation-cap me-2"></i>Bibliothèque
+      </a>
+    </div>
+
+    <!-- Correction -->
+    <h5 class="fw-700 mb-3">Correction détaillée</h5>
+
+    {% for answer in answers %}
+    {% with q=answer.question correct=answer.selected_choice.is_correct %}
+    <div class="answer-card {% if not answer.selected_choice %}unanswered{% elif correct %}correct{% else %}wrong{% endif %}">
+      <div class="d-flex align-items-start gap-2 mb-2">
+        <span style="font-weight:800;color:{% if not answer.selected_choice %}#f59e0b{% elif correct %}#006837{% else %}#ef4444{% endif %};">
+          {% if not answer.selected_choice %}<i class="fas fa-minus-circle"></i>
+          {% elif correct %}<i class="fas fa-check-circle"></i>
+          {% else %}<i class="fas fa-times-circle"></i>{% endif %}
+        </span>
+        <div class="fw-600" style="font-size:.95rem;line-height:1.4;">{{ q.text }}</div>
+      </div>
+      {% if answer.selected_choice %}
+        <div style="font-size:.84rem;margin-bottom:.3rem;">
+          <span style="font-weight:600;">Votre réponse :</span> {{ answer.selected_choice.text }}
+          {% if not correct %}<span class="ms-2 text-danger"><i class="fas fa-times"></i></span>{% else %}<span class="ms-2 text-success"><i class="fas fa-check"></i></span>{% endif %}
+        </div>
+      {% else %}
+        <div style="font-size:.84rem;color:#b45309;margin-bottom:.3rem;"><i class="fas fa-minus me-1"></i>Sans réponse</div>
+      {% endif %}
+      {% if not correct %}
+      {% for choice in q.choices.all %}{% if choice.is_correct %}
+      <div style="font-size:.82rem;color:#006837;"><i class="fas fa-check me-1"></i><strong>Bonne réponse :</strong> {{ choice.text }}</div>
+      {% endif %}{% endfor %}
+      {% endif %}
+      {% if q.explanation %}
+      <div class="mt-2 p-2" style="background:rgba(0,0,0,.04);border-radius:8px;font-size:.82rem;color:#666;line-height:1.5;">
+        <i class="fas fa-lightbulb me-1" style="color:#F7941D;"></i>{{ q.explanation }}
+      </div>
+      {% endif %}
+    </div>
+    {% endwith %}
+    {% endfor %}
+
+  </div>
+</section>
+
+{% endblock %}
