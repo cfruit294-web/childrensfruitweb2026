@@ -17,17 +17,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_apscheduler',
+    'axes',
     'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',   # sert les fichiers statiques
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'axes.middleware.AxesMiddleware',                # anti-brute-force
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -63,6 +65,11 @@ DATABASES = {
 # ── Auth ───────────────────────────────────────────────────────
 AUTH_USER_MODEL = 'core.CustomUser'
 
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -73,6 +80,13 @@ AUTH_PASSWORD_VALIDATORS = [
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
+
+# ── Axes (anti brute-force login) ──────────────────────────────
+AXES_FAILURE_LIMIT     = 5          # blocage après 5 tentatives
+AXES_COOLOFF_TIME      = 1          # débloqué après 1 heure
+AXES_LOCKOUT_CALLABLE  = 'core.views.axes_lockout_response'
+AXES_RESET_ON_SUCCESS  = True
+AXES_ENABLE_ADMIN      = True
 
 # ── Internationalisation ───────────────────────────────────────
 LANGUAGE_CODE = 'fr'
@@ -91,8 +105,6 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STORAGES = {
     'staticfiles': {
-        # En développement : pas de manifest (évite les 500 sur fichiers non collectés)
-        # En production : compression + manifest WhiteNoise
         'BACKEND': (
             'django.contrib.staticfiles.storage.StaticFilesStorage'
             if DEBUG else
@@ -108,6 +120,10 @@ STORAGES = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Taille max upload global (100 Mo)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024     # 10 Mo pour les données POST
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024     # fichiers > 10 Mo → tmp file
+
 # ── Email ─────────────────────────────────────────────────────
 EMAIL_BACKEND = config(
     'EMAIL_BACKEND',
@@ -115,14 +131,20 @@ EMAIL_BACKEND = config(
 )
 DEFAULT_FROM_EMAIL = "Children's Fruit <noreply@childrensfruit.org>"
 
-# ── Sécurité HTTPS (activer en production avec SSL) ───────────
+# ── Sécurité HTTPS (production uniquement) ────────────────────
 if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    X_FRAME_OPTIONS = 'SAMEORIGIN'
+    SECURE_PROXY_SSL_HEADER      = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT          = True
+    SESSION_COOKIE_SECURE        = True
+    CSRF_COOKIE_SECURE           = True
+    SECURE_BROWSER_XSS_FILTER    = True
+    SECURE_CONTENT_TYPE_NOSNIFF  = True
+    SECURE_HSTS_SECONDS          = 31536000   # 1 an
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD          = True
+    X_FRAME_OPTIONS              = 'SAMEORIGIN'
+    SESSION_COOKIE_HTTPONLY      = True
+    CSRF_COOKIE_HTTPONLY         = True
 
 # ── Google OAuth 2.0 ───────────────────────────────────────────
 GOOGLE_CLIENT_ID     = config('GOOGLE_CLIENT_ID', default='')
@@ -130,8 +152,8 @@ GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
 GOOGLE_REDIRECT_URI  = config('GOOGLE_REDIRECT_URI', default='http://127.0.0.1:8000/accounts/google/callback/')
 
 # ── YouTube Data API v3 ────────────────────────────────────────
-YOUTUBE_API_KEY     = config('YOUTUBE_API_KEY', default='')
-YOUTUBE_CHANNEL     = config('YOUTUBE_CHANNEL', default='@CFRUIT24')
+YOUTUBE_API_KEY  = config('YOUTUBE_API_KEY', default='')
+YOUTUBE_CHANNEL  = config('YOUTUBE_CHANNEL', default='@CFRUIT24')
 
 # ── APScheduler (sync YouTube toutes les heures) ───────────────
 APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"

@@ -9,12 +9,60 @@ from django.contrib.auth import login, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, TemplateView, View
+
+
+# ── Axes lockout handler ───────────────────────────────────────
+def axes_lockout_response(request, credentials, *args, **kwargs):
+    return HttpResponse(
+        "Trop de tentatives de connexion. Compte bloqué 1 heure.",
+        status=403,
+        content_type="text/plain; charset=utf-8",
+    )
+
+
+# ── Validation MIME uploads (magic bytes) ─────────────────────
+_ALLOWED_DOC_EXTS   = {'.pdf', '.doc', '.docx'}
+_ALLOWED_VIDEO_EXTS = {'.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv', '.m4v'}
+
+# Signatures des formats image courants
+_IMAGE_MAGIC = [
+    b'\xff\xd8\xff',           # JPEG
+    b'\x89PNG\r\n\x1a\n',     # PNG
+    b'GIF87a', b'GIF89a',     # GIF
+    b'RIFF',                   # WebP (suivi de WEBP)
+    b'BM',                     # BMP
+    b'II*\x00', b'MM\x00*',   # TIFF
+]
+
+
+def _validate_image(f):
+    header = f.read(16)
+    f.seek(0)
+    for sig in _IMAGE_MAGIC:
+        if header.startswith(sig):
+            return True
+    # WebP: RIFF????WEBP
+    if header[:4] == b'RIFF' and header[8:12] == b'WEBP':
+        return True
+    return False
+
+
+def _validate_doc(f):
+    name = getattr(f, 'name', '')
+    ext = ('.' + name.rsplit('.', 1)[-1]).lower() if '.' in name else ''
+    return ext in _ALLOWED_DOC_EXTS
+
+
+def _validate_video(f):
+    name = getattr(f, 'name', '')
+    ext = ('.' + name.rsplit('.', 1)[-1]).lower() if '.' in name else ''
+    return ext in _ALLOWED_VIDEO_EXTS
 
 from .models import (
     VideoContent, KPI, Testimonial, VolunteerTask,
@@ -203,6 +251,8 @@ class CommunityMessageView(LoginRequiredMixin, View):
             img = request.FILES.get('image')
             if not img:
                 return JsonResponse({'error': 'Aucune image'}, status=400)
+            if not _validate_image(img):
+                return JsonResponse({'error': 'Format image non autorisé'}, status=400)
             if img.size > 8 * 1024 * 1024:
                 return JsonResponse({'error': 'Image trop grande (max 8 Mo)'}, status=400)
             msg = CommunityMessage.objects.create(user=request.user, msg_type='image', image=img)
@@ -226,6 +276,8 @@ class CommunityMessageView(LoginRequiredMixin, View):
             video_file = request.FILES.get('video_file')
             if not video_url and not video_file:
                 return JsonResponse({'error': 'Aucune vidéo fournie'}, status=400)
+            if video_file and not _validate_video(video_file):
+                return JsonResponse({'error': 'Format vidéo non autorisé'}, status=400)
             if video_file and video_file.size > 100 * 1024 * 1024:
                 return JsonResponse({'error': 'Vidéo trop grande (max 100 Mo)'}, status=400)
             kw = {'msg_type': 'video'}
@@ -237,6 +289,8 @@ class CommunityMessageView(LoginRequiredMixin, View):
             doc = request.FILES.get('document')
             if not doc:
                 return JsonResponse({'error': 'Aucun document'}, status=400)
+            if not _validate_doc(doc):
+                return JsonResponse({'error': 'Format document non autorisé (PDF, Word uniquement)'}, status=400)
             if doc.size > 15 * 1024 * 1024:
                 return JsonResponse({'error': 'Document trop grand (max 15 Mo)'}, status=400)
             msg = CommunityMessage.objects.create(
