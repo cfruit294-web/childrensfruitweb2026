@@ -17,6 +17,11 @@ from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, TemplateView, View
 
 
+# ── Healthcheck (Railway) ─────────────────────────────────────
+def health_check(request):
+    return HttpResponse("ok", content_type="text/plain", status=200)
+
+
 # ── Axes lockout handler ───────────────────────────────────────
 def axes_lockout_response(request, credentials, *args, **kwargs):
     return HttpResponse(
