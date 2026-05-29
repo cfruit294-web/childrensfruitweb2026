@@ -8,6 +8,11 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-changeme-in-productio
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
+# Auto-include Railway domain if present
+_RAILWAY_DOMAIN = config('RAILWAY_PUBLIC_DOMAIN', default='')
+if _RAILWAY_DOMAIN and _RAILWAY_DOMAIN not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_RAILWAY_DOMAIN)
+
 # ── Applications ──────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -142,6 +147,7 @@ DEFAULT_FROM_EMAIL = "Children's Fruit <noreply@childrensfruit.org>"
 # ── Sécurité HTTPS (production uniquement) ────────────────────
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER      = ('HTTP_X_FORWARDED_PROTO', 'https')
+    # Railway healthcheck hits HTTPS public URL — redirect is safe
     SECURE_SSL_REDIRECT          = True
     SESSION_COOKIE_SECURE        = True
     CSRF_COOKIE_SECURE           = True
