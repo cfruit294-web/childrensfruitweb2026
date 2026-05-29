@@ -55,12 +55,20 @@ TEMPLATES = [
 WSGI_APPLICATION = 'childrensfruit.wsgi.application'
 
 # ── Base de données ────────────────────────────────────────────
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+import dj_database_url as _dj_db
+
+_DATABASE_URL = config('DATABASE_URL', default='')
+if _DATABASE_URL:
+    # Railway / PostgreSQL
+    DATABASES = {'default': _dj_db.parse(_DATABASE_URL, conn_max_age=600)}
+else:
+    # Développement local SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 # ── Auth ───────────────────────────────────────────────────────
 AUTH_USER_MODEL = 'core.CustomUser'
