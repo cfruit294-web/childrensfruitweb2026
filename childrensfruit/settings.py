@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_apscheduler',
     'core.apps.CoreConfig',
 ]
 
@@ -129,7 +130,12 @@ GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
 GOOGLE_REDIRECT_URI  = config('GOOGLE_REDIRECT_URI', default='http://127.0.0.1:8000/accounts/google/callback/')
 
 # ── YouTube Data API v3 ────────────────────────────────────────
-YOUTUBE_API_KEY = config('YOUTUBE_API_KEY', default='')
+YOUTUBE_API_KEY     = config('YOUTUBE_API_KEY', default='')
+YOUTUBE_CHANNEL     = config('YOUTUBE_CHANNEL', default='@CFRUIT24')
+
+# ── APScheduler (sync YouTube toutes les heures) ───────────────
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
+APSCHEDULER_RUN_NOW_TIMEOUT = 25
 
 # ── Misc ───────────────────────────────────────────────────────
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
