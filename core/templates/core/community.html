@@ -51,7 +51,7 @@ body { background: #0d1117; }
   background: var(--chat-surface);
   border-radius:20px; border:1px solid var(--chat-border);
   display:flex; flex-direction:column;
-  height:calc(100vh - 220px); min-height:560px;
+  height:calc(100svh - 220px); min-height:560px;
   box-shadow: 0 20px 60px rgba(0,0,0,.4);
   overflow:hidden;
 }
@@ -450,6 +450,100 @@ body { background: #0d1117; }
 .cf-toast.err  { border-color:rgba(220,38,38,.4); }
 .cf-toast.warn { border-color:rgba(247,148,29,.3); }
 @keyframes toastIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* ═══════════════ TABLET (≤ 991px) ═══════════════ */
+@media(max-width:991px){
+  .comm-hero { padding: 2rem 0 0; }
+  .hero-wave { margin-top: 1.5rem; }
+  .chat-wrap { height: calc(100svh - 190px); min-height: 480px; border-radius: 14px; }
+  .comm-layout { padding: 12px 0 24px; gap: 14px; }
+  .comm-sidebar { display: none !important; }
+  .comm-sidebar.mob-open { display: flex !important; }
+  #sidebarToggleWrap { display: block; }
+}
+
+/* ═══════════════ PHONE (≤ 575px) ═══════════════ */
+@media(max-width:575px){
+  .comm-hero { padding: 1rem 0 0; }
+  .hero-wave { margin-top: 1rem; }
+  .comm-hero h1 { font-size: clamp(1.5rem,7vw,2rem) !important; }
+  .hero-stat { font-size: .72rem; padding: 4px 10px; gap: 5px; }
+  .chat-wrap { height: calc(100svh - 160px); min-height: 400px; border-radius: 10px; }
+  .comm-layout { padding: 8px 0 16px; gap: 10px; }
+
+  /* Header */
+  .chat-head { padding: 10px 12px; gap: 8px; }
+  .chat-head-title h6 { font-size: .84rem; }
+  .head-btn, .wall-btn { padding: 4px 7px; font-size: .72rem; }
+
+  /* Messages */
+  .chat-messages { padding: 10px 8px; }
+  .msg-row { max-width: 94%; }
+  .chat-bubble { font-size: .83rem; padding: 8px 11px; }
+  .msg-author-name { font-size: .62rem; padding: 0 38px; }
+  .msg-wrap.own .msg-author-name { padding: 0 38px; }
+  .msg-avatar { width: 28px; height: 28px; font-size: .65rem; }
+  .chat-meta { font-size: .58rem; }
+  .msg-wrap.own .chat-meta { padding-right: 36px; }
+  .msg-wrap.other .chat-meta { padding-left: 36px; }
+
+  /* Media in bubbles */
+  .chat-img { max-width: 190px; max-height: 190px; }
+  .chat-audio { width: 180px; }
+  .chat-video { max-width: 100%; }
+  .chat-video-embed iframe { width: 100%; max-width: 260px; height: 135px; }
+  .chat-doc-card { min-width: 150px; max-width: 230px; padding: 8px 10px; gap: 8px; }
+  .doc-fname { font-size: .78rem; max-width: 110px; }
+
+  /* Action buttons — larger touch target */
+  .act-btn { width: 30px; height: 30px; font-size: .68rem; }
+
+  /* Input bar */
+  .wa-bar { padding: 4px 8px 10px; }
+  .wa-input-row { gap: 6px; }
+  .wa-textarea { font-size: .85rem; min-height: 34px; }
+  .wa-emoji-btn { width: 34px; height: 34px; font-size: 1.05rem; }
+  .wa-attach-btn { width: 30px; height: 30px; font-size: .85rem; }
+  .wa-send-btn { width: 42px; height: 42px; font-size: .9rem; }
+
+  /* Attach popup — full width on phone */
+  .wa-attach-menu {
+    left: 8px; right: 8px; min-width: unset;
+    bottom: calc(100% + 6px);
+  }
+  .wa-attach-item { padding: 9px 12px; font-size: .82rem; }
+  .wa-attach-icon { width: 34px; height: 34px; }
+
+  /* Recording bar */
+  .wa-rec-time { font-size: .82rem; min-width: 36px; }
+  .wa-cancel-rec { width: 32px; height: 32px; }
+
+  /* Reply bar */
+  #replyBar { padding: 6px 10px; }
+  .reply-bar-author { font-size: .68rem; }
+  .reply-bar-preview { font-size: .74rem; }
+
+  /* Image preview */
+  #imgPreviewWrap img { height: 46px; width: 46px; }
+
+  /* Date separator */
+  .date-sep span { font-size: .64rem; }
+
+  /* Modals */
+  .sticker-grid { grid-template-columns: repeat(3,1fr); }
+  .wall-presets { grid-template-columns: repeat(3,1fr); }
+  .cf-mc { border-radius: 14px; }
+
+  /* Scroll button */
+  #scrollDown { bottom: 72px; right: 12px; width: 32px; height: 32px; font-size: .78rem; }
+
+  /* Toast */
+  #toastZone { bottom: 16px; right: 12px; left: 12px; }
+  .cf-toast { font-size: .8rem; padding: 9px 13px; max-width: 100%; }
+}
+
+/* ─── Sidebar toggle button (mobile only) ─── */
+#sidebarToggleWrap { display: none; margin-bottom: 8px; }
 </style>
 {% endblock %}
 
@@ -748,7 +842,17 @@ body { background: #0d1117; }
     </div><!-- /position-relative -->
 
     <!-- ═══ SIDEBAR ═══ -->
-    <div class="comm-sidebar">
+    <!-- Toggle sidebar on mobile -->
+    <div id="sidebarToggleWrap">
+      <button class="btn btn-sm w-100 rounded-pill d-flex align-items-center justify-content-center gap-2"
+              style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.65);font-size:.8rem;"
+              onclick="toggleSidebar()">
+        <i class="fas fa-info-circle"></i> Stats &amp; liens rapides
+        <i class="fas fa-chevron-down" id="sidebarChevron" style="font-size:.65rem;transition:.2s;"></i>
+      </button>
+    </div>
+
+    <div class="comm-sidebar" id="desktopSidebar">
 
       <!-- Stats -->
       <div class="side-card">
@@ -1516,5 +1620,43 @@ document.getElementById('wallFileInput').addEventListener('change',function(){
 
 // Appliquer le wallpaper sauvegardé au chargement
 (()=>{ const saved=localStorage.getItem(WALL_KEY); if(saved) applyWallpaper(saved); })();
+
+/* ── MOBILE : clavier virtuel iOS/Android ── */
+(function(){
+  const wrap = document.querySelector('.chat-wrap');
+  if (!wrap) return;
+
+  // visualViewport API — compense le clavier virtuel
+  if (window.visualViewport) {
+    const updateHeight = () => {
+      const vvh = window.visualViewport.height;
+      const navH = window.innerHeight - vvh; // hauteur clavier
+      if (window.innerWidth <= 991) {
+        const base = window.innerWidth <= 575 ? 160 : 190;
+        wrap.style.height = (vvh - base + Math.min(navH, 0)) + 'px';
+      } else {
+        wrap.style.height = '';
+      }
+    };
+    window.visualViewport.addEventListener('resize', updateHeight);
+    window.visualViewport.addEventListener('scroll', updateHeight);
+  }
+
+  // Scroll au bas quand le textarea reçoit le focus (mobile)
+  const ta = document.getElementById('msgInput');
+  if (ta) {
+    ta.addEventListener('focus', () => {
+      setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 320);
+    });
+  }
+})();
+
+/* ── MOBILE : sidebar toggle ── */
+function toggleSidebar(){
+  const sb  = document.getElementById('desktopSidebar');
+  const ch  = document.getElementById('sidebarChevron');
+  const open = sb.classList.toggle('mob-open');
+  ch.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+}
 </script>
 {% endblock %}
