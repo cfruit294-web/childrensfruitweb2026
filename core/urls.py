@@ -13,9 +13,6 @@ urlpatterns = [
     # Don
     path('don/', views.DonationPageView.as_view(), name='donation'),
 
-    # Bible
-    path('bible/', views.BibleView.as_view(), name='bible'),
-
     # Live streaming
     path('live/', views.LiveView.as_view(), name='live'),
     path('live/status/', views.LiveStatusAPIView.as_view(), name='live_status'),
@@ -48,10 +45,6 @@ urlpatterns = [
     # Blog
     path('blog/', views.BlogListView.as_view(), name='blog_list'),
     path('blog/<slug:slug>/', views.BlogDetailView.as_view(), name='blog_detail'),
-
-    # Bible API proxy
-    path('api/bible/translations/', views.BibleTranslationsProxyView.as_view(), name='bible_translations'),
-    path('api/bible/<str:translation>/<int:book_nr>/<int:chapter_nr>/', views.BibleChapterProxyView.as_view(), name='bible_chapter'),
 
     # Bibliothèque d'étude
     path('bibliotheque/', views.StudyLibraryView.as_view(), name='study_library'),

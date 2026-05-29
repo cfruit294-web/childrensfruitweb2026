@@ -181,10 +181,6 @@ class DonationPageView(UpdateLastSeenMixin, View):
         })
 
 
-class BibleView(LoginRequiredMixin, UpdateLastSeenMixin, TemplateView):
-    template_name = 'core/bible.html'
-    login_url = '/accounts/login/'
-
 
 class CommunityView(LoginRequiredMixin, UpdateLastSeenMixin, TemplateView):
     template_name = 'core/community.html'
@@ -853,9 +849,6 @@ class BlogDetailView(DetailView):
         return context
 
 
-# ─────────────────────────────────────────────────────────────
-# Bible API proxy (avoids browser CORS restrictions)
-# ─────────────────────────────────────────────────────────────
 
 # ──────────────────────────────────────────────────────────────────────────────
 # LIVE STREAMING
@@ -991,111 +984,6 @@ class LiveControlView(LoginRequiredMixin, View):
             messages.success(request, 'Créneau supprimé.')
 
         return redirect('live_control')
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# BIBLE API PROXY  (bolls.life — gratuit, fiable, LSG français inclus)
-# Clé BIBLE_API_KEY conservée dans .env pour API future si besoin
-# ──────────────────────────────────────────────────────────────────────────────
-
-_BOLLS_BASE    = 'https://bolls.life'
-_PROXY_TIMEOUT = 12
-
-# Noms français des 66 livres (index 1-66)
-_FR_BOOK_NAMES = {
-     1:'Genèse', 2:'Exode', 3:'Lévitique', 4:'Nombres', 5:'Deutéronome',
-     6:'Josué', 7:'Juges', 8:'Ruth', 9:'1 Samuel', 10:'2 Samuel',
-    11:'1 Rois', 12:'2 Rois', 13:'1 Chroniques', 14:'2 Chroniques',
-    15:'Esdras', 16:'Néhémie', 17:'Esther', 18:'Job', 19:'Psaumes',
-    20:'Proverbes', 21:'Ecclésiaste', 22:'Cantique des Cantiques',
-    23:'Ésaïe', 24:'Jérémie', 25:'Lamentations', 26:'Ézéchiel',
-    27:'Daniel', 28:'Osée', 29:'Joël', 30:'Amos', 31:'Abdias',
-    32:'Jonas', 33:'Michée', 34:'Nahum', 35:'Habacuc', 36:'Sophonie',
-    37:'Aggée', 38:'Zacharie', 39:'Malachie', 40:'Matthieu', 41:'Marc',
-    42:'Luc', 43:'Jean', 44:'Actes', 45:'Romains', 46:'1 Corinthiens',
-    47:'2 Corinthiens', 48:'Galates', 49:'Éphésiens', 50:'Philippiens',
-    51:'Colossiens', 52:'1 Thessaloniciens', 53:'2 Thessaloniciens',
-    54:'1 Timothée', 55:'2 Timothée', 56:'Tite', 57:'Philémon',
-    58:'Hébreux', 59:'Jacques', 60:'1 Pierre', 61:'2 Pierre',
-    62:'1 Jean', 63:'2 Jean', 64:'3 Jean', 65:'Jude', 66:'Apocalypse',
-}
-
-# Langue native → code ISO 639-1
-_LANG_NAME_TO_2 = {
-    'french':'fr', 'english':'en', 'spanish':'es', 'portuguese':'pt',
-    'german':'de', 'italian':'it', 'russian':'ru', 'arabic':'ar',
-    'chinese':'zh', 'korean':'ko', 'japanese':'ja', 'dutch':'nl',
-    'polish':'pl', 'romanian':'ro', 'swahili':'sw', 'hausa':'ha',
-    'yoruba':'yo', 'afrikaans':'af', 'hindi':'hi', 'turkish':'tr',
-    'indonesian':'id', 'malay':'ms', 'vietnamese':'vi',
-    # also accept native names
-    'français':'fr', 'español':'es', 'português':'pt',
-    'deutsch':'de', 'italiano':'it',
-}
-
-
-def _fetch_json(url, headers=None):
-    h = {'User-Agent': 'ChildrensFruitApp/1.0'}
-    if headers:
-        h.update(headers)
-    req = urllib.request.Request(url, headers=h)
-    with urllib.request.urlopen(req, timeout=_PROXY_TIMEOUT) as r:
-        return json.loads(r.read().decode('utf-8'))
-
-
-@method_decorator(cache_page(60 * 60 * 12), name='dispatch')  # cache 12 h
-class BibleTranslationsProxyView(View):
-    def get(self, request):
-        try:
-            data = _fetch_json(f'{_BOLLS_BASE}/get-translations/')
-            result = {}
-            for t in data:
-                abbr = (t.get('short_name') or '').strip()
-                if not abbr:
-                    continue
-                lang_raw = (t.get('language') or '').lower().strip()
-                lang2 = _LANG_NAME_TO_2.get(lang_raw, lang_raw[:2] if len(lang_raw) >= 2 else 'xx')
-                result[abbr] = {
-                    'language':     lang2,
-                    'translation':  t.get('name', abbr),
-                    'abbreviation': abbr,
-                    'books':        t.get('books_number', 66),
-                }
-            return JsonResponse(result)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=502)
-
-
-class BibleChapterProxyView(LoginRequiredMixin, View):
-    login_url = '/accounts/login/'
-
-    def get(self, request, translation, book_nr, chapter_nr):
-        import re as _re
-        translation = translation.upper()
-        if not _re.match(r'^[A-Z0-9]{2,15}$', translation):
-            return JsonResponse({'error': 'Invalid translation'}, status=400)
-        if not (1 <= book_nr <= 66) or not (1 <= chapter_nr <= 150):
-            return JsonResponse({'error': 'Invalid reference'}, status=400)
-
-        try:
-            # bolls.life takes book number directly (1-66) — no abbreviation lookup needed
-            data = _fetch_json(f'{_BOLLS_BASE}/get-chapter/{translation}/{book_nr}/{chapter_nr}/')
-            verses = {}
-            for v in data:
-                num = str(v.get('verse') or v.get('number') or 0)
-                text = (v.get('text') or '').strip()
-                if num and num != '0' and text:
-                    verses[num] = {'text': text}
-            return JsonResponse({
-                'translation': translation,
-                'book_name':   _FR_BOOK_NAMES.get(book_nr, ''),
-                'chapter':     chapter_nr,
-                'verses':      verses,
-            })
-        except urllib.error.HTTPError as e:
-            return JsonResponse({'error': f'Passage introuvable ({e.code})'}, status=404)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=502)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
