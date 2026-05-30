@@ -31,8 +31,13 @@ services:
         value: ""
       - key: GOOGLE_REDIRECT_URI
         value: "https://childrensfruit.onrender.com/accounts/google/callback/"
-      - key: EMAIL_BACKEND
-        value: "django.core.mail.backends.console.EmailBackend"
+      # ── Gmail SMTP ───────────────────────────────────────────
+      - key: EMAIL_HOST_USER
+        value: ""
+      - key: EMAIL_HOST_PASSWORD
+        value: ""
+      - key: DEFAULT_FROM_EMAIL
+        value: "Children's Fruit <ton.email@gmail.com>"
       # ── Cloudinary (media permanent) ─────────────────────────
       - key: CLOUDINARY_CLOUD_NAME
         value: ""
