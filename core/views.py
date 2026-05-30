@@ -93,6 +93,27 @@ _DEFAULT_KPIS = [
 ]
 
 
+class _T:
+    def __init__(self, name, role, content, avatar=None):
+        self.name = name
+        self.role = role
+        self.content = content
+        self.avatar = avatar
+
+
+_DEFAULT_TESTIMONIALS = [
+    _T("Marie Kouassi",       "Mère de famille",          "Children's Fruit a transformé la vie de mes enfants. Les programmes inspirants leur donnent foi et espoir pour l'avenir."),
+    _T("Jean-Baptiste Koffi", "Pasteur",                   "Une plateforme exceptionnelle qui unit foi, culture et action sociale. Je recommande à toute notre communauté."),
+    _T("Aïcha Diallo",        "Étudiante",                "Grâce aux ressources de Children's Fruit, j'ai trouvé une communauté qui me soutient et m'élève chaque jour."),
+    _T("Emmanuel Tano",       "Chef d'entreprise",         "Les concerts et émissions de Children's Fruit rayonnent bien au-delà de nos frontières. Un travail remarquable."),
+    _T("Christelle Abo",      "Bénévole",                 "Servir au sein de Children's Fruit est une bénédiction. Chaque action compte pour transformer des vies concrètement."),
+    _T("Samuel Kouamé",       "Enseignant",               "Les vidéos éducatives et spirituelles ont enrichi mes cours et inspiré mes élèves. Merci Children's Fruit !"),
+    _T("Fatou Bamba",         "Infirmière",               "La communauté Children's Fruit m'a soutenue dans les moments difficiles. Une famille soudée dans la foi."),
+    _T("David Assi",          "Musicien",                 "Participer aux concerts Children's Fruit est un honneur. La mission d'évangélisation par la musique me touche profondément."),
+    _T("Rosine Gbagbo",       "Chef de projet ONG",        "Children's Fruit prouve que foi et action sociale peuvent aller de pair. Un modèle pour toute notre région."),
+]
+
+
 # ─────────────────────────────────────────────────────────────
 # Middleware-style last_seen update via mixin
 # ─────────────────────────────────────────────────────────────
@@ -140,7 +161,8 @@ class HomeView(UpdateLastSeenMixin, TemplateView):
         context['recent_videos'] = VideoContent.objects.order_by('-created_at')[:3]
         context['kpis'] = KPI.objects.all()
         context['default_kpis'] = _DEFAULT_KPIS
-        context['testimonials'] = Testimonial.objects.filter(is_approved=True)
+        db_testimonials = list(Testimonial.objects.filter(is_approved=True))
+        context['testimonials'] = db_testimonials if db_testimonials else _DEFAULT_TESTIMONIALS
         context['categories'] = VideoContent.CATEGORY_CHOICES
         context['funding_projects'] = FundingProject.objects.filter(is_active=True)[:3]
         context['blog_posts'] = BlogPost.objects.filter(is_published=True).select_related('author')[:6]
