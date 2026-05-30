@@ -18,6 +18,13 @@ _RENDER_DOMAIN = config('RENDER_EXTERNAL_HOSTNAME', default='')
 if _RENDER_DOMAIN and _RENDER_DOMAIN not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_RENDER_DOMAIN)
 
+# CSRF trusted origins (required for HTTPS forms in production)
+CSRF_TRUSTED_ORIGINS = []
+if _RAILWAY_DOMAIN:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{_RAILWAY_DOMAIN}')
+if _RENDER_DOMAIN:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{_RENDER_DOMAIN}')
+
 # ── Applications ──────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
