@@ -209,6 +209,15 @@ class Command(BaseCommand):
             existing = BlogPost.objects.filter(slug=data["slug"]).first()
 
             if existing:
+                # Toujours mettre à jour le contenu si vide
+                changed = False
+                if not existing.content or len(existing.content) < 100:
+                    existing.content = data["content"]
+                    existing.excerpt = data["excerpt"]
+                    existing.is_published = data["is_published"]
+                    existing.save(update_fields=['content', 'excerpt', 'is_published'])
+                    changed = True
+
                 # Force re-upload si le thumbnail n'est pas sur Cloudinary
                 needs_thumb = True
                 if existing.thumbnail:
@@ -221,7 +230,13 @@ class Command(BaseCommand):
                 if needs_thumb:
                     existing.thumbnail = None
                     existing.save(update_fields=['thumbnail'])
-                    self._attach_thumbnail(existing, data.get("thumbnail_static"), self.stdout)
+                    try:
+                        self._attach_thumbnail(existing, data.get("thumbnail_static"), self.stdout)
+                    except Exception as e:
+                        self.stdout.write(self.style.WARNING(f'       Thumbnail ignoré : {e}'))
+                    changed = True
+
+                if changed:
                     updated += 1
                     self.stdout.write(f'  [UPD]  {data["title"][:60]}')
                 else:
@@ -238,7 +253,10 @@ class Command(BaseCommand):
                 content=data["content"],
                 is_published=data["is_published"],
             )
-            self._attach_thumbnail(post, data.get("thumbnail_static"), self.stdout)
+            try:
+                self._attach_thumbnail(post, data.get("thumbnail_static"), self.stdout)
+            except Exception as e:
+                self.stdout.write(self.style.WARNING(f'       Thumbnail ignoré : {e}'))
             self.stdout.write(self.style.SUCCESS(f'  [OK]   {data["title"][:60]}'))
             created += 1
 
