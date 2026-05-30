@@ -1,12 +1,16 @@
+import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+from django.core.files import File
+from django.conf import settings
 
 
 ARTICLES = [
     {
-        "title": "Concert Children's Fruit 2019 — Louange, Musique et Évangélisation",
+        "title": "Concert Children’s Fruit 2019 — Louange, Musique et Évangélisation",
         "slug": "concert-childrens-fruit-2019",
         "category": "actualites",
+        "thumbnail_static": "blog/concert-2019-thumb.jpg",
         "excerpt": "Retour sur le premier Concert Annuel de Children’s Fruit en 2019 — une soirée de louange, de musique et d’évangélisation qui a rassemblé toute la communauté autour d’une même foi.",
         "content": """<style>
 .cf-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin:1.5rem 0 2rem;}
@@ -85,6 +89,7 @@ ARTICLES = [
         "title": "Concert Children’s Fruit 2020 : « Choisi la Vie » — VBS, Évangélisation et Gloire",
         "slug": "concert-childrens-fruit-2020",
         "category": "actualites",
+        "thumbnail_static": "blog/concert-2020-thumb.jpg",
         "excerpt": "Retour complet sur le 2e concert de Children’s Fruit (4 août 2019, Université FATEAC) : programme VBS, deux séances d’evangélisation dont un bus SOTRA, deux tenues scéniques, et la voix d’une communauté unie sous le theme « Choisi la Vie » — Deutéronome 30:18-20.",
         "content": """<style>
 .cf-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin:1.5rem 0 2rem;}
@@ -199,14 +204,22 @@ class Command(BaseCommand):
             ))
             return
 
-        created = skipped = 0
+        created = skipped = updated = 0
         for data in ARTICLES:
-            if BlogPost.objects.filter(slug=data["slug"]).exists():
-                self.stdout.write(f'  [SKIP] {data["title"][:60]}')
-                skipped += 1
+            existing = BlogPost.objects.filter(slug=data["slug"]).first()
+
+            if existing:
+                # Mise à jour du thumbnail si manquant
+                if not existing.thumbnail:
+                    self._attach_thumbnail(existing, data.get("thumbnail_static"), self.stdout)
+                    updated += 1
+                    self.stdout.write(f'  [UPD]  {data["title"][:60]}')
+                else:
+                    self.stdout.write(f'  [SKIP] {data["title"][:60]}')
+                    skipped += 1
                 continue
 
-            BlogPost.objects.create(
+            post = BlogPost.objects.create(
                 title=data["title"],
                 slug=data["slug"],
                 author=author,
@@ -215,7 +228,22 @@ class Command(BaseCommand):
                 content=data["content"],
                 is_published=data["is_published"],
             )
+            self._attach_thumbnail(post, data.get("thumbnail_static"), self.stdout)
             self.stdout.write(self.style.SUCCESS(f'  [OK]   {data["title"][:60]}'))
             created += 1
 
-        self.stdout.write(f'\nTerminé — {created} créé(s), {skipped} ignoré(s).')
+        self.stdout.write(f'\nTerminé — {created} créé(s), {updated} mis à jour, {skipped} ignoré(s).')
+
+    def _attach_thumbnail(self, post, static_path, stdout):
+        if not static_path:
+            return
+        # Cherche dans staticfiles/ puis static/
+        for base in ['staticfiles', 'static']:
+            full_path = os.path.join(settings.BASE_DIR, base, static_path)
+            if os.path.exists(full_path):
+                filename = os.path.basename(full_path)
+                with open(full_path, 'rb') as f:
+                    post.thumbnail.save(filename, File(f), save=True)
+                stdout.write(f'       Thumbnail : {filename}')
+                return
+        stdout.write(f'       Thumbnail introuvable : {static_path}')
