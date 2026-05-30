@@ -20,6 +20,19 @@ services:
         fromDatabase:
           name: childrensfruit-db
           property: connectionString
+      # ── À remplir manuellement dans le dashboard Render ──────
+      - key: YOUTUBE_API_KEY
+        value: ""
+      - key: YOUTUBE_CHANNEL
+        value: "@CFRUIT24"
+      - key: GOOGLE_CLIENT_ID
+        value: ""
+      - key: GOOGLE_CLIENT_SECRET
+        value: ""
+      - key: GOOGLE_REDIRECT_URI
+        value: "https://childrensfruit.onrender.com/accounts/google/callback/"
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.console.EmailBackend"
 
 databases:
   - name: childrensfruit-db
