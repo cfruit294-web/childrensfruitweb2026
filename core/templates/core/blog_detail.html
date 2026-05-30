@@ -6,40 +6,159 @@
 
 {% block extra_css %}
 <style>
+  /* Barre de lecture */
+  #reading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--green), var(--orange));
+    z-index: 9999;
+    transition: width .1s linear;
+  }
   .blog-detail-hero {
     background: linear-gradient(135deg, var(--dark) 0%, var(--dark-2) 100%);
-    padding: 4rem 0 3rem;
+    padding: 5rem 0 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .blog-detail-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(0,104,55,.25) 0%, transparent 70%);
   }
   .blog-content {
-    font-size: 1.05rem;
+    font-size: 1.06rem;
     line-height: 1.9;
     color: var(--text);
   }
   .blog-content p { margin-bottom: 1.25rem; }
-  .blog-content h2 { margin-top: 2rem; }
-  .blog-content h3 { margin-top: 1.5rem; }
-  .blog-content blockquote { margin: 1.5rem 0; }
-  .blog-content .lead-text { margin-bottom: 2rem; }
+  .blog-content h2 { margin-top: 2.5rem; margin-bottom: 1rem; color: var(--dark); }
+  .blog-content h3 { margin-top: 1.75rem; margin-bottom: .75rem; color: var(--dark); }
+  .blog-content blockquote { margin: 2rem 0; }
+  .blog-content ul, .blog-content ol { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+  .blog-content li { margin-bottom: .4rem; }
   .article-sidebar { position: sticky; top: 90px; }
+  /* Lightbox */
+  .cf-lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.92);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .cf-lightbox.open { display: flex; }
+  .cf-lightbox img {
+    max-width: 92vw;
+    max-height: 88vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 8px 48px rgba(0,0,0,.6);
+  }
+  .cf-lightbox-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    opacity: .8;
+    background: none;
+    border: none;
+    transition: opacity .2s;
+  }
+  .cf-lightbox-close:hover { opacity: 1; }
+  .cf-lightbox-caption {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,.75);
+    font-size: .85rem;
+    background: rgba(0,0,0,.5);
+    padding: .4rem 1rem;
+    border-radius: 50px;
+    white-space: nowrap;
+    max-width: 90vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Galerie cliquable */
+  .blog-content .cf-gal-item { cursor: zoom-in; }
+  /* Back to top */
+  #back-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 16px rgba(0,104,55,.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    transition: transform .2s;
+  }
+  #back-top:hover { transform: translateY(-3px); }
+  /* Share buttons */
+  .share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .45rem 1rem;
+    border-radius: 50px;
+    font-size: .8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity .2s, transform .15s;
+  }
+  .share-btn:hover { opacity: .85; transform: translateY(-1px); }
 </style>
 {% endblock %}
 
 {% block content %}
 
+<!-- Barre de lecture -->
+<div id="reading-bar"></div>
+
+<!-- Lightbox -->
+<div class="cf-lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <button class="cf-lightbox-close" onclick="closeLightbox()">&times;</button>
+  <img src="" alt="" id="lightbox-img">
+  <div class="cf-lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<!-- Bouton retour haut -->
+<button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Retour en haut">
+  <i class="fas fa-chevron-up"></i>
+</button>
+
 <!-- Hero article -->
 <section class="blog-detail-hero">
-  <div class="container">
+  <div class="container" style="position:relative;">
     <div class="row justify-content-center">
       <div class="col-lg-9 text-center">
         <a href="{% url 'blog_list' %}?category={{ post.category }}"
-           class="btn btn-sm rounded-pill mb-3 text-white"
-           style="background:var(--orange);font-size:.75rem;padding:.35rem .9rem;">
-          {{ post.get_category_display }}
+           class="d-inline-block mb-3 px-3 py-1 rounded-pill fw-700 text-white"
+           style="background:var(--orange);font-size:.75rem;">
+          <i class="fas fa-tag me-1"></i>{{ post.get_category_display }}
         </a>
-        <h1 class="text-white fw-800 mb-3" style="font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.25;">
+        <h1 class="text-white fw-800 mb-4" style="font-size:clamp(1.5rem,3vw,2.4rem);line-height:1.25;">
           {{ post.title }}
         </h1>
-        <div class="d-flex align-items-center justify-content-center gap-3" style="color:rgba(255,255,255,.55);font-size:.82rem;">
+        <div class="d-flex flex-wrap align-items-center justify-content-center gap-3"
+             style="color:rgba(255,255,255,.55);font-size:.82rem;">
           <span><i class="fas fa-user me-1"></i>{% if post.author %}{{ post.author.display_name }}{% else %}Children's Fruit{% endif %}</span>
           <span>·</span>
           <span><i class="far fa-calendar me-1"></i>{{ post.created_at|date:"d F Y" }}</span>
@@ -51,24 +170,24 @@
   </div>
 </section>
 
-<!-- Corps de l'article -->
+<!-- Corps -->
 <section style="background:#f9fafb;padding:3.5rem 0;">
   <div class="container">
     <div class="row g-5 justify-content-center">
 
       <!-- Article principal -->
-      <div class="col-lg-8">
+      <div class="col-lg-8" id="article-body">
 
         {% if post.thumbnail %}
         <div class="mb-4 rounded-xl overflow-hidden shadow-card">
           <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}"
-               style="width:100%;max-height:420px;object-fit:cover;" loading="lazy">
+               style="width:100%;max-height:440px;object-fit:cover;" loading="lazy">
         </div>
         {% endif %}
 
         {% if post.excerpt %}
-        <div class="p-4 mb-4 rounded-xl" style="background:rgba(0,104,55,.06);border-left:4px solid var(--green);">
-          <p class="mb-0 fw-600" style="color:var(--green);font-size:.95rem;font-style:italic;">
+        <div class="p-4 mb-4 rounded-xl" style="background:rgba(0,104,55,.07);border-left:4px solid var(--green);">
+          <p class="mb-0 fw-600" style="color:var(--green);font-size:.97rem;font-style:italic;line-height:1.7;">
             {{ post.excerpt }}
           </p>
         </div>
@@ -78,25 +197,52 @@
           <div class="blog-content">{{ post.content|safe }}</div>
         </div>
 
-        <!-- Navigation bas -->
-        <div class="d-flex justify-content-between align-items-center mt-4 pt-3">
-          <a href="{% url 'blog_list' %}" class="btn btn-outline-green rounded-pill">
+        <!-- Partage -->
+        <div class="bg-white rounded-xl shadow-card p-4 mt-4">
+          <p class="fw-700 mb-3 small text-muted text-uppercase" style="letter-spacing:.5px;">
+            <i class="fas fa-share-alt me-1"></i>Partager cet article
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}"
+               target="_blank" rel="noopener" class="share-btn text-white" style="background:#1877f2;">
+              <i class="fab fa-facebook-f"></i> Facebook
+            </a>
+            <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri }}&text={{ post.title|urlencode }}"
+               target="_blank" rel="noopener" class="share-btn text-white" style="background:#1da1f2;">
+              <i class="fab fa-twitter"></i> Twitter
+            </a>
+            <a href="https://wa.me/?text={{ post.title|urlencode }}%20{{ request.build_absolute_uri }}"
+               target="_blank" rel="noopener" class="share-btn text-white" style="background:#25d366;">
+              <i class="fab fa-whatsapp"></i> WhatsApp
+            </a>
+            <button onclick="navigator.clipboard.writeText(window.location.href).then(()=>this.innerHTML='<i class=\'fas fa-check\'></i> Copié !')"
+                    class="share-btn text-dark" style="background:#f1f3f5;border:none;cursor:pointer;">
+              <i class="fas fa-link"></i> Copier le lien
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="d-flex justify-content-between align-items-center mt-4 pt-2">
+          <a href="{% url 'blog_list' %}" class="btn btn-outline-secondary rounded-pill" style="font-size:.85rem;">
             <i class="fas fa-arrow-left me-2"></i>Tous les articles
           </a>
-          <a href="{% url 'blog_list' %}?category={{ post.category }}" class="btn btn-outline-secondary rounded-pill" style="font-size:.85rem;">
-            <i class="fas fa-tag me-1"></i>{{ post.get_category_display }}
+          {% if prev_post %}
+          <a href="{{ prev_post.get_absolute_url }}" class="btn rounded-pill fw-600" style="background:var(--green);color:#fff;font-size:.85rem;">
+            Article suivant <i class="fas fa-arrow-right ms-1"></i>
           </a>
+          {% endif %}
         </div>
       </div>
 
-      <!-- Sidebar articles liés -->
+      <!-- Sidebar -->
       <div class="col-lg-4">
         <div class="article-sidebar">
 
           {% if related_posts %}
           <div class="community-card mb-4">
             <div class="card-header-cf">
-              <i class="fas fa-bookmark"></i>Articles liés
+              <i class="fas fa-bookmark"></i> Articles liés
             </div>
             <div class="p-3 d-flex flex-column gap-3">
               {% for rp in related_posts %}
@@ -113,8 +259,10 @@
                   </div>
                 {% endif %}
                 <div class="overflow-hidden">
-                  <div class="fw-600 text-dark" style="font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ rp.title }}</div>
-                  <div class="text-muted" style="font-size:.7rem;">{{ rp.created_at|date:"d M Y" }} · {{ rp.read_time }} min</div>
+                  <div class="fw-600 text-dark" style="font-size:.82rem;line-height:1.35;">{{ rp.title }}</div>
+                  <div class="text-muted mt-1" style="font-size:.7rem;">
+                    {{ rp.created_at|date:"d M Y" }} · {{ rp.read_time }} min
+                  </div>
                 </div>
               </a>
               {% endfor %}
@@ -122,21 +270,77 @@
           </div>
           {% endif %}
 
-          <!-- CTA don -->
-          <div class="p-4 rounded-xl text-center" style="background:linear-gradient(135deg,var(--green),var(--green-mid));color:#fff;">
-            <i class="fas fa-hand-holding-heart fa-2x mb-2 d-block" style="opacity:.9;"></i>
+          <!-- Mission CTA -->
+          <div class="p-4 rounded-xl text-center mb-4"
+               style="background:linear-gradient(135deg,var(--green),var(--green-mid));color:#fff;">
+            <i class="fas fa-hand-holding-heart fa-2x mb-3 d-block" style="opacity:.9;"></i>
             <h6 class="fw-bold mb-2">Soutenez notre mission</h6>
-            <p class="small mb-3" style="opacity:.8;">Chaque don aide un enfant à avoir un meilleur avenir.</p>
+            <p class="small mb-3" style="opacity:.8;line-height:1.6;">Chaque don aide un enfant à avoir un meilleur avenir.</p>
             <a href="{% url 'donation' %}" class="btn btn-light btn-sm rounded-pill px-4 fw-700">
               <i class="fas fa-heart me-1 text-danger"></i>Faire un Don
             </a>
           </div>
 
+          <!-- À propos Children's Fruit -->
+          <div class="community-card">
+            <div class="card-header-cf">
+              <i class="fas fa-info-circle"></i> Children's Fruit
+            </div>
+            <div class="p-3">
+              <p class="small text-muted mb-2" style="line-height:1.65;">
+                Une plateforme combinant contenu multimédia inspirant et actions caritatives pour transformer des vies.
+              </p>
+              <p class="small fw-600 mb-0" style="color:var(--green);font-style:italic;">
+                « Porte ta croix et suis moi »
+              </p>
+            </div>
+          </div>
+
         </div>
       </div>
-
     </div>
   </div>
 </section>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Barre de lecture
+const bar = document.getElementById('reading-bar');
+const body = document.getElementById('article-body');
+window.addEventListener('scroll', () => {
+  const rect = body.getBoundingClientRect();
+  const total = body.offsetHeight - window.innerHeight;
+  const scrolled = Math.min(Math.max(-rect.top / total * 100, 0), 100);
+  bar.style.width = scrolled + '%';
+  // Bouton retour haut
+  const btn = document.getElementById('back-top');
+  btn.style.display = window.scrollY > 400 ? 'flex' : 'none';
+});
+
+// Lightbox
+function openLightbox(src, caption) {
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox-caption').textContent = caption || '';
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox(e) {
+  if (!e || e.target !== document.getElementById('lightbox-img')) {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// Rendre toutes les images de galerie cliquables
+document.querySelectorAll('.cf-gal-item img').forEach(img => {
+  img.addEventListener('click', () => {
+    const caption = img.closest('.cf-gal-item')?.querySelector('.cf-gal-caption')?.textContent || '';
+    openLightbox(img.src, caption);
+  });
+});
+</script>
 {% endblock %}

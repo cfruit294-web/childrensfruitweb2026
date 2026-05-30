@@ -826,9 +826,12 @@ class BlogListView(TemplateView):
         context = super().get_context_data(**kwargs)
         qs = BlogPost.objects.filter(is_published=True).select_related('author')
         category = self.request.GET.get('category', '')
+        q = self.request.GET.get('q', '').strip()
         if category:
             qs = qs.filter(category=category)
-        context['posts'] = qs
+        if q:
+            qs = qs.filter(title__icontains=q) | qs.filter(content__icontains=q)
+        context['posts'] = qs.distinct()
         context['blog_categories'] = BlogPost.CATEGORY_CHOICES
         context['current_category'] = category
         return context
@@ -850,6 +853,10 @@ class BlogDetailView(DetailView):
         context['related_posts'] = (
             BlogPost.objects.filter(is_published=True, category=post.category)
             .exclude(pk=post.pk)[:3]
+        )
+        context['prev_post'] = (
+            BlogPost.objects.filter(is_published=True, pk__lt=post.pk)
+            .order_by('-pk').first()
         )
         return context
 

@@ -8,9 +8,82 @@
 <style>
   .blog-hero {
     background: linear-gradient(135deg, var(--dark) 0%, var(--dark-2) 100%);
-    padding: 4rem 0 3rem;
+    padding: 5rem 0 4rem;
     border-bottom: 1px solid rgba(255,255,255,.05);
   }
+  .blog-card {
+    transition: transform .25s ease, box-shadow .25s ease;
+    border-radius: 16px !important;
+  }
+  .blog-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 48px rgba(0,0,0,.12) !important;
+  }
+  .blog-card .card-img-top {
+    transition: transform .4s ease;
+  }
+  .blog-card:hover .card-img-top { transform: scale(1.04); }
+  .blog-filter-btn {
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 50px;
+    padding: .35rem 1.1rem;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--text);
+    transition: all .2s;
+  }
+  .blog-filter-btn:hover, .blog-filter-btn.active {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+  .blog-featured {
+    background: linear-gradient(135deg, #006837 0%, #009450 100%);
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    min-height: 340px;
+    display: flex;
+    align-items: flex-end;
+  }
+  .blog-featured-img {
+    position: absolute;
+    inset: 0;
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    opacity: .35;
+  }
+  .blog-featured-body {
+    position: relative;
+    padding: 2.5rem;
+    color: #fff;
+  }
+  .read-time-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    background: rgba(255,255,255,.12);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 600;
+    padding: .25rem .7rem;
+    border-radius: 50px;
+  }
+  .cat-chip {
+    display: inline-block;
+    background: var(--orange);
+    color: #fff;
+    font-size: .68rem;
+    font-weight: 700;
+    padding: .28rem .75rem;
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .img-wrap { overflow: hidden; }
 </style>
 {% endblock %}
 
@@ -20,12 +93,23 @@
 <section class="blog-hero">
   <div class="container text-center">
     <span class="section-badge d-inline-block mb-3"><i class="fas fa-pen-nib me-1"></i>Blog</span>
-    <h1 class="text-white fw-800 mb-2" style="font-size:clamp(1.8rem,3vw,2.6rem);">
-      Tous nos <span style="color:var(--orange);">Articles</span>
+    <h1 class="text-white fw-800 mb-2" style="font-size:clamp(1.8rem,3vw,2.8rem);">
+      Actualités & <span style="color:var(--orange);">Inspirations</span>
     </h1>
-    <p style="color:rgba(255,255,255,.6);max-width:500px;margin:0 auto;font-size:.95rem;">
-      Inspiration, foi, mission et actualités pour transformer des vies.
+    <p style="color:rgba(255,255,255,.6);max-width:520px;margin:0 auto 2rem;font-size:.95rem;">
+      Témoignages, concerts, missions et ressources pour transformer des vies.
     </p>
+    <!-- Barre de recherche -->
+    <form method="get" action="{% url 'blog_list' %}" class="d-flex justify-content-center gap-2">
+      <input type="hidden" name="category" value="{{ current_category }}">
+      <div class="input-group" style="max-width:400px;border-radius:50px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.2);">
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Rechercher un article…"
+               class="form-control border-0" style="background:rgba(255,255,255,.12);color:#fff;font-size:.9rem;padding:.75rem 1.25rem;">
+        <button class="btn" style="background:var(--orange);color:#fff;padding:.75rem 1.25rem;" type="submit">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </form>
   </div>
 </section>
 
@@ -34,82 +118,108 @@
 
     <!-- Filtres catégories -->
     <div class="d-flex flex-wrap justify-content-center gap-2 mb-5">
-      <a href="{% url 'blog_list' %}"
-         class="btn blog-filter-btn {% if not current_category %}active{% endif %}">
+      <a href="{% url 'blog_list' %}" class="blog-filter-btn {% if not current_category %}active{% endif %}">
         <i class="fas fa-border-all me-1"></i>Tous
       </a>
       {% for cat_key, cat_label in blog_categories %}
-      <a href="?category={{ cat_key }}"
-         class="btn blog-filter-btn {% if current_category == cat_key %}active{% endif %}">
+      <a href="?category={{ cat_key }}" class="blog-filter-btn {% if current_category == cat_key %}active{% endif %}">
         {{ cat_label }}
       </a>
       {% endfor %}
     </div>
 
-    <!-- Résultat -->
-    {% if current_category %}
-    <p class="text-center text-muted small mb-4">
-      <i class="fas fa-filter me-1"></i>
-      {{ posts|length }} article{% if posts|length != 1 %}s{% endif %}
-      dans « {% for k, v in blog_categories %}{% if k == current_category %}{{ v }}{% endif %}{% endfor %} »
-    </p>
-    {% endif %}
-
     {% if posts %}
-    <div class="row g-4">
-      {% for post in posts %}
-      <div class="col-sm-6 col-lg-4">
-        <article class="card h-100 border-0 shadow-card rounded-xl overflow-hidden blog-card">
 
-          {% if post.thumbnail %}
-            <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}"
-                 style="height:200px;object-fit:cover;width:100%;" loading="lazy">
-          {% else %}
-            <div style="height:200px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;
-                        background:linear-gradient(135deg,var(--green),var(--green-mid));color:rgba(255,255,255,.3);">
-              <i class="fas fa-pen-nib"></i>
-            </div>
-          {% endif %}
-
-          <div style="position:relative;">
-            <span class="position-absolute" style="top:-14px;left:16px;
-                  background:var(--orange);color:#fff;font-size:.68rem;font-weight:700;
-                  padding:.3rem .75rem;border-radius:var(--radius-pill);text-transform:uppercase;
-                  box-shadow:0 2px 8px rgba(247,148,29,.4);">
-              {{ post.get_category_display }}
-            </span>
+      <!-- Article vedette (1er article) -->
+      {% with featured=posts.0 %}
+      <div class="blog-featured mb-5">
+        {% if featured.thumbnail %}
+          <img src="{{ featured.thumbnail.url }}" alt="{{ featured.title }}" class="blog-featured-img">
+        {% endif %}
+        <div class="blog-featured-body" style="width:100%;">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="cat-chip">{{ featured.get_category_display }}</span>
+            <span class="read-time-badge"><i class="fas fa-clock"></i>{{ featured.read_time }} min</span>
+            <span class="read-time-badge"><i class="far fa-calendar"></i>{{ featured.created_at|date:"d M Y" }}</span>
           </div>
-
-          <div class="card-body d-flex flex-column p-4 pt-5">
-            <h5 class="fw-700 mb-2 lh-sm" style="font-size:.95rem;">{{ post.title }}</h5>
-            <p class="text-muted mb-3 flex-grow-1" style="font-size:.82rem;line-height:1.6;
-                display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
-              {% if post.excerpt %}{{ post.excerpt }}{% else %}{{ post.content|truncatewords:25 }}{% endif %}
-            </p>
-            <div class="d-flex justify-content-between align-items-center pt-3 mt-auto border-top">
-              <div>
-                <div style="font-size:.72rem;font-weight:600;">
-                  {% if post.author %}{{ post.author.display_name }}{% else %}Children's Fruit{% endif %}
-                </div>
-                <div style="font-size:.65rem;color:var(--text-muted);">
-                  {{ post.created_at|date:"d M Y" }} · {{ post.read_time }} min
-                </div>
-              </div>
-              <a href="{{ post.get_absolute_url }}" class="btn btn-sm btn-green px-3 rounded-pill" style="font-size:.78rem;">
-                Lire <i class="fas fa-arrow-right ms-1"></i>
-              </a>
-            </div>
-          </div>
-        </article>
+          <h2 class="fw-800 text-white mb-2" style="font-size:clamp(1.3rem,2.5vw,2rem);max-width:700px;line-height:1.3;">
+            {{ featured.title }}
+          </h2>
+          <p style="color:rgba(255,255,255,.75);max-width:600px;font-size:.92rem;margin-bottom:1.5rem;">
+            {{ featured.excerpt|default:featured.content|truncatewords:25 }}
+          </p>
+          <a href="{{ featured.get_absolute_url }}"
+             class="btn rounded-pill fw-700 px-4"
+             style="background:var(--orange);color:#fff;font-size:.88rem;">
+            Lire l'article <i class="fas fa-arrow-right ms-2"></i>
+          </a>
+        </div>
       </div>
-      {% endfor %}
-    </div>
+      {% endwith %}
+
+      <!-- Grille articles -->
+      {% if posts|length > 1 %}
+      <h5 class="fw-700 mb-4 text-dark" style="letter-spacing:-.3px;">
+        {% if current_category %}Autres articles{% else %}Tous les articles{% endif %}
+        <span class="ms-2 badge rounded-pill" style="background:var(--green);font-size:.75rem;">{{ posts|length|add:"-1" }}</span>
+      </h5>
+      <div class="row g-4">
+        {% for post in posts %}
+        {% if not forloop.first %}
+        <div class="col-sm-6 col-lg-4">
+          <article class="card h-100 border-0 shadow-card blog-card overflow-hidden">
+
+            <div class="img-wrap" style="height:210px;">
+              {% if post.thumbnail %}
+                <img src="{{ post.thumbnail.url }}" alt="{{ post.title }}"
+                     class="card-img-top" style="height:210px;object-fit:cover;width:100%;" loading="lazy">
+              {% else %}
+                <div style="height:210px;display:flex;align-items:center;justify-content:center;
+                            background:linear-gradient(135deg,var(--green),var(--green-mid));color:rgba(255,255,255,.3);">
+                  <i class="fas fa-pen-nib fa-3x"></i>
+                </div>
+              {% endif %}
+            </div>
+
+            <div style="position:relative;">
+              <span class="position-absolute" style="top:-14px;left:16px;">
+                <span class="cat-chip">{{ post.get_category_display }}</span>
+              </span>
+            </div>
+
+            <div class="card-body d-flex flex-column p-4 pt-5">
+              <h5 class="fw-700 mb-2 lh-sm" style="font-size:.95rem;">{{ post.title }}</h5>
+              <p class="text-muted mb-3 flex-grow-1" style="font-size:.82rem;line-height:1.65;
+                 display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
+                {% if post.excerpt %}{{ post.excerpt }}{% else %}{{ post.content|truncatewords:25 }}{% endif %}
+              </p>
+              <div class="d-flex justify-content-between align-items-center pt-3 mt-auto border-top">
+                <div>
+                  <div style="font-size:.72rem;font-weight:600;color:var(--dark);">
+                    {% if post.author %}{{ post.author.display_name }}{% else %}Children's Fruit{% endif %}
+                  </div>
+                  <div style="font-size:.65rem;color:var(--text-muted);">
+                    {{ post.created_at|date:"d M Y" }} · {{ post.read_time }} min de lecture
+                  </div>
+                </div>
+                <a href="{{ post.get_absolute_url }}" class="btn btn-sm rounded-pill fw-600 px-3"
+                   style="background:var(--green);color:#fff;font-size:.78rem;">
+                  Lire <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+              </div>
+            </div>
+          </article>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
 
     {% else %}
     <div class="text-center py-5 text-muted">
       <i class="fas fa-search fa-4x opacity-25 d-block mb-3"></i>
-      <p>Aucun article dans cette catégorie pour l'instant.</p>
-      <a href="{% url 'blog_list' %}" class="btn btn-outline-green mt-2">Voir tous les articles</a>
+      <p>Aucun article trouvé.</p>
+      <a href="{% url 'blog_list' %}" class="btn btn-outline-green mt-2 rounded-pill">Voir tous les articles</a>
     </div>
     {% endif %}
 
