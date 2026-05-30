@@ -12,16 +12,21 @@ class CoreConfig(AppConfig):
 
 def _start_scheduler():
     import os
-    # Ne pas lancer dans les processus de migration/test/collectstatic
-    if os.environ.get('RUN_MAIN') != 'true' and not _is_server_process():
+    import sys
+
+    args = ' '.join(sys.argv)
+
+    # Start only in runserver (dev) or gunicorn/uvicorn — never in
+    # migrate, collectstatic, shell, etc.
+    is_dev = 'runserver' in args and os.environ.get('RUN_MAIN') == 'true'
+    is_server = any(cmd in args for cmd in ('gunicorn', 'uvicorn', 'daphne'))
+    if not is_dev and not is_server:
         return
 
     try:
         from apscheduler.schedulers.background import BackgroundScheduler
         from apscheduler.triggers.interval import IntervalTrigger
         from django_apscheduler.jobstores import DjangoJobStore
-        from django_apscheduler.models import DjangoJobExecution
-        from django.conf import settings
         import logging
 
         logger = logging.getLogger(__name__)
@@ -43,13 +48,6 @@ def _start_scheduler():
     except Exception as exc:
         import logging
         logging.getLogger(__name__).warning(f'APScheduler non démarré : {exc}')
-
-
-def _is_server_process():
-    """True si on est dans un vrai processus serveur (gunicorn, uvicorn, runserver)."""
-    import sys
-    args = ' '.join(sys.argv)
-    return any(cmd in args for cmd in ('runserver', 'gunicorn', 'uvicorn', 'daphne'))
 
 
 def _sync_youtube_job():
