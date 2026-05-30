@@ -31,13 +31,21 @@ services:
         value: ""
       - key: GOOGLE_REDIRECT_URI
         value: "https://childrensfruit.onrender.com/accounts/google/callback/"
-      # ── Gmail SMTP ───────────────────────────────────────────
+      # ── Email SMTP LWS ───────────────────────────────────────
+      - key: EMAIL_HOST
+        value: "mail.childrensfruit.org"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_USE_SSL
+        value: "False"
       - key: EMAIL_HOST_USER
-        value: ""
+        value: "info@childrensfruit.org"
       - key: EMAIL_HOST_PASSWORD
         value: ""
       - key: DEFAULT_FROM_EMAIL
-        value: "Children's Fruit <ton.email@gmail.com>"
+        value: "Children's Fruit <info@childrensfruit.org>"
       # ── Cloudinary (media permanent) ─────────────────────────
       - key: CLOUDINARY_CLOUD_NAME
         value: ""

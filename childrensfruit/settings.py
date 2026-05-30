@@ -167,23 +167,24 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024     # 10 Mo pour les données POST
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024     # fichiers > 10 Mo → tmp file
 
-# ── Email ─────────────────────────────────────────────────────
+# ── Email SMTP (LWS / tout hébergeur) ─────────────────────────
 _EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 
 if _EMAIL_HOST_USER:
-    EMAIL_BACKEND    = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST       = 'smtp.gmail.com'
-    EMAIL_PORT       = 587
-    EMAIL_USE_TLS    = True
-    EMAIL_HOST_USER  = _EMAIL_HOST_USER
+    EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST          = config('EMAIL_HOST', default='mail.childrensfruit.org')
+    EMAIL_PORT          = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_TLS       = config('EMAIL_USE_TLS', default=True, cast=bool)
+    EMAIL_USE_SSL       = config('EMAIL_USE_SSL', default=False, cast=bool)
+    EMAIL_HOST_USER     = _EMAIL_HOST_USER
     EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 else:
-    EMAIL_BACKEND = config(
-        'EMAIL_BACKEND',
-        default='django.core.mail.backends.console.EmailBackend'
-    )
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=f"Children's Fruit <{_EMAIL_HOST_USER or 'noreply@childrensfruit.org'}>")
+DEFAULT_FROM_EMAIL = config(
+    'DEFAULT_FROM_EMAIL',
+    default=f"Children's Fruit <{_EMAIL_HOST_USER or 'noreply@childrensfruit.org'}>"
+)
 
 # ── Sécurité HTTPS (production uniquement) ────────────────────
 if not DEBUG:
