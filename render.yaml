@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: python manage.py migrate --noinput && python manage.py load_blog_data && gunicorn childrensfruit.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    startCommand: python manage.py migrate --noinput && python manage.py load_blog_data && python manage.py import_youtube --channel=@CFRUIT24 --no-thumbnails || true && gunicorn childrensfruit.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     healthCheckPath: /health/
     autoDeploy: true
     envVars:
@@ -22,7 +22,7 @@ services:
           property: connectionString
       # ── À remplir manuellement dans le dashboard Render ──────
       - key: YOUTUBE_API_KEY
-        value: ""
+        value: "AIzaSyChhHyT9JWSWzxyOYivhWNix7PV9XB7szI"
       - key: YOUTUBE_CHANNEL
         value: "@CFRUIT24"
       - key: GOOGLE_CLIENT_ID

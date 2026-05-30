@@ -209,8 +209,18 @@ class Command(BaseCommand):
             existing = BlogPost.objects.filter(slug=data["slug"]).first()
 
             if existing:
-                # Mise à jour du thumbnail si manquant
-                if not existing.thumbnail:
+                # Force re-upload si le thumbnail n'est pas sur Cloudinary
+                needs_thumb = True
+                if existing.thumbnail:
+                    try:
+                        url = existing.thumbnail.url
+                        if 'cloudinary.com' in url or url.startswith('http'):
+                            needs_thumb = False
+                    except Exception:
+                        pass
+                if needs_thumb:
+                    existing.thumbnail = None
+                    existing.save(update_fields=['thumbnail'])
                     self._attach_thumbnail(existing, data.get("thumbnail_static"), self.stdout)
                     updated += 1
                     self.stdout.write(f'  [UPD]  {data["title"][:60]}')
