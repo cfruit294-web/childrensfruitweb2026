@@ -810,3 +810,17 @@ class Certificate(models.Model):
 
     def __str__(self):
         return f"Certificat {self.certificate_number} — {self.user.username} — {self.course.title}"
+
+
+class NewsletterSubscriber(models.Model):
+    email        = models.EmailField(unique=True, verbose_name='Email')
+    subscribed_at = models.DateTimeField(auto_now_add=True, verbose_name='Date d\'inscription')
+    is_active    = models.BooleanField(default=True, verbose_name='Actif')
+
+    class Meta:
+        ordering = ['-subscribed_at']
+        verbose_name = 'Abonné newsletter'
+        verbose_name_plural = 'Abonnés newsletter'
+
+    def __str__(self):
+        return self.email

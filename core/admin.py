@@ -12,6 +12,7 @@ from .models import (
     LiveStream, EmissionSlot,
     StudyCourse, CourseResource, CourseEnrollment, ResourceProgress,
     Quiz, QuizQuestion, QuizChoice, QuizAttempt, QuizAnswer, Certificate,
+    NewsletterSubscriber,
 )
 
 
@@ -522,3 +523,12 @@ class CertificateAdmin(admin.ModelAdmin):
         if obj.attempt:
             return f"{obj.attempt.score}/100"
         return '—'
+
+
+@admin.register(NewsletterSubscriber)
+class NewsletterSubscriberAdmin(admin.ModelAdmin):
+    list_display  = ('email', 'subscribed_at', 'is_active')
+    list_filter   = ('is_active',)
+    search_fields = ('email',)
+    ordering      = ('-subscribed_at',)
+    readonly_fields = ('subscribed_at',)

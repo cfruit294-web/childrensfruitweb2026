@@ -47,6 +47,9 @@ urlpatterns = [
     path('blog/', views.BlogListView.as_view(), name='blog_list'),
     path('blog/<slug:slug>/', views.BlogDetailView.as_view(), name='blog_detail'),
 
+    # Newsletter
+    path('newsletter/subscribe/', views.NewsletterSubscribeView.as_view(), name='newsletter_subscribe'),
+
     # Bibliothèque d'étude
     path('bibliotheque/', views.StudyLibraryView.as_view(), name='study_library'),
     path('bibliotheque/<int:pk>/', views.CourseDetailView.as_view(), name='study_course'),

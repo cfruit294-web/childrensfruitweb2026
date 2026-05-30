@@ -77,6 +77,7 @@ from .models import (
     LiveStream, EmissionSlot,
     StudyCourse, CourseResource, CourseEnrollment, ResourceProgress,
     Quiz, QuizQuestion, QuizChoice, QuizAttempt, QuizAnswer, Certificate,
+    NewsletterSubscriber,
 )
 from .forms import (
     PartnershipRequestForm, VolunteerApplicationForm,
@@ -1317,4 +1318,67 @@ class CertificateView(LoginRequiredMixin, UpdateLastSeenMixin, View):
             'course': course,
             'certificate': cert,
             'user': request.user,
+        })
+
+
+# ── Newsletter ─────────────────────────────────────────────────────────────────
+class NewsletterSubscribeView(View):
+    def post(self, request):
+        import re
+        from django.core.mail import send_mail
+
+        email = request.POST.get('email', '').strip().lower()
+
+        if not email or not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
+            return JsonResponse({'status': 'invalid', 'message': 'Adresse e-mail invalide.'})
+
+        existing = NewsletterSubscriber.objects.filter(email=email).first()
+
+        if existing:
+            # Envoyer un rappel à l'abonné déjà inscrit
+            try:
+                send_mail(
+                    subject="Vous êtes déjà abonné à la Newsletter Children's Fruit",
+                    message=(
+                        f"Bonjour,\n\n"
+                        f"Vous tentez de vous inscrire avec l'adresse {email}, "
+                        f"mais vous êtes déjà abonné(e) à notre newsletter.\n\n"
+                        f"Vous continuez de recevoir nos actualités, concerts et ressources.\n\n"
+                        f"Merci pour votre fidélité !\n\n"
+                        f"— L'équipe Children's Fruit"
+                    ),
+                    from_email=django_settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+            return JsonResponse({
+                'status': 'exists',
+                'message': 'Vous êtes déjà inscrit(e) à notre newsletter. Un rappel vous a été envoyé par e-mail.',
+            })
+
+        # Nouvel abonné
+        NewsletterSubscriber.objects.create(email=email)
+        try:
+            send_mail(
+                subject="Bienvenue dans la Newsletter Children's Fruit !",
+                message=(
+                    f"Bonjour,\n\n"
+                    f"Merci de vous être inscrit(e) à la newsletter de Children's Fruit avec l'adresse {email}.\n\n"
+                    f"Vous recevrez désormais nos actualités, concerts, témoignages et ressources directement dans votre boîte mail.\n\n"
+                    f"Que Dieu vous bénisse !\n\n"
+                    f"— L'équipe Children's Fruit\n"
+                    f"childrensfruit.org"
+                ),
+                from_email=django_settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
+
+        return JsonResponse({
+            'status': 'ok',
+            'message': 'Inscription réussie ! Vérifiez votre boîte mail pour la confirmation.',
         })
