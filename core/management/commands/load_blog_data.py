@@ -39,9 +39,31 @@ ARTICLES = [
 
 <p>Avant le grand soir, l’équipe de Children’s Fruit a consacré de nombreuses heures à la préparation : répétitions, prière, organisation logistique. Ces coulisses témoignent de la dévotion et de l’engagement de chaque membre.</p>
 
+<div class="cf-gallery">
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/prep_01.jpg" alt="Préparatifs concert 2019" loading="lazy"><p class="cf-gal-caption">Préparatifs et organisation</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/prep_02.jpg" alt="Répétitions avant le concert" loading="lazy"><p class="cf-gal-caption">Répétitions de l’équipe</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/prep_03.jpg" alt="L’équipe en coulisses" loading="lazy"><p class="cf-gal-caption">L’équipe en coulisses</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/prep_04.jpg" alt="Moment de prière" loading="lazy"><p class="cf-gal-caption">Moment de prière et de communion</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/prep_05.jpg" alt="Préparation scénique" loading="lazy"><p class="cf-gal-caption">Mise en place de la scène</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/prep_06.jpg" alt="L’équipe unie" loading="lazy"><p class="cf-gal-caption">Unité et communion fraternelle</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/prep_07.jpg" alt="Répétitions finales" loading="lazy"><p class="cf-gal-caption">Répétitions de dernière minute</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/prep_08.jpg" alt="Coordination équipe" loading="lazy"><p class="cf-gal-caption">Coordination de l’équipe technique</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/prep_09.jpg" alt="Préparation finale" loading="lazy"><p class="cf-gal-caption">Les derniers préparatifs</p></div>
+</div>
+
 <h2><i class="fas fa-star" style="color:#f7941d;margin-right:.5rem;"></i>Le Concert</h2>
 
 <p>La soirée du concert a été un moment de grâce et de célébration. Portés par la musique et la louange, les participants ont vécu une expérience spirituelle profonde. Children’s Fruit a démontré que l’art peut être un puissant vecteur d’évangélisation.</p>
+
+<div class="cf-gallery">
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/concert_01.jpg" alt="Concert Children’s Fruit 2019" loading="lazy"><p class="cf-gal-caption">L’ambiance lors du concert</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/concert_02.jpg" alt="Performance sur scène" loading="lazy"><p class="cf-gal-caption">Performance sur scène</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/concert_03.jpg" alt="Moments de louange" loading="lazy"><p class="cf-gal-caption">Moments de louange collective</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/concert_04.jpg" alt="L’équipe sur scène" loading="lazy"><p class="cf-gal-caption">L’équipe unie sur scène</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/concert_05.jpg" alt="Concert en pleine communion" loading="lazy"><p class="cf-gal-caption">Une communion profonde avec le public</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/concert_06.jpg" alt="Finale du concert 2019" loading="lazy"><p class="cf-gal-caption">La finale du concert</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2019/concert_07.jpg" alt="Clôture du concert" loading="lazy"><p class="cf-gal-caption">Clôture en beauté</p></div>
+</div>
 
 <h2><i class="fas fa-users" style="color:#006837;margin-right:.5rem;"></i>L’Équipe</h2>
 
@@ -95,6 +117,15 @@ ARTICLES = [
 
 <p>Tout a commencé par le <strong>VBS (Vacation Bible School)</strong>, du <strong>lundi 29 juillet au 5 août 2019</strong>. Pendant cette semaine intense, les jeunes de Children’s Fruit se sont réunis pour apprendre, grandir dans la foi et préparer quelque chose d’exceptionnel.</p>
 
+<div class="cf-gallery">
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/prep_01.jpg" alt="Répétition dans l’église" loading="lazy"><p class="cf-gal-caption">Répétition dans l’église — les jeunes devant la croix</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/prep_02.jpg" alt="Session vocale" loading="lazy"><p class="cf-gal-caption">Session vocale — direction et écoute attentive</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/prep_03.jpg" alt="Moment de complicité" loading="lazy"><p class="cf-gal-caption">Moment de complicité entre répétitions</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/prep_04.jpg" alt="Le groupe en session" loading="lazy"><p class="cf-gal-caption">Le groupe en pleine session de travail</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/prep_05.jpg" alt="Concentration maximale" loading="lazy"><p class="cf-gal-caption">Concentration maximale avant le grand jour</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/prep_06.jpg" alt="Les jeunes talents" loading="lazy"><p class="cf-gal-caption">Les jeunes talents de Children’s Fruit</p></div>
+</div>
+
 <h3>Deux séances d’évangélisation</h3>
 
 <div style="background:rgba(0,104,55,.06);border-radius:14px;padding:1.25rem 1.5rem;margin:1.25rem 0;">
@@ -120,7 +151,16 @@ ARTICLES = [
 <ul style="line-height:2;padding-left:1.25rem;">
   <li><strong>Première tenue — Les tee-shirts blancs :</strong> Symbole de pureté et d’unité.</li>
   <li><strong>Deuxième tenue — Les pagnes africains :</strong> Robes et ensembles noirs garnis de motifs kente colorés — un hommage à l’identité africaine.</li>
-</ul>
+
+
+<div class="cf-gallery">
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/concert_01.jpg" alt="La salle FATEAC" loading="lazy"><p class="cf-gal-caption">La salle de l'Université FATEAC habillée de jaune</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/concert_02.jpg" alt="Les artistes en tenues africaines" loading="lazy"><p class="cf-gal-caption">Les artistes en tenues africaines avant la montée sur scène</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/concert_03.jpg" alt="Les jeunes au micro" loading="lazy"><p class="cf-gal-caption">Les jeunes au micro</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/concert_04.jpg" alt="Le choeur en action" loading="lazy"><p class="cf-gal-caption">Le chœur en action</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/concert_05.jpg" alt="Photo de groupe finale" loading="lazy"><p class="cf-gal-caption">Photo de groupe finale sur scène</p></div>
+  <div class="cf-gal-item"><img src="/static/blog/concert-2020/concert_06.jpg" alt="Le choeur" loading="lazy"><p class="cf-gal-caption">Le chœur Children s Fruit</p></div>
+</div>
 
 <h2 style="font-size:1.4rem;font-weight:800;color:#1a1a2e;margin-top:3rem;margin-bottom:1rem;">Les piliers de Children’s Fruit</h2>
 
