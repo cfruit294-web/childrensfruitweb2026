@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ── Sécurité ───────────────────────────────────────────────────
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-changeme-in-production')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,childrensfruit.org,www.childrensfruit.org', cast=Csv())
 
 # Auto-include Railway domain if present
 _RAILWAY_DOMAIN = config('RAILWAY_PUBLIC_DOMAIN', default='')
@@ -19,7 +19,10 @@ if _RENDER_DOMAIN and _RENDER_DOMAIN not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_RENDER_DOMAIN)
 
 # CSRF trusted origins (required for HTTPS forms in production)
-CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS = [
+    'https://childrensfruit.org',
+    'https://www.childrensfruit.org',
+]
 if _RAILWAY_DOMAIN:
     CSRF_TRUSTED_ORIGINS.append(f'https://{_RAILWAY_DOMAIN}')
 if _RENDER_DOMAIN:
