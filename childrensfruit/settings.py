@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_apscheduler',
     'axes',
+    'cloudinary_storage',
+    'cloudinary',
     'core.apps.CoreConfig',
 ]
 
@@ -127,6 +129,14 @@ TIME_ZONE = 'Africa/Abidjan'
 USE_I18N = True
 USE_TZ = True
 
+# ── Cloudinary (stockage media permanent) ─────────────────────
+_CLOUDINARY_NAME = config('CLOUDINARY_CLOUD_NAME', default='')
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': _CLOUDINARY_NAME,
+    'API_KEY':    config('CLOUDINARY_API_KEY', default=''),
+    'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
+}
+
 # ── Fichiers statiques (WhiteNoise) ───────────────────────────
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -140,7 +150,12 @@ STORAGES = {
         ),
     },
     'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        # Cloudinary en production si configuré, FileSystem en local
+        'BACKEND': (
+            'cloudinary_storage.storage.MediaCloudinaryStorage'
+            if _CLOUDINARY_NAME else
+            'django.core.files.storage.FileSystemStorage'
+        ),
     },
 }
 

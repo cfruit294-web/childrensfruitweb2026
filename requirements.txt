@@ -19,3 +19,7 @@ tzlocal==5.3.1
 # Sécurité anti-brute-force
 django-axes==8.3.1
 packaging==26.2
+
+# Stockage cloud (media persistant)
+cloudinary==1.41.0
+django-cloudinary-storage==0.3.0

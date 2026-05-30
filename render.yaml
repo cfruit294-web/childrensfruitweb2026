@@ -33,6 +33,13 @@ services:
         value: "https://childrensfruit.onrender.com/accounts/google/callback/"
       - key: EMAIL_BACKEND
         value: "django.core.mail.backends.console.EmailBackend"
+      # ── Cloudinary (media permanent) ─────────────────────────
+      - key: CLOUDINARY_CLOUD_NAME
+        value: ""
+      - key: CLOUDINARY_API_KEY
+        value: ""
+      - key: CLOUDINARY_API_SECRET
+        value: ""
 
 databases:
   - name: childrensfruit-db
