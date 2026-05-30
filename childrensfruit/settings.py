@@ -13,6 +13,11 @@ _RAILWAY_DOMAIN = config('RAILWAY_PUBLIC_DOMAIN', default='')
 if _RAILWAY_DOMAIN and _RAILWAY_DOMAIN not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_RAILWAY_DOMAIN)
 
+# Auto-include Render domain if present
+_RENDER_DOMAIN = config('RENDER_EXTERNAL_HOSTNAME', default='')
+if _RENDER_DOMAIN and _RENDER_DOMAIN not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_RENDER_DOMAIN)
+
 # ── Applications ──────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
