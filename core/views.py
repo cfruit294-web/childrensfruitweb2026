@@ -596,13 +596,10 @@ class RegisterView(View):
     def post(self, request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.info(
-                request,
-                "Compte créé ! Votre demande est en attente d'approbation par l'administrateur. "
-                "Vous recevrez une confirmation dès l'activation de votre compte."
-            )
-            return redirect('pending_approval')
+            user = form.save()
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            messages.success(request, f"Bienvenue {user.first_name or user.username} ! Votre compte est actif.")
+            return redirect('dashboard_redirect')
         return render(request, self.template_name, {'form': form})
 
 
@@ -614,13 +611,6 @@ class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
 
     def form_valid(self, form):
-        user = form.get_user()
-        if not user.is_superuser and not user.is_approved:
-            messages.warning(
-                self.request,
-                "Votre compte est en attente d'approbation par l'administrateur."
-            )
-            return redirect('pending_approval')
         return super().form_valid(form)
 
 
@@ -731,17 +721,8 @@ class GoogleCallbackView(View):
                 first_name=info.get('given_name', ''),
                 last_name=info.get('family_name', ''),
                 google_id=google_id,
-                is_approved=False,
+                is_approved=True,
             )
-            messages.info(
-                request,
-                "Compte Google créé ! Votre accès est en attente d'approbation par l'administrateur."
-            )
-            return redirect('pending_approval')
-
-        if not user.is_superuser and not user.is_approved:
-            messages.warning(request, "Votre compte est en attente d'approbation.")
-            return redirect('pending_approval')
 
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         return redirect('dashboard_redirect')
@@ -828,10 +809,6 @@ class PhoneVerifyView(View):
         except User.DoesNotExist:
             messages.error(request, "Compte introuvable.")
             return redirect('phone_login')
-
-        if not user.is_superuser and not user.is_approved:
-            messages.warning(request, "Votre compte est en attente d'approbation.")
-            return redirect('pending_approval')
 
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         messages.success(request, f"Bienvenue, {user.display_name} !")
